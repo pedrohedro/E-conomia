@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — E-CONOMIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    .mp-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 18px; }
+    .mp-tab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: var(--radius);
+      font-size: 12.5px; font-weight: 500;
+      background: var(--secondary); color: var(--muted-foreground);
+      border: 1px solid var(--border); cursor: pointer;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .mp-tab:hover { background: var(--accent); color: var(--foreground); }
+    .mp-tab.active { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
+    .mp-tab img { width: 14px; height: 14px; object-fit: contain; }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 18px; }
+    @media(max-width:900px){ .kpi-grid{ grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:600px){ .kpi-grid{ grid-template-columns: 1fr; } }
+
+    .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+    .kpi-label { font-size: 11.5px; color: var(--muted-foreground); margin: 0 0 6px; }
+    .kpi-value { font-size: 24px; font-weight: 700; color: var(--foreground); margin: 0; line-height: 1; transition: opacity 0.2s, transform 0.2s; }
+    .kpi-sub   { font-size: 12px; color: var(--muted-foreground); margin: 6px 0 0; transition: opacity 0.2s, transform 0.2s; }
+
+    .chart-canvas-wrap { height: 220px; position: relative; }
+
+    .inv-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .inv-search { height: 30px; font-size: 12.5px; width: 200px; }
+
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .status-ok   { background: var(--success); }
+    .status-warn { background: var(--warning); }
+    .status-crit { background: var(--destructive); }
+
+    /* User dropdown */
+    .user-menu { position: relative; }
+    .user-avatar-btn {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--brand-light); color: var(--brand);
+      border: none; cursor: pointer; font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dropdown {
+      position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 160px;
+      box-shadow: var(--shadow-md); z-index: 50;
+      display: none;
+    }
+    .dropdown.open { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; font-size: 12.5px; color: var(--foreground);
+      cursor: pointer; transition: background 0.1s;
+      border: none; background: transparent; width: 100%; text-align: left; text-decoration: none;
+    }
+    .dropdown-item:hover { background: var(--secondary); }
+    .dropdown-item.danger { color: var(--destructive); }
+    .dropdown-item svg { width: 13px; height: 13px; }
+    .dropdown-sep { border-top: 1px solid var(--border); margin: 4px 0; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 16px; right: 16px; z-index: 100;
+      background: var(--foreground); color: var(--background);
+      padding: 10px 16px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md);
+      transform: translateX(120%); transition: transform 0.25s ease;
+      display: flex; align-items: center; gap: 8px; max-width: 300px;
+    }
+    #toast.show { transform: translateX(0); }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="sidebar-logo-text">E-CONOMIA</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <p class="nav-label">Principal</p>
+      <a href="dashboard.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="index.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        Marketplaces
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <p class="nav-label">Operações</p>
+      <a href="vendas.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        Vendas
+      </a>
+      <a href="estoque.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Estoque
+      </a>
+      <a href="contabil.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        Contábil
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <p class="nav-label">Conta</p>
+      <a href="settings.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Configurações
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="userInitials">?</div>
+      <div class="sidebar-user-info">
+        <p class="sidebar-user-name" id="userName">Carregando...</p>
+        <p class="sidebar-user-role" id="userOrg">—</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main-content">
+  <!-- Header -->
+  <header class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-icon" id="themeToggle" title="Alternar tema"></button>
+      <div class="user-menu">
+        <button class="user-avatar-btn" id="headerAvatar" onclick="toggleDropdown()">?</button>
+        <div class="dropdown" id="userDropdown">
+          <a href="settings.html" class="dropdown-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Configurações
+          </a>
+          <div class="dropdown-sep"></div>
+          <button class="dropdown-item danger" id="signOutBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <main class="page-body">
+
+    <!-- Marketplace Tabs -->
+    <div class="mp-tabs">
+      <button class="mp-tab active tab-btn" data-mp="" onclick="changeMarketplace('geral', this)">
+        Geral
+      </button>
+      <button class="mp-tab tab-btn" data-mp="mercado_livre" onclick="changeMarketplace('ml', this)">
+        <img src="assets/logos/mercado-livre.png" alt=""> Mercado Livre
+      </button>
+      <button class="mp-tab tab-btn" data-mp="amazon" onclick="changeMarketplace('amazon', this)">
+        <img src="assets/logos/amazon.png" alt=""> Amazon
+      </button>
+      <button class="mp-tab tab-btn" data-mp="shopee" onclick="changeMarketplace('shopee', this)">
+        <img src="assets/logos/shopee.png" alt=""> Shopee
+      </button>
+      <button class="mp-tab tab-btn" data-mp="nuvemshop" onclick="changeMarketplace('nuvemshop', this)">
+        <img src="assets/logos/nuvemshop.png" alt=""> Nuvemshop
+      </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <p class="kpi-label">Faturamento bruto</p>
+        <p class="kpi-value" id="kpi-vendas">—</p>
+        <p class="kpi-sub" id="kpi-subtitle">Carregando...</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Taxas de marketplace</p>
+        <p class="kpi-value" id="kpi-taxas">—</p>
+        <p class="kpi-sub" id="kpi-taxa-percent">—</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Status</p>
+        <p class="kpi-value" id="kpi-status">—</p>
+        <p class="kpi-sub" id="kpi-status-detail">—</p>
+      </div>
+    </div>
+
+    <!-- Chart + Inventory -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Faturamento — últimos 12 meses</h2>
+        </div>
+        <div class="card-body">
+          <div class="chart-canvas-wrap">
+            <canvas id="mainChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Estoque em alerta</h2>
+          <a href="estoque.html" class="btn btn-ghost" style="font-size:12px;height:28px;padding:0 10px;">Ver tudo</a>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Estoque</th>
+                <th>Margem</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryBody">
+              <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted-foreground);font-size:12.5px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+  <span id="toast-msg">Ação realizada</span>
+</div>
+
+<script type="module">
+import { requireAuth, signOut } from './js/auth-guard.js';
+import { initThemeToggle } from './js/theme.js';
+import {
+    fetchDashboardKPIs,
+    fetchMonthlyRevenue,
+    fetchActiveIntegrations,
+    fetchInventoryPreview,
+    fetchMarketplaceStatus,
+    formatCurrency,
+} from './js/api.js';
+
+// Theme toggle
+initThemeToggle('themeToggle');
+
+// Dropdown
+window.toggleDropdown = () => {
+    document.getElementById('userDropdown').classList.toggle('open');
+};
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.user-menu')) {
+        document.getElementById('userDropdown').classList.remove('open');
+    }
+});
+
+// Sign out
+document.getElementById('signOutBtn').addEventListener('click', async () => {
+    await signOut();
+    window.location.href = 'login.html';
+});
+
+// Toast
+window.showToast = (msg = 'Ação realizada') => {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+};
+
+// MP colors
+const MP_COLORS = {
+    geral:         { color: '#0891b2' },
+    mercado_livre: { color: '#e6b800' },
+    amazon:        { color: '#ff9900' },
+    shopee:        { color: '#f43f5e' },
+    nuvemshop:     { color: '#3b82f6' },
+};
+const TAB_MAP = { geral: null, ml: 'mercado_livre', amazon: 'amazon', shopee: 'shopee', nuvemshop: 'nuvemshop' };
+
+let chartInstance = null;
+let orgId = null;
+
+// Chart
+const initChart = (dataArray, colorStr) => {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const isDark = document.documentElement.classList.contains('dark');
+    const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const labelColor = isDark ? '#a1a1a1' : '#737373';
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+    gradient.addColorStop(0, colorStr + '33');
+    gradient.addColorStop(1, colorStr + '00');
+
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+            datasets: [{
+                label: 'Faturamento (k)',
+                data: dataArray,
+                borderColor: colorStr,
+                backgroundColor: gradient,
+                borderWidth: 2,
+                pointBackgroundColor: colorStr,
+                pointBorderColor: 'transparent',
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                fill: true,
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: isDark ? '#262626' : '#ffffff',
+                    titleColor: isDark ? '#fafafa' : '#0a0a0a',
+                    bodyColor: colorStr,
+                    borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e5e5e5',
+                    borderWidth: 1,
+                    padding: 10,
+                    displayColors: false,
+                    callbacks: { label: (ctx) => `R$ ${ctx.parsed.y}k` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: labelColor, font: { size: 11 } }, border: { display: false } },
+                y: {
+                    grid: { color: gridColor },
+                    ticks: { color: labelColor, font: { size: 11 }, callback: (v) => v + 'k' },
+                    border: { display: false }
+                }
+            },
+            interaction: { intersect: false, mode: 'index' },
+        }
+    });
+};
+
+// Tab change
+window.changeMarketplace = async (key, btnElement) => {
+    const marketplace = TAB_MAP[key];
+    const mpKey = marketplace ?? 'geral';
+    const color = (MP_COLORS[mpKey] ?? MP_COLORS.geral).color;
+
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+
+    ['kpi-vendas','kpi-subtitle','kpi-taxas','kpi-taxa-percent','kpi-status','kpi-status-detail'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.opacity = '0.3'; }
+    });
+
+    try {
+        const [kpis, chartData, status] = await Promise.all([
+            fetchDashboardKPIs(orgId, marketplace),
+            fetchMonthlyRevenue(orgId, marketplace),
+            marketplace ? fetchMarketplaceStatus(orgId, marketplace) : null,
+        ]);
+
+        document.getElementById('kpi-vendas').textContent = kpis.vendas;
+        document.getElementById('kpi-subtitle').textContent = kpis.variation;
+        document.getElementById('kpi-taxas').textContent = kpis.taxas;
+        document.getElementById('kpi-taxa-percent').textContent = kpis.percentTaxa;
+
+        const statusEl = document.getElementById('kpi-status');
+        const statusDetailEl = document.getElementById('kpi-status-detail');
+        if (status) {
+            statusEl.textContent = status.status;
+            statusDetailEl.textContent = status.subStatus;
+        } else {
+            statusEl.textContent = kpis.ordersCount + ' pedidos';
+            statusDetailEl.textContent = 'Mês atual';
+        }
+
+        ['kpi-vendas','kpi-subtitle','kpi-taxas','kpi-taxa-percent','kpi-status','kpi-status-detail'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.opacity = '1';
+        });
+
+        initChart(chartData, color);
+    } catch (err) {
+        console.error('Erro ao carregar marketplace:', err);
+        showToast('Erro ao carregar dados.');
+    }
+};
+
+// Inventory
+const renderInventory = (products) => {
+    const tbody = document.getElementById('inventoryBody');
+    if (!products.length) {
+        tbody.innerHTML = `<tr><td colspan="3" class="empty-state" style="padding:24px;text-align:center;color:var(--muted-foreground);font-size:12.5px;">Nenhum produto cadastrado.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = products.slice(0, 8).map(p => {
+        const stock = p.total_stock ?? 0;
+        const isLow = p.stock_alert && p.stock_alert !== 'normal';
+        const margin = p.margin_percent ?? 0;
+        const dotClass = stock === 0 ? 'status-crit' : isLow ? 'status-warn' : 'status-ok';
+        return `<tr>
+            <td>
+                <div style="font-size:13px;font-weight:500;color:var(--foreground)">${p.name}</div>
+                <div style="font-size:11.5px;color:var(--muted-foreground)">${p.sku ?? '—'}</div>
+            </td>
+            <td>
+                <div style="display:flex;align-items:center;gap:6px">
+                    <span class="status-dot ${dotClass}"></span>
+                    <span style="font-size:13px;font-weight:600">${stock}</span>
+                    ${isLow ? `<span class="badge badge-danger" style="font-size:10px">Baixo</span>` : ''}
+                </div>
+            </td>
+            <td>
+                <span class="badge ${margin >= 25 ? 'badge-success' : margin >= 15 ? 'badge-brand' : 'badge-danger'}">${margin.toFixed(1)}%</span>
+            </td>
+        </tr>`;
+    }).join('');
+};
+
+// Init
+const init = async () => {
+    const auth = await requireAuth();
+    if (!auth) return;
+    orgId = auth.orgId;
+
+    // Update profile UI
+    if (auth.user?.email) {
+        const parts = auth.user.email.split('@')[0].split(/[._-]/);
+        const initials = parts.length >= 2
+            ? (parts[0][0] + parts[1][0]).toUpperCase()
+            : auth.user.email.substring(0, 2).toUpperCase();
+        document.getElementById('userInitials').textContent = initials;
+        document.getElementById('headerAvatar').textContent = initials;
+        document.getElementById('userName').textContent = auth.user.email;
+    }
+    if (auth.org?.name) {
+        document.getElementById('userOrg').textContent = auth.org.name;
+    }
+
+    try {
+        const [kpis, chartData, integrations, products] = await Promise.all([
+            fetchDashboardKPIs(orgId, null),
+            fetchMonthlyRevenue(orgId, null),
+            fetchActiveIntegrations(orgId),
+            fetchInventoryPreview(orgId, 10),
+        ]);
+
+        document.getElementById('kpi-vendas').textContent = kpis.vendas;
+        document.getElementById('kpi-subtitle').textContent = kpis.variation;
+        document.getElementById('kpi-taxas').textContent = kpis.taxas;
+        document.getElementById('kpi-taxa-percent').textContent = kpis.percentTaxa;
+        document.getElementById('kpi-status').textContent = kpis.ordersCount + ' pedidos';
+        document.getElementById('kpi-status-detail').textContent = 'Mês atual';
+
+        initChart(chartData, MP_COLORS.geral.color);
+        renderInventory(products);
+
+        // Desabilitar tabs sem integração
+        const activeMarketplaces = integrations.map(i => i.marketplace);
+        document.querySelectorAll('.tab-btn[data-mp]').forEach(btn => {
+            const mp = btn.getAttribute('data-mp');
+            if (mp && !activeMarketplaces.includes(mp)) {
+                btn.style.opacity = '0.4';
+                btn.title = 'Marketplace não conectado';
+            }
+        });
+    } catch (err) {
+        console.error('Erro ao inicializar dashboard:', err);
+        showToast('Erro ao carregar dados. Verifique a conexão.');
+    }
+};
+
+init();
+</script>
+</body>
+</html>

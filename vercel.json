@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/vendas", "destination": "/vendas.html" },
+    { "source": "/estoque", "destination": "/estoque.html" },
+    { "source": "/contabil", "destination": "/contabil.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/settings", "destination": "/settings.html" },
+    { "source": "/onboarding", "destination": "/onboarding.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}

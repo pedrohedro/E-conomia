@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketplaces — E-CONOMIA</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <script src="js/theme.js" type="module"></script>
+
+  <!-- Supabase Config -->
+  <script>
+    window.__ENV__ = {
+      SUPABASE_URL: 'https://rqmpqxguecuhrsbzcwgb.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxbXBxeGd1ZWN1aHJzYnpjd2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDA0NjUsImV4cCI6MjA5MDU3NjQ2NX0.NctXATRekxQh0R3zSTlMmW673ZtJog6aBeeNrrSu0hU',
+    };
+  </script>
+
+  <style>
+    /* -----------------------------------------------------------------------
+       User Menu / Dropdown
+    ----------------------------------------------------------------------- */
+    .user-menu {
+      position: relative;
+    }
+
+    .user-avatar-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--brand-light);
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s;
+    }
+    .user-avatar-btn:hover { opacity: 0.85; }
+
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 180px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      z-index: 50;
+      padding: 4px;
+    }
+    .dropdown.open { display: block; }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--foreground);
+      text-decoration: none;
+      border-radius: calc(var(--radius) - 2px);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      transition: background 0.1s;
+    }
+    .dropdown-item:hover { background: var(--secondary); }
+    .dropdown-item svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--muted-foreground); }
+    .dropdown-item.danger { color: var(--destructive); }
+    .dropdown-item.danger svg { color: var(--destructive); }
+    .dropdown-item.danger:hover { background: color-mix(in srgb, var(--destructive) 10%, transparent); }
+
+    .dropdown-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    /* -----------------------------------------------------------------------
+       Toast
+    ----------------------------------------------------------------------- */
+    #toast {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .toast-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      max-width: 300px;
+      animation: toastIn 0.2s ease;
+      pointer-events: all;
+    }
+    .toast-item.success {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+    }
+    .toast-item.error {
+      background: color-mix(in srgb, var(--destructive) 12%, transparent);
+      color: var(--destructive);
+      border: 1px solid color-mix(in srgb, var(--destructive) 25%, transparent);
+    }
+    .toast-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    @keyframes toastIn {
+      from { transform: translateX(110%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    /* -----------------------------------------------------------------------
+       Section heading
+    ----------------------------------------------------------------------- */
+    .section-heading {
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .section-heading h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--foreground);
+      margin: 0 0 6px;
+    }
+    .section-heading h2 svg { width: 18px; height: 18px; color: var(--brand); }
+    .section-heading p {
+      font-size: 13px;
+      color: var(--muted-foreground);
+      margin: 0;
+    }
+    .section-heading p strong { color: var(--foreground); }
+
+    /* -----------------------------------------------------------------------
+       Marketplace cards grid
+    ----------------------------------------------------------------------- */
+    .mp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 1100px) { .mp-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .mp-grid { grid-template-columns: 1fr; } }
+
+    /* -----------------------------------------------------------------------
+       Marketplace card
+    ----------------------------------------------------------------------- */
+    .mp-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .mp-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .mp-card.mp-disabled { opacity: 0.55; pointer-events: none; }
+
+    /* Accent glow overlay (top-right decoration) */
+    .mp-card-glow {
+      position: absolute;
+      top: -24px;
+      right: -24px;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .mp-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .mp-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: calc(var(--radius) + 2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mp-icon svg { width: 24px; height: 24px; }
+
+    /* Status badge */
+    .mp-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 1px solid transparent;
+    }
+    .mp-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .mp-status.disconnected {
+      background: var(--secondary);
+      color: var(--muted-foreground);
+      border-color: var(--border);
+    }
+    .mp-status.disconnected .mp-status-dot { background: var(--muted-foreground); }
+    .mp-status.connected {
+      background: var(--success-light);
+      color: var(--success);
+      border-color: color-mix(in srgb, var(--success) 30%, transparent);
+    }
+    .mp-status.connected .mp-status-dot {
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+    .mp-status.expired {
+      background: var(--warning-light);
+      color: var(--warning);
+      border-color: color-mix(in srgb, var(--warning) 30%, transparent);
+    }
+    .mp-status.expired .mp-status-dot { background: var(--warning); animation: pulse 1.5s ease-in-out infinite; }
+    .mp-status.soon {
+      background: var(--brand-light);
+      color: var(--brand);
+      border-color: color-mix(in srgb, var(--brand) 25%, transparent);
+    }
+
+    .mp-card-body {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+    .mp-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--foreground);
+      margin: 0 0 4px;
+    }
+    .mp-desc {
+      font-size: 12.5px;
+      color: var(--muted-foreground);
+      margin: 0 0 14px;
+    }
+
+    .mp-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .mp-features li {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12.5px;
+      color: var(--foreground);
+    }
+    .mp-features li svg {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0;
+    }
+
+    .mp-seller-info {
+      font-size: 11.5px;
+      color: var(--muted-foreground);
+      margin-bottom: 6px;
+    }
+
+    .mp-card-footer {
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+      padding-top: 16px;
+    }
+
+    /* Connect / action button  */
+    .mp-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      height: 38px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .mp-btn:active { transform: scale(0.97); }
+    .mp-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+    .mp-btn svg { width: 15px; height: 15px; }
+
+    /* Yellow (Mercado Livre) */
+    .mp-btn-ml {
+      background: #FFE600;
+      color: #0a0a0a;
+    }
+    .mp-btn-ml:hover:not(:disabled) { background: #f0d900; }
+
+    /* Purple (Nuvemshop) */
+    .mp-btn-ns {
+      background: #595AD3;
+      color: #ffffff;
+    }
+    .mp-btn-ns:hover:not(:disabled) { background: #4a4bbf; }
+
+    /* Green (syncing state — replaces branded color when connected) */
+    .mp-btn-sync {
+      background: var(--success);
+      color: #ffffff;
+    }
+    .mp-btn-sync:hover:not(:disabled) { opacity: 0.88; }
+
+    /* Muted disabled (Em Breve) */
+    .mp-btn-disabled {
+      background: var(--secondary);
+      color: var(--muted-foreground);
+    }
+
+    /* Icon colours per brand */
+    .mp-icon-ml  { background: #FFE600; }
+    .mp-icon-ml svg { color: #0a0a0a; }
+    .mp-icon-ns  { background: #595AD3; }
+    .mp-icon-ns svg { color: #ffffff; }
+    .mp-icon-muted { background: var(--secondary); border: 1px solid var(--border); }
+    .mp-icon-muted svg { color: var(--muted-foreground); }
+
+    .mp-glow-ml { background: rgba(255, 230, 0, 0.18); }
+    .mp-glow-ns { background: rgba(89, 90, 211, 0.18); }
+
+    /* No-org empty state */
+    .no-org-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 20px;
+      text-align: center;
+    }
+    .no-org-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: calc(var(--radius) + 4px);
+      background: var(--brand-light);
+      border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .no-org-icon svg { width: 26px; height: 26px; color: var(--brand); }
+    .no-org-state h2 { font-size: 20px; font-weight: 700; color: var(--foreground); margin: 0 0 8px; }
+    .no-org-state p  { font-size: 13.5px; color: var(--muted-foreground); margin: 0 0 24px; max-width: 340px; }
+  </style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     SIDEBAR
+========================================================= -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="sidebar-logo-text">E-CONOMIA</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <p class="nav-label">Principal</p>
+      <a href="dashboard.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="7" height="9" x="3" y="3" rx="1"/>
+          <rect width="7" height="5" x="14" y="3" rx="1"/>
+          <rect width="7" height="9" x="14" y="12" rx="1"/>
+          <rect width="7" height="5" x="3" y="16" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+      <a href="index.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+          <polyline points="13 2 13 9 20 9"/>
+        </svg>
+        Marketplaces
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <p class="nav-label">Operações</p>
+      <a href="vendas.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="8" cy="21" r="1"/>
+          <circle cx="19" cy="21" r="1"/>
+          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+        </svg>
+        Vendas
+      </a>
+      <a href="estoque.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        </svg>
+        Estoque
+      </a>
+      <a href="contabil.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect width="20" height="14" x="2" y="5" rx="2"/>
+          <line x1="2" x2="22" y1="10" y2="10"/>
+        </svg>
+        Contábil
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <p class="nav-label">Conta</p>
+      <a href="settings.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Configurações
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="userInitials">?</div>
+      <div class="sidebar-user-info">
+        <p class="sidebar-user-name" id="userName">Carregando...</p>
+        <p class="sidebar-user-role" id="userOrg">—</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- =========================================================
+     MAIN CONTENT
+========================================================= -->
+<div class="main-content">
+  <header class="page-header">
+    <h1 class="page-title">Marketplaces</h1>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-icon" id="themeToggle" title="Alternar tema"></button>
+      <div class="user-menu">
+        <button class="user-avatar-btn" id="headerAvatar" onclick="toggleDropdown()">?</button>
+        <div class="dropdown" id="userDropdown">
+          <a href="settings.html" class="dropdown-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            Configurações
+          </a>
+          <div class="dropdown-sep"></div>
+          <button class="dropdown-item danger" id="signOutBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-body" id="pageBody">
+
+    <!-- Section heading -->
+    <div class="section-heading">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        Lojas &amp; Marketplaces
+      </h2>
+      <p>
+        Conecte suas lojas de forma segura. O E-CONOMIA utiliza criptografia de ponta e OAuth 2.0.
+        <strong>Nós não temos acesso às suas senhas.</strong>
+      </p>
+    </div>
+
+    <!-- Marketplace grid -->
+    <div class="mp-grid" id="integrations-grid">
+
+      <!-- CARD: MERCADO LIVRE -->
+      <div id="card-mercado_livre" class="mp-card">
+        <div class="mp-card-glow mp-glow-ml"></div>
+        <div class="mp-card-top">
+          <div class="mp-icon mp-icon-ml">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </div>
+          <span id="status-mercado_livre" class="mp-status disconnected">
+            <span class="mp-status-dot"></span>
+            Desconectado
+          </span>
+        </div>
+        <div class="mp-card-body">
+          <h3 class="mp-name">Mercado Livre</h3>
+          <p class="mp-desc">Sincronize vendas e gerencie estoque Full/Flex.</p>
+          <ul class="mp-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Importação de Pedidos
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Desconto de Taxas Oficiais
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Cálculo de Impostos (Simples)
+            </li>
+          </ul>
+          <p id="seller-info-mercado_livre" class="mp-seller-info" style="display:none;"></p>
+        </div>
+        <div class="mp-card-footer">
+          <button id="btn-mercado_livre" class="mp-btn mp-btn-ml" onclick="handleConnect('mercado_livre')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>Conectar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD: NUVEMSHOP -->
+      <div id="card-nuvemshop" class="mp-card">
+        <div class="mp-card-glow mp-glow-ns"></div>
+        <div class="mp-card-top">
+          <div class="mp-icon mp-icon-ns">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <span id="status-nuvemshop" class="mp-status disconnected">
+            <span class="mp-status-dot"></span>
+            Desconectado
+          </span>
+        </div>
+        <div class="mp-card-body">
+          <h3 class="mp-name">Nuvemshop</h3>
+          <p class="mp-desc">E-commerce próprio com controle total de margem.</p>
+          <ul class="mp-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#595AD3" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Sem taxas de marketplace
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#595AD3" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Sync de Pedidos
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#595AD3" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Gestão via Correios/Transp.
+            </li>
+          </ul>
+          <p id="seller-info-nuvemshop" class="mp-seller-info" style="display:none;"></p>
+        </div>
+        <div class="mp-card-footer">
+          <button id="btn-nuvemshop" class="mp-btn mp-btn-ns" onclick="handleConnect('nuvemshop')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>Conectar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- CARD: AMAZON (Em Breve) -->
+      <div class="mp-card mp-disabled">
+        <div class="mp-card-top">
+          <div class="mp-icon mp-icon-muted">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
+          <span class="mp-status soon">Em Breve</span>
+        </div>
+        <div class="mp-card-body">
+          <h3 class="mp-name">Amazon Seller</h3>
+          <p class="mp-desc">Gestão de margem FBA e DBA.</p>
+        </div>
+        <div class="mp-card-footer">
+          <button class="mp-btn mp-btn-disabled" disabled>Em Breve</button>
+        </div>
+      </div>
+
+      <!-- CARD: SHOPEE (Em Breve) -->
+      <div class="mp-card mp-disabled">
+        <div class="mp-card-top">
+          <div class="mp-icon mp-icon-muted">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <span class="mp-status soon">Em Breve</span>
+        </div>
+        <div class="mp-card-body">
+          <h3 class="mp-name">Shopee</h3>
+          <p class="mp-desc">Taxas, Ads e estoque unificado.</p>
+        </div>
+        <div class="mp-card-footer">
+          <button class="mp-btn mp-btn-disabled" disabled>Em Breve</button>
+        </div>
+      </div>
+
+      <!-- CARD: SHEIN (Em Breve) -->
+      <div class="mp-card mp-disabled">
+        <div class="mp-card-top">
+          <div class="mp-icon mp-icon-muted">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
+            </svg>
+          </div>
+          <span class="mp-status soon">Em Breve</span>
+        </div>
+        <div class="mp-card-body">
+          <h3 class="mp-name">Shein</h3>
+          <p class="mp-desc">Marketplace de moda e acessórios.</p>
+        </div>
+        <div class="mp-card-footer">
+          <button class="mp-btn mp-btn-disabled" disabled>Em Breve</button>
+        </div>
+      </div>
+
+      <!-- CARD: SHOPIFY (Em Breve) -->
+      <div class="mp-card mp-disabled">
+        <div class="mp-card-top">
+          <div class="mp-icon mp-icon-muted">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" x2="21" y1="6" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+          </div>
+          <span class="mp-status soon">Em Breve</span>
+        </div>
+        <div class="mp-card-body">
+          <h3 class="mp-name">Shopify</h3>
+          <p class="mp-desc">Loja própria internacional.</p>
+        </div>
+        <div class="mp-card-footer">
+          <button class="mp-btn mp-btn-disabled" disabled>Em Breve</button>
+        </div>
+      </div>
+
+    </div><!-- /integrations-grid -->
+  </main>
+</div><!-- /main-content -->
+
+<!-- Toast container -->
+<div id="toast"></div>
+
+<script type="module">
+  import { initThemeToggle } from './js/theme.js';
+  import {
+    supabase,
+    getCurrentUser,
+    getUserOrganization,
+    getIntegrations,
+    connectMarketplace,
+    triggerSync,
+    checkOAuthResult,
+  } from './js/supabase-client.js';
+
+  /* ------------------------------------------------------------------
+     Theme toggle + dropdown
+  ------------------------------------------------------------------ */
+  initThemeToggle('themeToggle');
+
+  window.toggleDropdown = () =>
+    document.getElementById('userDropdown').classList.toggle('open');
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.user-menu'))
+      document.getElementById('userDropdown')?.classList.remove('open');
+  });
+
+  document.getElementById('signOutBtn')?.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = 'login.html';
+  });
+
+  /* ------------------------------------------------------------------
+     Constants
+  ------------------------------------------------------------------ */
+  const SUPABASE_FUNCTIONS = 'https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1';
+  let currentOrgId = null;
+
+  /* ------------------------------------------------------------------
+     OAuth result check on page load
+  ------------------------------------------------------------------ */
+  const oauthResult = checkOAuthResult();
+  if (oauthResult.connected) {
+    showToast(`${formatMarketplaceName(oauthResult.connected)} conectado com sucesso!`, 'success');
+  } else if (oauthResult.error) {
+    showToast(`Erro: ${oauthResult.error}`, 'error');
+  }
+
+  /* ------------------------------------------------------------------
+     Init
+  ------------------------------------------------------------------ */
+  async function init() {
+    try {
+      const user = await getCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Populate sidebar + header avatar
+      const initials = (user.user_metadata?.full_name || user.email || '?')
+        .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+      document.getElementById('userInitials').textContent = initials;
+      document.getElementById('headerAvatar').textContent = initials;
+      document.getElementById('userName').textContent =
+        user.user_metadata?.full_name || user.email || '—';
+
+      const org = await getUserOrganization();
+      if (org) {
+        currentOrgId = org.organization_id;
+        document.getElementById('userOrg').textContent = org.organizations?.name || '—';
+      } else {
+        showNoOrgState();
+        return;
+      }
+    } catch (err) {
+      console.error('Erro ao verificar auth:', err.message);
+      window.location.href = 'login.html';
+      return;
+    }
+
+    await loadIntegrations();
+  }
+
+  /* ------------------------------------------------------------------
+     No-org empty state
+  ------------------------------------------------------------------ */
+  function showNoOrgState() {
+    const body = document.getElementById('pageBody');
+    if (!body) return;
+    body.innerHTML = `
+      <div class="no-org-state">
+        <div class="no-org-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <h2>Configure sua conta</h2>
+        <p>Você precisa criar ou ser adicionado a uma organização para usar o E-CONOMIA.</p>
+        <button class="btn btn-primary" onclick="createOrganization()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          Criar Minha Organização
+        </button>
+      </div>`;
+  }
+
+  window.createOrganization = async () => {
+    const name = prompt('Nome da sua empresa / loja:');
+    if (!name?.trim()) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: org, error } = await supabase
+      .from('organizations')
+      .insert({ name: name.trim(), owner_id: user.id })
+      .select('id')
+      .single();
+
+    if (error) {
+      showToast('Erro ao criar organização: ' + error.message, 'error');
+      return;
+    }
+
+    await supabase.from('org_members').insert({
+      organization_id: org.id,
+      user_id: user.id,
+      role: 'owner',
+      is_active: true,
+    });
+
+    currentOrgId = org.id;
+    showToast('Organização criada com sucesso!', 'success');
+    window.location.reload();
+  };
+
+  /* ------------------------------------------------------------------
+     Load integrations
+  ------------------------------------------------------------------ */
+  async function loadIntegrations() {
+    try {
+      const { data, error } = await supabase
+        .from('marketplace_integrations')
+        .select('id, marketplace, status, seller_id, seller_nickname, last_sync_at, last_sync_error, created_at')
+        .eq('organization_id', currentOrgId)
+        .order('marketplace');
+
+      if (data) {
+        for (const integration of data) {
+          updateCardStatus(integration);
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao carregar integrações:', err);
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Update card status DOM
+  ------------------------------------------------------------------ */
+  function updateCardStatus(integration) {
+    const { marketplace, status, seller_nickname, last_sync_at } = integration;
+    const statusEl  = document.getElementById(`status-${marketplace}`);
+    const btnEl     = document.getElementById(`btn-${marketplace}`);
+    const sellerEl  = document.getElementById(`seller-info-${marketplace}`);
+
+    if (!statusEl || !btnEl) return;
+
+    if (status === 'active') {
+      statusEl.className = 'mp-status connected';
+      statusEl.innerHTML = '<span class="mp-status-dot"></span> Conectado';
+
+      btnEl.className = 'mp-btn mp-btn-sync';
+      const btnSpan = btnEl.querySelector('span');
+      if (btnSpan) btnSpan.textContent = 'Sincronizar Agora';
+      btnEl.onclick = () => handleSync(marketplace);
+
+      if (sellerEl && seller_nickname) {
+        sellerEl.textContent = 'Loja: ' + seller_nickname +
+          (last_sync_at ? ' | Sync: ' + new Date(last_sync_at).toLocaleString('pt-BR') : '');
+        sellerEl.style.display = '';
+      }
+    } else if (status === 'token_expired') {
+      statusEl.className = 'mp-status expired';
+      statusEl.innerHTML = '<span class="mp-status-dot"></span> Token Expirado';
+
+      const btnSpan = btnEl.querySelector('span');
+      if (btnSpan) btnSpan.textContent = 'Reconectar';
+      btnEl.onclick = () => handleConnect(marketplace);
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Connect (OAuth)
+  ------------------------------------------------------------------ */
+  window.handleConnect = function(marketplace) {
+    const state = btoa(JSON.stringify({ org_id: currentOrgId, marketplace }));
+    let authUrl;
+
+    if (marketplace === 'mercado_livre') {
+      authUrl = 'https://auth.mercadolivre.com.br/authorization?response_type=code'
+        + '&client_id=8352452310875924'
+        + '&redirect_uri=' + encodeURIComponent(SUPABASE_FUNCTIONS + '/marketplace-oauth/callback')
+        + '&state=' + encodeURIComponent(state);
+    } else if (marketplace === 'nuvemshop') {
+      showToast('Nuvemshop: em breve!', 'error');
+      return;
+    } else {
+      showToast('Marketplace não suportado ainda.', 'error');
+      return;
+    }
+
+    window.location.href = authUrl;
+  };
+
+  /* ------------------------------------------------------------------
+     Sync
+  ------------------------------------------------------------------ */
+  window.handleSync = async function(marketplace) {
+    const btn = document.getElementById('btn-' + marketplace);
+    const btnSpan = btn?.querySelector('span');
+    if (btnSpan) btnSpan.textContent = 'Sincronizando...';
+    if (btn) btn.disabled = true;
+
+    try {
+      const res = await fetch(SUPABASE_FUNCTIONS + '/sync-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organization_id: currentOrgId, marketplace }),
+      });
+      const result = await res.json();
+      const synced = result.results?.[0]?.orders_synced ?? 0;
+      showToast(synced + ' pedidos sincronizados do ' + formatMarketplaceName(marketplace) + '!', 'success');
+      await loadIntegrations();
+    } catch (err) {
+      showToast('Erro ao sincronizar: ' + err.message, 'error');
+    } finally {
+      if (btnSpan) btnSpan.textContent = 'Sincronizar Agora';
+      if (btn) btn.disabled = false;
+    }
+  };
+
+  /* ------------------------------------------------------------------
+     Helpers
+  ------------------------------------------------------------------ */
+  function formatMarketplaceName(key) {
+    const names = {
+      mercado_livre: 'Mercado Livre',
+      nuvemshop: 'Nuvemshop',
+      amazon: 'Amazon',
+      shopee: 'Shopee',
+    };
+    return names[key] || key;
+  }
+
+  function showToast(message, type) {
+    const container = document.getElementById('toast');
+    if (!container) return;
+
+    const item = document.createElement('div');
+    item.className = 'toast-item ' + (type === 'success' ? 'success' : 'error');
+
+    const icon = type === 'success'
+      ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+
+    item.innerHTML = icon + `<span>${message}</span>`;
+    container.appendChild(item);
+    setTimeout(() => item.remove(), 5000);
+  }
+
+  /* ------------------------------------------------------------------
+     Boot
+  ------------------------------------------------------------------ */
+  init();
+</script>
+</body>
+</html>

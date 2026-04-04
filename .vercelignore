@@ -1,0 +1,7 @@
+supabase/
+.claude/
+.swarm/
+.mcp.json
+docs/
+*.png
+*.md

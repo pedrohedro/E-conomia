@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contábil — E-CONOMIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <script src="js/theme.js" type="module"></script>
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* User menu / dropdown                                                  */
+    /* ------------------------------------------------------------------ */
+    .user-menu { position: relative; }
+
+    .user-avatar-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--brand-light);
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s;
+    }
+    .user-avatar-btn:hover { opacity: 0.85; }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 180px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 4px;
+      display: none;
+      z-index: 50;
+    }
+    .dropdown.open { display: block; }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 13px;
+      color: var(--foreground);
+      text-decoration: none;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .dropdown-item:hover { background: var(--secondary); }
+    .dropdown-item svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--muted-foreground); }
+
+    .dropdown-item.danger { color: var(--destructive); }
+    .dropdown-item.danger svg { color: var(--destructive); }
+    .dropdown-item.danger:hover { background: color-mix(in srgb, var(--destructive) 10%, transparent); }
+
+    .dropdown-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+    /* ------------------------------------------------------------------ */
+    /* Toast                                                                 */
+    /* ------------------------------------------------------------------ */
+    #toast {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Page-specific: period selector row                                   */
+    /* ------------------------------------------------------------------ */
+    .period-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    .period-bar-title { margin: 0; }
+    .period-bar-title h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--foreground);
+      margin: 0 0 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .period-bar-title h2 svg { width: 16px; height: 16px; color: var(--success); }
+    .period-bar-title p { font-size: 12.5px; color: var(--muted-foreground); margin: 0; }
+
+    /* ------------------------------------------------------------------ */
+    /* Marketplace tabs                                                      */
+    /* ------------------------------------------------------------------ */
+    .mkt-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px;
+    }
+
+    .mkt-tab {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted-foreground);
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+      white-space: nowrap;
+    }
+    .mkt-tab:hover { background: var(--card); color: var(--foreground); }
+    .mkt-tab.active {
+      background: var(--card);
+      color: var(--foreground);
+      border-color: var(--border);
+      box-shadow: var(--shadow);
+    }
+    .mkt-tab img { width: 14px; height: 14px; object-fit: contain; }
+
+    /* ------------------------------------------------------------------ */
+    /* KPI grid                                                              */
+    /* ------------------------------------------------------------------ */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 900px)  { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px)  { .kpi-grid { grid-template-columns: 1fr; } }
+
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .kpi-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .kpi-icon svg { width: 17px; height: 17px; }
+
+    .kpi-icon-success { background: var(--success-light); color: var(--success); }
+    .kpi-icon-brand   { background: var(--brand-light);   color: var(--brand); }
+    .kpi-icon-muted   { background: var(--secondary);     color: var(--muted-foreground); }
+    .kpi-icon-danger  { background: color-mix(in srgb, var(--destructive) 12%, transparent); color: var(--destructive); }
+    .kpi-icon-warning { background: var(--warning-light); color: var(--warning); }
+
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted-foreground);
+      margin: 0 0 4px;
+    }
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--foreground);
+      margin: 0;
+      line-height: 1.2;
+    }
+    .kpi-value.positive { color: var(--success); }
+    .kpi-value.negative { color: var(--destructive); }
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--muted-foreground);
+      margin: 4px 0 0;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Middle section: launch panel + expenses table                        */
+    /* ------------------------------------------------------------------ */
+    .mid-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 900px) { .mid-grid { grid-template-columns: 1fr; } }
+
+    /* Launch panel */
+    .launch-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .launch-panel-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin: 0 0 2px;
+    }
+    .launch-panel-desc {
+      font-size: 12px;
+      color: var(--muted-foreground);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .launch-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      background: var(--background);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--foreground);
+      text-align: left;
+    }
+    .launch-btn:hover { background: var(--secondary); }
+    .launch-btn-inner { display: flex; align-items: center; gap: 10px; }
+    .launch-btn-inner svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .launch-btn-icon-danger  { color: var(--destructive); }
+    .launch-btn-icon-brand   { color: var(--brand); }
+    .launch-btn svg.chevron { width: 14px; height: 14px; color: var(--muted-foreground); }
+
+    .fixed-costs-box {
+      background: var(--secondary);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .fixed-costs-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .fixed-costs-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-foreground); }
+    .fixed-costs-value { font-size: 13px; font-weight: 700; color: var(--foreground); }
+    .progress-track { width: 100%; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .progress-fill  { height: 100%; border-radius: 3px; background: var(--destructive); }
+
+    /* ------------------------------------------------------------------ */
+    /* Repasses section                                                      */
+    /* ------------------------------------------------------------------ */
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin: 0 0 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title svg { width: 15px; height: 15px; color: var(--success); }
+    .section-sub { font-size: 12px; color: var(--muted-foreground); margin: 0; }
+
+    .legend-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--foreground); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .legend-dot-success { background: var(--success); }
+    .legend-dot-warning { background: var(--warning); }
+
+    /* ------------------------------------------------------------------ */
+    /* Modal                                                                 */
+    /* ------------------------------------------------------------------ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 24px;
+      width: 100%;
+      max-width: 440px;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal-box { transform: scale(1); }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .modal-title svg { width: 15px; height: 15px; color: var(--destructive); }
+    .modal-close {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--muted-foreground);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      transition: color 0.1s;
+    }
+    .modal-close:hover { color: var(--foreground); }
+    .modal-close svg { width: 16px; height: 16px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted-foreground);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      padding-top: 6px;
+    }
+    .modal-actions .btn { flex: 1; justify-content: center; }
+
+    /* ------------------------------------------------------------------ */
+    /* Skeleton animation for KPI placeholders                              */
+    /* ------------------------------------------------------------------ */
+    .kpi-skeleton {
+      display: inline-block;
+      width: 100px;
+      height: 26px;
+      background: var(--secondary);
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+  </style>
+</head>
+<body>
+
+<!-- ======================================================================
+     Sidebar
+     ====================================================================== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="sidebar-logo-text">E-CONOMIA</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <p class="nav-label">Principal</p>
+      <a href="dashboard.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="index.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        Marketplaces
+      </a>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Operações</p>
+      <a href="vendas.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        Vendas
+      </a>
+      <a href="estoque.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Estoque
+      </a>
+      <a href="contabil.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        Contábil
+      </a>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Conta</p>
+      <a href="settings.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Configurações
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="userInitials">?</div>
+      <div class="sidebar-user-info">
+        <p class="sidebar-user-name" id="userName">Carregando...</p>
+        <p class="sidebar-user-role" id="userOrg">—</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ======================================================================
+     Main content
+     ====================================================================== -->
+<div class="main-content">
+  <header class="page-header">
+    <h1 class="page-title">Contábil</h1>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-icon" id="themeToggle" title="Alternar tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <div class="user-menu">
+        <button class="user-avatar-btn" id="headerAvatar" onclick="toggleDropdown()">?</button>
+        <div class="dropdown" id="userDropdown">
+          <a href="settings.html" class="dropdown-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Configurações
+          </a>
+          <div class="dropdown-sep"></div>
+          <button class="dropdown-item danger" id="signOutBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-body">
+
+    <!-- Period bar: title + marketplace tabs -->
+    <div class="period-bar">
+      <div class="period-bar-title">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          DRE &amp; Balanço
+        </h2>
+        <p>Análise de Lucratividade, Faturamento e Capital Girando — <span data-month-label></span></p>
+      </div>
+
+      <div class="mkt-tabs" id="contabil-tabs">
+        <button class="mkt-tab active" onclick="changeContabilTab('geral', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Geral
+        </button>
+        <button class="mkt-tab" onclick="changeContabilTab('ml', this)">
+          <img src="assets/logos/mercado-livre.png" alt="ML">
+          ML
+        </button>
+        <button class="mkt-tab" onclick="changeContabilTab('amazon', this)">
+          <img src="assets/logos/amazon.png" alt="Amazon">
+          Amazon
+        </button>
+        <button class="mkt-tab" onclick="changeContabilTab('shopee', this)">
+          <img src="assets/logos/shopee.png" alt="Shopee">
+          Shopee
+        </button>
+        <button class="mkt-tab" onclick="changeContabilTab('nuvemshop', this)">
+          <img src="assets/logos/nuvemshop.png" alt="Nuvemshop">
+          Nuvemshop
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="kpi-grid">
+
+      <!-- Valores em Caixa -->
+      <div class="kpi-card">
+        <div class="kpi-card-top">
+          <div class="kpi-icon kpi-icon-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          </div>
+        </div>
+        <p class="kpi-label">Valores em Caixa</p>
+        <p class="kpi-value" id="kpi-caixa">R$ 142.500</p>
+        <p class="kpi-sub">Saldo disponível para saque</p>
+      </div>
+
+      <!-- Total Taxas -->
+      <div class="kpi-card">
+        <div class="kpi-card-top">
+          <div class="kpi-icon kpi-icon-brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+        </div>
+        <p class="kpi-label">Total Taxas</p>
+        <p class="kpi-value" id="kpi-taxas">—</p>
+        <p class="kpi-sub">Comissões de marketplace</p>
+      </div>
+
+      <!-- Receita Bruta -->
+      <div class="kpi-card">
+        <div class="kpi-card-top">
+          <div class="kpi-icon kpi-icon-muted">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+          </div>
+        </div>
+        <p class="kpi-label">Receita Bruta</p>
+        <p class="kpi-value" id="kpi-bruto">—</p>
+        <p class="kpi-sub">Vendas totais do mês</p>
+      </div>
+
+      <!-- Total Despesas -->
+      <div class="kpi-card">
+        <div class="kpi-card-top">
+          <div class="kpi-icon kpi-icon-danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+          </div>
+        </div>
+        <p class="kpi-label">Total Despesas</p>
+        <p class="kpi-value" id="kpi-despesas">—</p>
+        <p class="kpi-sub">Saídas lançadas no mês</p>
+      </div>
+
+      <!-- Lucro Estimado -->
+      <div class="kpi-card">
+        <div class="kpi-card-top">
+          <div class="kpi-icon kpi-icon-warning">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="1" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+        </div>
+        <p class="kpi-label">Lucro Estimado</p>
+        <p class="kpi-value positive" id="kpi-lucro">—</p>
+        <p class="kpi-sub">Receita − Taxas − Despesas</p>
+      </div>
+
+    </div>
+
+    <!-- Middle: launch panel + expenses table -->
+    <div class="mid-grid">
+
+      <!-- Launch panel -->
+      <div class="launch-panel">
+        <div>
+          <p class="launch-panel-title">Gestão de Lançamentos</p>
+          <p class="launch-panel-desc">Cadastre pagamentos fixos mensais para descontar diretamente do caixa líquido e pró-labore.</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="launch-btn" onclick="openExpenseModal()">
+            <span class="launch-btn-inner">
+              <svg class="launch-btn-icon-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              Nova Despesa Avulsa/Fixa
+            </span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="launch-btn" onclick="openExpenseModal()">
+            <span class="launch-btn-inner">
+              <svg class="launch-btn-icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              Definir Pró-Labore Sócio
+            </span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <div class="fixed-costs-box">
+          <div class="fixed-costs-row">
+            <span class="fixed-costs-label">Custos Fixos Mensais</span>
+            <span class="fixed-costs-value">R$ 14.200</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width:35%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expenses table -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Extrato Operacional — Saídas Recentes</h3>
+          <button class="btn btn-ghost" style="font-size:12px;">Ver Relatório Completo</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Origem</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th style="text-align:right">Valor</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-tbody">
+              <tr>
+                <td colspan="5" style="text-align:center;padding:32px 14px;">
+                  <span class="skeleton" style="display:inline-block;width:120px;height:18px;margin-right:8px;"></span>
+                  <span class="skeleton" style="display:inline-block;width:80px;height:18px;"></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Repasses de Marketplace -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+            Repasses de Marketplace
+            <span style="font-size:12px;font-weight:400;color:var(--muted-foreground)" data-month-label></span>
+          </h3>
+          <p class="section-sub">Valores recebidos e pendentes dos canais de venda.</p>
+        </div>
+        <div class="legend-row">
+          <span class="legend-item">
+            <span class="legend-dot legend-dot-success"></span>Pago
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-dot-warning"></span>Pendente
+          </span>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Marketplace</th>
+              <th>Data</th>
+              <th style="text-align:right">Bruto</th>
+              <th style="text-align:right">Taxas</th>
+              <th style="text-align:right">Líquido</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="payouts-tbody">
+            <tr>
+              <td colspan="6" style="text-align:center;padding:32px 14px;">
+                <span class="skeleton" style="display:inline-block;width:120px;height:18px;margin-right:8px;"></span>
+                <span class="skeleton" style="display:inline-block;width:80px;height:18px;"></span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast container -->
+<div id="toast"></div>
+
+<!-- ======================================================================
+     Modal — Nova Despesa
+     ====================================================================== -->
+<div id="expenseModal" class="modal-overlay">
+  <div class="modal-box" id="expenseModalContent">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Lançar Pagamento
+      </h3>
+      <button class="modal-close" onclick="closeExpenseModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+      </button>
+    </div>
+
+    <form onsubmit="event.preventDefault(); alert('Despesa cadastrada com sucesso! (Demonstração)'); closeExpenseModal();">
+
+      <div class="form-group">
+        <label class="form-label">Valor Gasto (R$)</label>
+        <input type="number" step="0.01" placeholder="0.00" class="input" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Descrição / No que foi gasto</label>
+        <input type="text" placeholder="Ex: Tarifas, Fornecedor, Anúncios, Aluguel" class="input" required>
+      </div>
+
+      <div class="form-row form-group">
+        <div>
+          <label class="form-label">Data de Vencimento</label>
+          <input type="date" class="input" required>
+        </div>
+        <div>
+          <label class="form-label">Parcelado?</label>
+          <select class="select" style="width:100%">
+            <option value="1">À vista (1x)</option>
+            <option value="2">2x</option>
+            <option value="3">3x</option>
+            <option value="4">4x</option>
+            <option value="5">5x</option>
+            <option value="6">6x ou mais</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Origem / E-commerce Associado</label>
+        <select class="select" style="width:100%" required>
+          <option value="" disabled selected>Selecione um local</option>
+          <option value="Geral">Consolidado (Custos Gerais)</option>
+          <option value="Mercado Livre">Mercado Livre</option>
+          <option value="Amazon">Amazon</option>
+          <option value="Shopee">Shopee</option>
+          <option value="Nuvemshop">Nuvemshop</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeExpenseModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="20 6 9 17 4 12"/></svg>
+          Registrar
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- ======================================================================
+     Scripts
+     ====================================================================== -->
+<script type="module">
+import { requireAuth } from './js/auth-guard.js';
+import {
+  fetchFinancialSummary,
+  fetchExpenses,
+  fetchPayouts,
+  formatCurrency
+} from './js/api.js';
+import { initThemeToggle } from './js/theme.js';
+
+// -----------------------------------------------------------------------
+// Theme toggle + dropdown
+// -----------------------------------------------------------------------
+
+initThemeToggle('themeToggle');
+
+window.toggleDropdown = () =>
+  document.getElementById('userDropdown').classList.toggle('open');
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.user-menu'))
+    document.getElementById('userDropdown')?.classList.remove('open');
+});
+
+document.getElementById('signOutBtn')?.addEventListener('click', async () => {
+  const { supabase } = await import('./js/supabase-client.js');
+  await supabase.auth.signOut();
+  window.location.href = 'login.html';
+});
+
+// -----------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------
+
+const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                     'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+const MARKETPLACE_LABELS = {
+  mercado_livre: 'Mercado Livre',
+  amazon:        'Amazon',
+  shopee:        'Shopee',
+  nuvemshop:     'Nuvemshop',
+};
+
+function skeletonKPI(id) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = '<span class="kpi-skeleton"></span>';
+}
+
+function setKPI(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(6px)';
+  el.textContent = value;
+  requestAnimationFrame(() => {
+    el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  });
+}
+
+function emptyState(icon, title, subtitle) {
+  return `
+    <tr>
+      <td colspan="99" class="py-14" style="text-align:center;padding:48px 14px;">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="${icon}"/>
+          </svg>
+          <p class="empty-state-title">${title}</p>
+          <p class="empty-state-desc">${subtitle}</p>
+        </div>
+      </td>
+    </tr>`;
+}
+
+// -----------------------------------------------------------------------
+// Render: expenses table
+// -----------------------------------------------------------------------
+
+function renderExpenses(expenses) {
+  const tbody = document.getElementById('expenses-tbody');
+  if (!tbody) return;
+
+  if (!expenses.length) {
+    tbody.innerHTML = emptyState(
+      'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z',
+      'Nenhuma despesa registrada',
+      'As despesas lançadas este mês aparecerão aqui.'
+    );
+    return;
+  }
+
+  tbody.innerHTML = expenses.map(exp => {
+    const cat      = exp.expense_categories;
+    const catName  = cat?.name || exp.expense_type || 'Geral';
+    const catColor = cat?.color || '#6b7280';
+    const dueDate  = exp.due_date
+      ? new Date(exp.due_date + 'T00:00:00').toLocaleDateString('pt-BR')
+      : '—';
+    const mktLabel = exp.marketplace
+      ? (MARKETPLACE_LABELS[exp.marketplace] || exp.marketplace)
+      : 'Geral';
+
+    const paidBadge = exp.is_paid
+      ? `<span class="badge badge-success"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block"></span>Pago</span>`
+      : `<span class="badge badge-warning"><span style="width:6px;height:6px;border-radius:50%;background:var(--warning);display:inline-block"></span>Pendente</span>`;
+
+    return `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;background:${catColor}1a;color:${catColor};display:flex;align-items:center;justify-content:center;">
+              <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+              </svg>
+            </div>
+            <div>
+              <p style="font-weight:600;color:var(--foreground);margin:0;font-size:13px;">${exp.description || '—'}</p>
+              <p style="font-size:10px;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.05em;margin:1px 0 0;">${catName}</p>
+            </div>
+          </div>
+        </td>
+        <td>${mktLabel}</td>
+        <td>${dueDate}</td>
+        <td>${paidBadge}</td>
+        <td style="text-align:right;font-weight:600;color:var(--destructive);">- ${formatCurrency(exp.amount)}</td>
+      </tr>`;
+  }).join('');
+}
+
+// -----------------------------------------------------------------------
+// Render: payouts table
+// -----------------------------------------------------------------------
+
+function renderPayouts(payouts) {
+  const tbody = document.getElementById('payouts-tbody');
+  if (!tbody) return;
+
+  if (!payouts.length) {
+    tbody.innerHTML = emptyState(
+      'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
+      'Nenhum repasse encontrado',
+      'Os repasses de marketplace deste mês aparecerão aqui.'
+    );
+    return;
+  }
+
+  tbody.innerHTML = payouts.map(p => {
+    const mktLabel   = MARKETPLACE_LABELS[p.marketplace] || p.marketplace || '—';
+    const payoutDate = p.payout_date
+      ? new Date(p.payout_date + 'T00:00:00').toLocaleDateString('pt-BR')
+      : '—';
+    const fees = p.fees_amount != null ? formatCurrency(p.fees_amount) : '—';
+
+    const statusBadge = p.status === 'paid'
+      ? `<span class="badge badge-success"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block"></span>Pago</span>`
+      : p.status === 'pending'
+      ? `<span class="badge badge-warning"><span style="width:6px;height:6px;border-radius:50%;background:var(--warning);display:inline-block"></span>Pendente</span>`
+      : `<span class="badge badge-neutral">${p.status || '—'}</span>`;
+
+    return `
+      <tr>
+        <td style="font-weight:600;">${mktLabel}</td>
+        <td>${payoutDate}</td>
+        <td style="text-align:right;">${formatCurrency(p.gross_amount)}</td>
+        <td style="text-align:right;color:var(--destructive);">- ${fees}</td>
+        <td style="text-align:right;font-weight:600;color:var(--success);">${formatCurrency(p.net_amount)}</td>
+        <td>${statusBadge}</td>
+      </tr>`;
+  }).join('');
+}
+
+// -----------------------------------------------------------------------
+// KPI loader
+// -----------------------------------------------------------------------
+
+async function loadKPIs(orgId) {
+  ['kpi-bruto', 'kpi-taxas', 'kpi-despesas', 'kpi-lucro'].forEach(skeletonKPI);
+
+  try {
+    const summary = await fetchFinancialSummary(orgId);
+    setKPI('kpi-bruto',     summary.receita);
+    setKPI('kpi-taxas',     summary.taxas);
+    setKPI('kpi-despesas',  summary.despesas);
+
+    const lucroEl = document.getElementById('kpi-lucro');
+    if (lucroEl) {
+      lucroEl.style.opacity = '0';
+      lucroEl.style.transform = 'translateY(6px)';
+      lucroEl.textContent = summary.lucroEstimado;
+      lucroEl.className = 'kpi-value ' + (summary.lucroPositivo ? 'positive' : 'negative');
+      requestAnimationFrame(() => {
+        lucroEl.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        lucroEl.style.opacity = '1';
+        lucroEl.style.transform = 'translateY(0)';
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao carregar KPIs financeiros:', err);
+    ['kpi-bruto', 'kpi-taxas', 'kpi-despesas', 'kpi-lucro'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
+  }
+}
+
+// -----------------------------------------------------------------------
+// Tables loader
+// -----------------------------------------------------------------------
+
+async function loadTables(orgId) {
+  try {
+    const [expenses, payouts] = await Promise.all([
+      fetchExpenses(orgId, null),
+      fetchPayouts(orgId, null),
+    ]);
+    renderExpenses(expenses);
+    renderPayouts(payouts);
+  } catch (err) {
+    console.error('Erro ao carregar tabelas contábeis:', err);
+  }
+}
+
+// -----------------------------------------------------------------------
+// Tab switching
+// -----------------------------------------------------------------------
+
+const contabilData = {
+  geral:     { color: '#059669', brandGlow: 'rgba(5,150,105,0.18)',   gradient: 'linear-gradient(to right,#059669,#0891b2)' },
+  ml:        { color: '#FFE600', brandGlow: 'rgba(255,230,0,0.25)',   gradient: null },
+  amazon:    { color: '#FF9900', brandGlow: 'rgba(255,153,0,0.25)',   gradient: null },
+  shopee:    { color: '#EE4D2D', brandGlow: 'rgba(238,77,45,0.25)',   gradient: null },
+  nuvemshop: { color: '#595AD3', brandGlow: 'rgba(89,90,211,0.25)',   gradient: null },
+};
+
+window.changeContabilTab = (key, btnElement) => {
+  document.querySelectorAll('#contabil-tabs .mkt-tab').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  btnElement.classList.add('active');
+};
+
+// -----------------------------------------------------------------------
+// Modal logic
+// -----------------------------------------------------------------------
+
+window.openExpenseModal = () => {
+  document.getElementById('expenseModal').classList.add('open');
+};
+
+window.closeExpenseModal = () => {
+  document.getElementById('expenseModal').classList.remove('open');
+};
+
+// Close on backdrop click
+document.getElementById('expenseModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeExpenseModal();
+});
+
+// -----------------------------------------------------------------------
+// Boot
+// -----------------------------------------------------------------------
+
+(async () => {
+  const auth = await requireAuth();
+  if (!auth) return;
+
+  // Populate user info in sidebar and header
+  const user = auth.user || auth;
+  if (user) {
+    const name    = user.user_metadata?.full_name || user.email || 'Usuário';
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+    const orgName = user.user_metadata?.organization || '—';
+
+    const sidebarAvatar = document.getElementById('userInitials');
+    const headerAvatar  = document.getElementById('headerAvatar');
+    const userNameEl    = document.getElementById('userName');
+    const userOrgEl     = document.getElementById('userOrg');
+
+    if (sidebarAvatar) sidebarAvatar.textContent = initials;
+    if (headerAvatar)  headerAvatar.textContent  = initials;
+    if (userNameEl)    userNameEl.textContent     = name;
+    if (userOrgEl)     userOrgEl.textContent      = orgName;
+  }
+
+  const orgId = window.__ECONOMIA__?.orgId;
+
+  // Update month label
+  const now = new Date();
+  document.querySelectorAll('[data-month-label]').forEach(el => {
+    el.textContent = `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
+  });
+
+  if (!orgId) {
+    ['kpi-bruto','kpi-taxas','kpi-despesas','kpi-lucro'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = 'R$ 0';
+    });
+    const expBody = document.getElementById('expenses-tbody');
+    if (expBody) expBody.innerHTML = emptyState(
+      'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z',
+      'Organização não encontrada',
+      'Faça login em uma conta vinculada a uma organização.'
+    );
+    const payBody = document.getElementById('payouts-tbody');
+    if (payBody) payBody.innerHTML = emptyState(
+      'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
+      'Organização não encontrada',
+      'Faça login em uma conta vinculada a uma organização.'
+    );
+    return;
+  }
+
+  await Promise.all([
+    loadKPIs(orgId),
+    loadTables(orgId),
+  ]);
+})();
+</script>
+</body>
+</html>

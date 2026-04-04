@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estoque — E-CONOMIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <script src="js/theme.js" type="module"></script>
+  <style>
+    /* -----------------------------------------------------------------------
+       Estoque — page-specific styles (all design tokens from tokens.css)
+    ----------------------------------------------------------------------- */
+
+    /* User dropdown */
+    .user-menu { position: relative; }
+    .user-avatar-btn {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--brand-light); color: var(--brand);
+      border: none; cursor: pointer; font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dropdown {
+      position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 165px;
+      box-shadow: var(--shadow-md); z-index: 50;
+      display: none;
+    }
+    .dropdown.open { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; font-size: 12.5px; color: var(--foreground);
+      cursor: pointer; transition: background 0.1s;
+      border: none; background: transparent; width: 100%; text-align: left; text-decoration: none;
+    }
+    .dropdown-item:hover { background: var(--secondary); }
+    .dropdown-item.danger { color: var(--destructive); }
+    .dropdown-item svg { width: 13px; height: 13px; }
+    .dropdown-sep { border-top: 1px solid var(--border); margin: 4px 0; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 16px; right: 16px; z-index: 100;
+      background: var(--foreground); color: var(--background);
+      padding: 10px 16px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md);
+      transform: translateX(120%); transition: transform 0.25s ease;
+      display: flex; align-items: center; gap: 8px; max-width: 300px;
+    }
+    #toast.show { transform: translateX(0); }
+
+    /* KPI grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px)  { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    /* KPI card */
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: border-color 0.15s;
+    }
+    .kpi-card:hover { border-color: var(--brand); }
+    .kpi-icon {
+      width: 28px; height: 28px;
+      border-radius: calc(var(--radius) - 2px);
+      background: var(--secondary);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 6px;
+    }
+    .kpi-icon svg { width: 14px; height: 14px; color: var(--brand); }
+    .kpi-label { font-size: 11.5px; color: var(--muted-foreground); margin: 0; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+    .kpi-value { font-size: 22px; font-weight: 700; color: var(--foreground); margin: 0; line-height: 1.15; }
+
+    /* Filter bar */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 360px;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px; height: 14px;
+      color: var(--muted-foreground);
+      pointer-events: none;
+    }
+    .search-wrap .input { padding-left: 32px; }
+
+    /* Marketplace tabs */
+    .mp-tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mp-tab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: var(--radius);
+      font-size: 12.5px; font-weight: 500;
+      background: var(--secondary); color: var(--muted-foreground);
+      border: 1px solid var(--border); cursor: pointer;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .mp-tab:hover { background: var(--accent); color: var(--foreground); }
+    .mp-tab.active { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
+    .mp-tab img { width: 14px; height: 14px; object-fit: contain; }
+
+    /* Stock status badge */
+    .stock-badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 7px; border-radius: 100px;
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      margin-left: 6px;
+    }
+    .stock-badge-critical {
+      background: color-mix(in srgb, var(--destructive) 15%, transparent);
+      color: var(--destructive);
+    }
+    .stock-badge-empty {
+      background: var(--secondary);
+      color: var(--muted-foreground);
+    }
+
+    /* Channel stock dot */
+    .ch-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .ch-dot-ok     { background: var(--success); }
+    .ch-dot-warn   { background: var(--warning); }
+    .ch-dot-empty  { background: var(--border); }
+
+    /* Table cell helpers */
+    .col-stock-val { font-size: 13.5px; font-weight: 700; }
+    .col-stock-critical { color: var(--destructive); }
+    .col-stock-normal   { color: var(--foreground); }
+    .col-stock-empty    { color: var(--muted-foreground); }
+
+    /* Row critical highlight */
+    .row-critical td { background: color-mix(in srgb, var(--destructive) 4%, transparent); }
+    .row-critical:hover td { background: color-mix(in srgb, var(--destructive) 8%, transparent) !important; }
+
+    /* Action buttons inside table */
+    .tbl-action {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: var(--radius);
+      color: var(--muted-foreground);
+      transition: background 0.1s, color 0.1s;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .tbl-action:hover { background: var(--secondary); color: var(--foreground); }
+    .tbl-action svg { width: 15px; height: 15px; }
+    .tbl-action-danger { color: var(--destructive); }
+    .tbl-action-danger:hover { background: color-mix(in srgb, var(--destructive) 12%, transparent); color: var(--destructive); }
+
+    /* Page header subtitle */
+    .page-subtitle { font-size: 12.5px; color: var(--muted-foreground); margin: 2px 0 0; }
+
+    /* Skeleton animation override for table */
+    .skel-row td > div { height: 14px; border-radius: 4px; }
+    .skel-row td:first-child > .skel-main { height: 15px; margin-bottom: 6px; width: 60%; }
+    .skel-row td:first-child > .skel-sub  { height: 12px; width: 40%; }
+
+    /* Responsive: hide non-critical cols on small screens */
+    @media (max-width: 860px) {
+      .col-amazon, .col-shopee, .col-nuvemshop { display: none; }
+    }
+    @media (max-width: 640px) {
+      .col-ml { display: none; }
+      .col-actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="sidebar-logo-text">E-CONOMIA</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <p class="nav-label">Principal</p>
+      <a href="dashboard.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="index.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        Marketplaces
+      </a>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Operações</p>
+      <a href="vendas.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        Vendas
+      </a>
+      <a href="estoque.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Estoque
+      </a>
+      <a href="contabil.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        Contábil
+      </a>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Conta</p>
+      <a href="settings.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Configurações
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="userInitials">?</div>
+      <div class="sidebar-user-info">
+        <p class="sidebar-user-name" id="userName">Carregando...</p>
+        <p class="sidebar-user-role" id="userOrg">—</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main-content">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Estoque</h1>
+      <p class="page-subtitle">Disponibilidade por canal de venda</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-icon" id="themeToggle" title="Alternar tema"></button>
+      <div class="user-menu">
+        <button class="user-avatar-btn" id="headerAvatar" onclick="toggleDropdown()">?</button>
+        <div class="dropdown" id="userDropdown">
+          <a href="settings.html" class="dropdown-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Configurações
+          </a>
+          <div class="dropdown-sep"></div>
+          <button class="dropdown-item danger" id="signOutBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-body">
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <p class="kpi-label">Estoque Total</p>
+        <p class="kpi-value" id="kpi-total">—</p>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <p class="kpi-label">ML Full</p>
+        <p class="kpi-value" id="kpi-ml">—</p>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        </div>
+        <p class="kpi-label">Local / Flex</p>
+        <p class="kpi-value" id="kpi-local">—</p>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3"/><path d="M3 15l4-4 4 4 4-4 4 4"/></svg>
+        </div>
+        <p class="kpi-label">Amazon FBA</p>
+        <p class="kpi-value" id="kpi-amazon">—</p>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </div>
+        <p class="kpi-label">Shopee</p>
+        <p class="kpi-value" id="kpi-shopee">—</p>
+      </div>
+    </div>
+
+    <!-- Marketplace tabs -->
+    <div class="mp-tabs" id="estoque-tabs">
+      <button class="mp-tab active" onclick="changeEstoqueTab('geral', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Geral
+      </button>
+      <button class="mp-tab" onclick="changeEstoqueTab('ml', this)">
+        <img src="assets/logos/mercado-livre.png" alt="Mercado Livre">
+        Mercado Livre
+      </button>
+      <button class="mp-tab" onclick="changeEstoqueTab('amazon', this)">
+        <img src="assets/logos/amazon.png" alt="Amazon">
+        Amazon
+      </button>
+      <button class="mp-tab" onclick="changeEstoqueTab('shopee', this)">
+        <img src="assets/logos/shopee.png" alt="Shopee">
+        Shopee
+      </button>
+      <button class="mp-tab" onclick="changeEstoqueTab('nuvemshop', this)">
+        <img src="assets/logos/nuvemshop.png" alt="Nuvemshop">
+        Nuvemshop
+      </button>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input
+          id="searchInput"
+          type="text"
+          class="input"
+          placeholder="Filtrar por SKU, produto ou fornecedor..."
+        >
+      </div>
+      <select id="stock-status-select" class="select" style="width:auto;">
+        <option value="all">Todos os status</option>
+        <option value="critical">Estoque crítico</option>
+        <option value="ok">Estoque OK</option>
+        <option value="empty">Sem estoque</option>
+      </select>
+    </div>
+
+    <!-- Inventory table -->
+    <div class="card">
+      <div class="table-wrapper">
+        <table class="table" id="estoque-table">
+          <thead>
+            <tr>
+              <th>Produto / SKU</th>
+              <th style="text-align:center;">Total Físico</th>
+              <th class="col-ml" style="text-align:center;">ML Full</th>
+              <th class="col-ml" style="text-align:center;">Local / Flex</th>
+              <th class="col-amazon" style="text-align:center;">Amazon FBA</th>
+              <th class="col-shopee" style="text-align:center;">Shopee</th>
+              <th class="col-nuvemshop" style="text-align:center;">Nuvemshop</th>
+              <th class="col-actions" style="text-align:right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="estoque-table-body">
+            <!-- filled by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+  import { requireAuth } from './js/auth-guard.js';
+  import { fetchAllInventory, formatCurrency } from './js/api.js';
+  import { initThemeToggle } from './js/theme.js';
+
+  // -----------------------------------------------------------------------
+  // Init theme toggle
+  // -----------------------------------------------------------------------
+  initThemeToggle('themeToggle');
+
+  // -----------------------------------------------------------------------
+  // Marketplace config: slug → display name, dot color, tab key
+  // -----------------------------------------------------------------------
+  const MARKETPLACE_COLORS = {
+      mercado_livre: { dotClass: 'ch-dot-ok',   label: 'ML Full'     },
+      amazon:        { dotClass: 'ch-dot-ok',   label: 'Amazon FBA'  },
+      shopee:        { dotClass: 'ch-dot-warn',  label: 'Shopee'      },
+      nuvemshop:     { dotClass: 'ch-dot-ok',   label: 'Nuvemshop'   },
+  };
+
+  const TAB_MARKETPLACE_MAP = {
+      geral:      null,
+      ml:         'mercado_livre',
+      amazon:     'amazon',
+      shopee:     'shopee',
+      nuvemshop:  'nuvemshop',
+  };
+
+  // -----------------------------------------------------------------------
+  // State
+  // -----------------------------------------------------------------------
+  let allProducts = [];
+  let activeTab = 'geral';
+  let searchQuery = '';
+  let stockFilter = 'all';
+  let orgId = null;
+
+  // -----------------------------------------------------------------------
+  // Init
+  // -----------------------------------------------------------------------
+  (async () => {
+      const auth = await requireAuth();
+      if (!auth) return;
+
+      // Populate user UI
+      const user = window.__ECONOMIA__?.user;
+      orgId = window.__ECONOMIA__?.orgId;
+
+      if (user) {
+          const initials = (user.email ?? 'U').charAt(0).toUpperCase();
+          const el = document.getElementById('userInitials');
+          const avatarEl = document.getElementById('headerAvatar');
+          const nameEl = document.getElementById('userName');
+          const orgEl = document.getElementById('userOrg');
+          if (el) el.textContent = initials;
+          if (avatarEl) avatarEl.textContent = initials;
+          if (nameEl) nameEl.textContent = user.user_metadata?.full_name ?? user.email ?? 'Usuário';
+          if (orgEl) orgEl.textContent = window.__ECONOMIA__?.orgName ?? '—';
+      }
+
+      if (!orgId) {
+          renderError('Organização não encontrada. Faça login novamente.');
+          return;
+      }
+
+      await loadAndRender();
+  })();
+
+  // -----------------------------------------------------------------------
+  // Load data and render
+  // -----------------------------------------------------------------------
+  async function loadAndRender() {
+      showTableLoading();
+      try {
+          const marketplace = TAB_MARKETPLACE_MAP[activeTab] ?? null;
+          allProducts = await fetchAllInventory(orgId, {
+              search: searchQuery,
+              stockFilter,
+              marketplace,
+          });
+          renderKPIs(allProducts, marketplace);
+          renderTable(allProducts, marketplace);
+      } catch (err) {
+          console.error('[Estoque] Erro ao carregar produtos:', err);
+          renderError('Erro ao carregar estoque. Verifique sua conexão.');
+      }
+  }
+
+  // -----------------------------------------------------------------------
+  // KPI cards
+  // -----------------------------------------------------------------------
+  function renderKPIs(products, marketplace) {
+      const totalStock = products.reduce((s, p) => s + (p.total_stock ?? 0), 0);
+
+      const sumByMarketplace = (mp) => products.reduce((s, p) => {
+          const cs = (p.channel_stock ?? []).find(c => c.channel === mp || (c.channel ?? '').startsWith(mp.split('_')[0]));
+          return s + (cs?.available ?? cs?.quantity ?? 0);
+      }, 0);
+
+      document.getElementById('kpi-total').textContent  = totalStock.toLocaleString('pt-BR');
+      document.getElementById('kpi-ml').textContent     = sumByMarketplace('mercado_livre').toLocaleString('pt-BR');
+      document.getElementById('kpi-local').textContent  = sumByMarketplace('nuvemshop').toLocaleString('pt-BR');
+      document.getElementById('kpi-amazon').textContent = sumByMarketplace('amazon').toLocaleString('pt-BR');
+      document.getElementById('kpi-shopee').textContent = sumByMarketplace('shopee').toLocaleString('pt-BR');
+  }
+
+  // -----------------------------------------------------------------------
+  // Table rendering
+  // -----------------------------------------------------------------------
+  function renderTable(products, activeMarketplace) {
+      const tbody = document.getElementById('estoque-table-body');
+      tbody.style.opacity = '0';
+      tbody.style.transform = 'translateY(6px)';
+
+      if (!products.length) {
+          tbody.innerHTML = `
+              <tr>
+                <td colspan="8" style="padding:0;">
+                  <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    <p class="empty-state-title">Nenhum produto encontrado</p>
+                    <p class="empty-state-desc">Ajuste os filtros aplicados para ver resultados.</p>
+                  </div>
+                </td>
+              </tr>`;
+          animateTableIn(tbody);
+          return;
+      }
+
+      tbody.innerHTML = products.map(p => buildRow(p, activeMarketplace)).join('');
+      animateTableIn(tbody);
+  }
+
+  function animateTableIn(tbody) {
+      requestAnimationFrame(() => {
+          tbody.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+          tbody.style.opacity = '1';
+          tbody.style.transform = 'translateY(0)';
+      });
+  }
+
+  function buildRow(p, activeMarketplace) {
+      const isCritical  = p.stock_alert && p.stock_alert !== 'normal';
+      const isEmpty     = (p.total_stock ?? 0) === 0;
+      const totalStock  = p.total_stock ?? 0;
+
+      const rowClass = isCritical ? 'row-critical' : '';
+
+      let badge = '';
+      if (isEmpty) {
+          badge = `<span class="stock-badge stock-badge-empty">Sem estoque</span>`;
+      } else if (isCritical) {
+          badge = `<span class="stock-badge stock-badge-critical">Urgente</span>`;
+      }
+
+      const totalClass = isEmpty
+          ? 'col-stock-val col-stock-empty'
+          : isCritical
+              ? 'col-stock-val col-stock-critical'
+              : 'col-stock-val col-stock-normal';
+
+      const actionBtn = isCritical
+          ? `<button class="tbl-action tbl-action-danger" title="Repor Estoque">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+             </button>`
+          : `<button class="tbl-action" title="Transferir Estoque">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M2 12h20"/></svg>
+             </button>`;
+
+      const channelCells = buildChannelCells(p, activeMarketplace);
+
+      return `
+          <tr class="${rowClass}">
+            <td>
+              <div style="display:flex;flex-direction:column;gap:2px;">
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+                  <span style="font-weight:600;font-size:13.5px;">${escHtml(p.name)}</span>
+                  ${badge}
+                </div>
+                <span style="font-size:11.5px;color:var(--brand);font-weight:500;">SKU: ${escHtml(p.sku ?? '—')}</span>
+              </div>
+            </td>
+            <td style="text-align:center;">
+              <span class="${totalClass}">${totalStock.toLocaleString('pt-BR')}</span>
+            </td>
+            ${channelCells}
+            <td class="col-actions" style="text-align:right;">${actionBtn}</td>
+          </tr>`;
+  }
+
+  function buildChannelCells(p, activeMarketplace) {
+      const CHANNELS = ['mercado_livre', 'nuvemshop', 'amazon', 'shopee'];
+      const COL_CLASSES = {
+          mercado_livre: 'col-ml',
+          nuvemshop:     'col-ml',
+          amazon:        'col-amazon',
+          shopee:        'col-shopee',
+      };
+
+      const stockMap = {};
+      (p.channel_stock ?? []).forEach(cs => {
+          stockMap[cs.channel] = cs.available ?? cs.quantity ?? 0;
+      });
+
+      return CHANNELS.map(mp => {
+          const qty = stockMap[mp];
+          const cfg = MARKETPLACE_COLORS[mp] ?? { dotClass: 'ch-dot-empty', label: mp };
+          const colClass = COL_CLASSES[mp] ?? '';
+          const isActive = activeMarketplace === mp || activeMarketplace === null;
+
+          if (qty == null || !isActive) {
+              return `<td class="${colClass}" style="text-align:center;">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                    <span class="ch-dot ch-dot-empty"></span>
+                    <span style="color:var(--muted-foreground);font-size:13px;">${activeMarketplace && activeMarketplace !== mp ? '—' : '0'}</span>
+                  </div>
+              </td>`;
+          }
+
+          const dotCls = qty > 0 ? cfg.dotClass : 'ch-dot-empty';
+          const txtStyle = qty > 0
+              ? 'color:var(--foreground);font-weight:600;font-size:13px;'
+              : 'color:var(--muted-foreground);font-size:13px;';
+
+          return `<td class="${colClass}" style="text-align:center;">
+              <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
+                <span class="ch-dot ${dotCls}"></span>
+                <span style="${txtStyle}">${qty.toLocaleString('pt-BR')}</span>
+              </div>
+          </td>`;
+      }).join('');
+  }
+
+  // -----------------------------------------------------------------------
+  // Loading / error states
+  // -----------------------------------------------------------------------
+  function showTableLoading() {
+      const tbody = document.getElementById('estoque-table-body');
+      tbody.innerHTML = Array.from({ length: 6 }, () => `
+          <tr class="skel-row">
+            <td>
+              <div class="skel-main skeleton" style="height:14px;width:55%;margin-bottom:6px;border-radius:4px;"></div>
+              <div class="skel-sub skeleton" style="height:11px;width:35%;border-radius:4px;"></div>
+            </td>
+            <td style="text-align:center;"><div class="skeleton" style="height:14px;width:40px;margin:0 auto;border-radius:4px;"></div></td>
+            <td class="col-ml" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
+            <td class="col-ml" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
+            <td class="col-amazon" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
+            <td class="col-shopee" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
+            <td class="col-nuvemshop" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
+            <td class="col-actions"></td>
+          </tr>`).join('');
+  }
+
+  function renderError(msg) {
+      const tbody = document.getElementById('estoque-table-body');
+      tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="padding:0;">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--destructive);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <p class="empty-state-title" style="color:var(--destructive);">Erro ao carregar</p>
+                <p class="empty-state-desc">${escHtml(msg)}</p>
+              </div>
+            </td>
+          </tr>`;
+  }
+
+  // -----------------------------------------------------------------------
+  // Tab switching
+  // -----------------------------------------------------------------------
+  window.changeEstoqueTab = async (key, btnElement) => {
+      activeTab = key;
+
+      document.querySelectorAll('#estoque-tabs .mp-tab').forEach(btn => {
+          btn.classList.remove('active');
+      });
+      if (btnElement) btnElement.classList.add('active');
+
+      if (orgId) await loadAndRender();
+  };
+
+  // -----------------------------------------------------------------------
+  // Search + stock filter
+  // -----------------------------------------------------------------------
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+      let debounceTimer;
+      searchInput.addEventListener('input', (e) => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+              searchQuery = e.target.value.trim();
+              if (orgId) loadAndRender();
+          }, 350);
+      });
+  }
+
+  const statusSelect = document.getElementById('stock-status-select');
+  if (statusSelect) {
+      statusSelect.addEventListener('change', (e) => {
+          stockFilter = e.target.value;
+          if (orgId) loadAndRender();
+      });
+  }
+
+  // -----------------------------------------------------------------------
+  // User dropdown
+  // -----------------------------------------------------------------------
+  window.toggleDropdown = () => document.getElementById('userDropdown')?.classList.toggle('open');
+  document.addEventListener('click', (e) => {
+      if (!e.target.closest('.user-menu')) {
+          document.getElementById('userDropdown')?.classList.remove('open');
+      }
+  });
+
+  document.getElementById('signOutBtn')?.addEventListener('click', async () => {
+      const { supabase } = await import('./js/supabase-client.js');
+      await supabase.auth.signOut();
+      window.location.href = 'login.html';
+  });
+
+  // -----------------------------------------------------------------------
+  // Utility
+  // -----------------------------------------------------------------------
+  function escHtml(str) {
+      return String(str ?? '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "e-conomia-crm",
+  "version": "1.0.0",
+  "description": "CRM multi-marketplace para e-commerce",
+  "scripts": {
+    "build": "echo 'Static site — no build step needed'",
+    "dev": "npx serve public -p 3000",
+    "supabase:migrate": "supabase db push",
+    "supabase:types": "supabase gen types typescript --project-id rqmpqxguecuhrsbzcwgb",
+    "deploy:functions": "supabase functions deploy"
+  }
+}

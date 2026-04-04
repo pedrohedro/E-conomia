@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurar Loja — E-CONOMIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <script src="js/theme.js" type="module"></script>
+
+  <!-- Supabase Config -->
+  <script>
+    window.__ENV__ = {
+      SUPABASE_URL: 'https://rqmpqxguecuhrsbzcwgb.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxbXBxeGd1ZWN1aHJzYnpjd2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDA0NjUsImV4cCI6MjA5MDU3NjQ2NX0.NctXATRekxQh0R3zSTlMmW673ZtJog6aBeeNrrSu0hU',
+    };
+  </script>
+
+  <style>
+    .onboarding-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .onboarding-card {
+      width: 100%;
+      max-width: 420px;
+    }
+    .onboarding-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .onboarding-logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    .onboarding-logo-icon svg { width: 22px; height: 22px; color: var(--primary-foreground); }
+    .onboarding-logo h1 { font-size: 18px; font-weight: 600; margin: 0 0 4px; color: var(--foreground); }
+    .onboarding-logo p  { font-size: 13px; color: var(--muted-foreground); margin: 0; text-align: center; }
+
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .form-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin: 0 0 6px;
+    }
+    .form-card-subtitle {
+      font-size: 13px;
+      color: var(--muted-foreground);
+      margin: 0 0 22px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--foreground);
+      margin-bottom: 5px;
+    }
+    .form-hint {
+      font-size: 11.5px;
+      color: var(--muted-foreground);
+      margin-top: 4px;
+    }
+
+    .error-box {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: color-mix(in srgb, var(--destructive) 10%, transparent);
+      color: var(--destructive);
+      border-radius: var(--radius);
+      font-size: 12.5px;
+      margin-bottom: 16px;
+    }
+    .error-box.show { display: flex; }
+    .error-box svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .step-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .step-dot.active { background: var(--primary); }
+    .step-dot.done { background: var(--success); }
+    .steps-label {
+      font-size: 12px;
+      color: var(--muted-foreground);
+      margin-left: 4px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      justify-content: center;
+      height: 40px;
+      margin-top: 4px;
+      font-size: 14px;
+    }
+    .skip-link {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 12.5px;
+      color: var(--muted-foreground);
+      cursor: pointer;
+    }
+    .skip-link:hover { color: var(--foreground); }
+  </style>
+</head>
+<body>
+  <div class="onboarding-wrap">
+    <div class="onboarding-card">
+      <div class="onboarding-logo">
+        <div class="onboarding-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h1>E-CONOMIA</h1>
+        <p>Vamos configurar sua loja para começar</p>
+      </div>
+
+      <div class="form-card">
+        <!-- Steps indicator -->
+        <div class="steps">
+          <div class="step-dot done"></div>
+          <div class="step-dot active"></div>
+          <div class="step-dot"></div>
+          <span class="steps-label">Passo 2 de 3 — Sua loja</span>
+        </div>
+
+        <p class="form-card-title">Crie sua organização</p>
+        <p class="form-card-subtitle">Dê um nome para sua loja. Você poderá alterar isso depois nas configurações.</p>
+
+        <div id="onb-error" class="error-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="onb-error-msg"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="org-name">Nome da loja / empresa</label>
+          <input class="input" type="text" id="org-name" placeholder="Ex: Minha Loja Online" autofocus>
+          <p class="form-hint">Este nome aparecerá nos relatórios e no cabeçalho da plataforma.</p>
+        </div>
+
+        <button id="create-btn" class="btn btn-primary submit-btn" onclick="handleCreate()">
+          Criar loja e continuar
+        </button>
+
+        <span class="skip-link" onclick="handleSignOut()">Sair e usar outra conta</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase, getCurrentUser, getUserOrganization, createOrganization } from './js/supabase-client.js';
+
+    // Verificar autenticação
+    const user = await getCurrentUser();
+    if (!user) {
+      window.location.href = 'login.html';
+    }
+
+    // Se já tem organização, ir para dashboard
+    const orgData = await getUserOrganization();
+    if (orgData?.organization_id) {
+      window.location.href = 'index.html';
+    }
+
+    window.handleCreate = async () => {
+      const orgName = document.getElementById('org-name').value.trim();
+      const errEl   = document.getElementById('onb-error');
+      const errMsg  = document.getElementById('onb-error-msg');
+      const btn     = document.getElementById('create-btn');
+
+      errEl.classList.remove('show');
+
+      if (!orgName) {
+        errMsg.textContent = 'Digite o nome da sua loja.';
+        errEl.classList.add('show');
+        return;
+      }
+      if (orgName.length < 2) {
+        errMsg.textContent = 'O nome precisa ter pelo menos 2 caracteres.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Criando...';
+
+      try {
+        await createOrganization(orgName);
+        window.location.href = 'index.html';
+      } catch (err) {
+        errMsg.textContent = err.message || 'Erro ao criar organização. Tente novamente.';
+        errEl.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = 'Criar loja e continuar';
+      }
+    };
+
+    window.handleSignOut = async () => {
+      await supabase.auth.signOut();
+      window.location.href = 'login.html';
+    };
+
+    // Enter key
+    document.getElementById('org-name')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') window.handleCreate();
+    });
+  </script>
+</body>
+</html>
