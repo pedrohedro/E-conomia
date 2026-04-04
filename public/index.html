@@ -809,7 +809,7 @@
     }
 
     // Usa o Edge Function /authorize (lê ML_APP_ID dos secrets — não expõe no frontend)
-    const returnUrl = window.location.origin + '/index.html';
+    const returnUrl = window.location.origin;
     window.location.href = SUPABASE_FUNCTIONS + '/marketplace-oauth/authorize'
       + '?marketplace=' + encodeURIComponent(marketplace)
       + '&org_id=' + encodeURIComponent(currentOrgId)
