@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="css/tokens.css">
   <script src="js/theme.js" type="module"></script>
 
-  <!-- Supabase Config -->
   <script>
     window.__ENV__ = {
       SUPABASE_URL: 'https://rqmpqxguecuhrsbzcwgb.supabase.co',
@@ -20,104 +19,47 @@
   </script>
 
   <style>
-    /* -----------------------------------------------------------------------
-       User Menu / Dropdown
-    ----------------------------------------------------------------------- */
-    .user-menu {
-      position: relative;
-    }
-
+    /* ---- User menu / dropdown ---- */
+    .user-menu { position: relative; }
     .user-avatar-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--brand-light);
-      color: var(--brand);
-      font-size: 12px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.15s;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--brand-light); color: var(--brand);
+      border: none; cursor: pointer; font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
     }
-    .user-avatar-btn:hover { opacity: 0.85; }
-
     .dropdown {
-      display: none;
-      position: absolute;
-      top: calc(100% + 6px);
-      right: 0;
-      min-width: 180px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-md);
-      z-index: 50;
-      padding: 4px;
+      position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); min-width: 160px;
+      box-shadow: var(--shadow-md); z-index: 50; display: none; padding: 4px;
     }
     .dropdown.open { display: block; }
-
     .dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 10px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--foreground);
-      text-decoration: none;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; font-size: 12.5px; color: var(--foreground);
+      cursor: pointer; transition: background 0.1s;
+      border: none; background: transparent; width: 100%;
+      text-align: left; text-decoration: none;
       border-radius: calc(var(--radius) - 2px);
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      width: 100%;
-      text-align: left;
-      transition: background 0.1s;
     }
     .dropdown-item:hover { background: var(--secondary); }
-    .dropdown-item svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--muted-foreground); }
     .dropdown-item.danger { color: var(--destructive); }
-    .dropdown-item.danger svg { color: var(--destructive); }
-    .dropdown-item.danger:hover { background: color-mix(in srgb, var(--destructive) 10%, transparent); }
+    .dropdown-item svg { width: 13px; height: 13px; }
+    .dropdown-sep { border-top: 1px solid var(--border); margin: 4px 0; }
 
-    .dropdown-sep {
-      height: 1px;
-      background: var(--border);
-      margin: 4px 0;
-    }
-
-    /* -----------------------------------------------------------------------
-       Toast
-    ----------------------------------------------------------------------- */
+    /* ---- Toast ---- */
     #toast {
-      position: fixed;
-      bottom: 16px;
-      right: 16px;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      pointer-events: none;
+      position: fixed; bottom: 16px; right: 16px; z-index: 100;
+      display: flex; flex-direction: column; gap: 6px; pointer-events: none;
     }
-
     .toast-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 11px 14px;
-      border-radius: var(--radius);
-      font-size: 13px;
-      font-weight: 500;
-      box-shadow: var(--shadow-md);
-      max-width: 300px;
-      animation: toastIn 0.2s ease;
-      pointer-events: all;
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md);
+      max-width: 300px; animation: toastIn 0.2s ease; pointer-events: all;
     }
     .toast-item.success {
-      background: var(--success-light);
-      color: var(--success);
+      background: var(--success-light); color: var(--success);
       border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
     }
     .toast-item.error {
@@ -125,52 +67,22 @@
       color: var(--destructive);
       border: 1px solid color-mix(in srgb, var(--destructive) 25%, transparent);
     }
-    .toast-item svg { width: 15px; height: 15px; flex-shrink: 0; }
-
+    .toast-item svg { width: 14px; height: 14px; flex-shrink: 0; }
     @keyframes toastIn {
       from { transform: translateX(110%); opacity: 0; }
       to   { transform: translateX(0);    opacity: 1; }
     }
 
-    /* -----------------------------------------------------------------------
-       Section heading
-    ----------------------------------------------------------------------- */
-    .section-heading {
-      padding-bottom: 18px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
-    }
-    .section-heading h2 {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--foreground);
-      margin: 0 0 6px;
-    }
-    .section-heading h2 svg { width: 18px; height: 18px; color: var(--brand); }
-    .section-heading p {
-      font-size: 13px;
-      color: var(--muted-foreground);
-      margin: 0;
-    }
-    .section-heading p strong { color: var(--foreground); }
-
-    /* -----------------------------------------------------------------------
-       Marketplace cards grid
-    ----------------------------------------------------------------------- */
+    /* ---- Marketplace grid ---- */
     .mp-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+      gap: 14px;
     }
     @media (max-width: 1100px) { .mp-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px)  { .mp-grid { grid-template-columns: 1fr; } }
 
-    /* -----------------------------------------------------------------------
-       Marketplace card
-    ----------------------------------------------------------------------- */
+    /* ---- Marketplace card ---- */
     .mp-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -178,239 +90,209 @@
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+      padding: 18px;
+      transition: box-shadow 0.15s;
     }
-    .mp-card:hover {
-      transform: translateY(-2px);
+    .mp-card:not(.mp-disabled):hover {
       box-shadow: var(--shadow-md);
     }
-    .mp-card.mp-disabled { opacity: 0.55; pointer-events: none; }
-
-    /* Accent glow overlay (top-right decoration) */
-    .mp-card-glow {
-      position: absolute;
-      top: -24px;
-      right: -24px;
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
-      filter: blur(40px);
+    .mp-card.mp-disabled {
+      opacity: 0.5;
       pointer-events: none;
     }
 
     .mp-card-top {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
-      position: relative;
-      z-index: 1;
+      margin-bottom: 14px;
     }
 
-    .mp-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: calc(var(--radius) + 2px);
+    /* Logo container — neutral, no brand colors */
+    .mp-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid var(--border);
+      background: var(--background);
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
       flex-shrink: 0;
     }
-    .mp-icon svg { width: 24px; height: 24px; }
+    .mp-logo img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+    /* Fallback icon when no logo image */
+    .mp-logo svg { width: 18px; height: 18px; color: var(--muted-foreground); }
 
-    /* Status badge */
+    /* ---- Status badge ---- */
     .mp-status {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 3px 10px;
+      padding: 3px 8px;
       border-radius: 100px;
       font-size: 10.5px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       border: 1px solid transparent;
     }
     .mp-status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
+      width: 5px; height: 5px;
+      border-radius: 50%; flex-shrink: 0;
     }
     .mp-status.disconnected {
-      background: var(--secondary);
-      color: var(--muted-foreground);
+      background: var(--secondary); color: var(--muted-foreground);
       border-color: var(--border);
     }
     .mp-status.disconnected .mp-status-dot { background: var(--muted-foreground); }
     .mp-status.connected {
-      background: var(--success-light);
-      color: var(--success);
+      background: var(--success-light); color: var(--success);
       border-color: color-mix(in srgb, var(--success) 30%, transparent);
     }
     .mp-status.connected .mp-status-dot {
       background: var(--success);
-      box-shadow: 0 0 6px var(--success);
+      box-shadow: 0 0 5px var(--success);
     }
     .mp-status.expired {
-      background: var(--warning-light);
-      color: var(--warning);
+      background: var(--warning-light); color: var(--warning);
       border-color: color-mix(in srgb, var(--warning) 30%, transparent);
     }
-    .mp-status.expired .mp-status-dot { background: var(--warning); animation: pulse 1.5s ease-in-out infinite; }
+    .mp-status.expired .mp-status-dot { background: var(--warning); }
     .mp-status.soon {
-      background: var(--brand-light);
-      color: var(--brand);
-      border-color: color-mix(in srgb, var(--brand) 25%, transparent);
+      background: var(--secondary); color: var(--muted-foreground);
+      border-color: var(--border);
     }
 
-    .mp-card-body {
-      flex: 1;
-      position: relative;
-      z-index: 1;
-    }
+    /* ---- Card body ---- */
+    .mp-card-body { flex: 1; }
     .mp-name {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--foreground);
-      margin: 0 0 4px;
+      font-size: 14px; font-weight: 600;
+      color: var(--foreground); margin: 0 0 4px;
     }
     .mp-desc {
-      font-size: 12.5px;
-      color: var(--muted-foreground);
-      margin: 0 0 14px;
+      font-size: 12px; color: var(--muted-foreground); margin: 0 0 12px;
+      line-height: 1.5;
     }
 
     .mp-features {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      list-style: none; padding: 0; margin: 0 0 12px;
+      display: flex; flex-direction: column; gap: 4px;
     }
     .mp-features li {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 12.5px;
-      color: var(--foreground);
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11.5px; color: var(--muted-foreground);
     }
     .mp-features li svg {
-      width: 13px;
-      height: 13px;
-      flex-shrink: 0;
+      width: 12px; height: 12px; flex-shrink: 0;
+      color: var(--success);
     }
 
     .mp-seller-info {
-      font-size: 11.5px;
-      color: var(--muted-foreground);
-      margin-bottom: 6px;
+      font-size: 11px; color: var(--muted-foreground);
+      margin-bottom: 4px; padding: 6px 8px;
+      background: var(--secondary); border-radius: calc(var(--radius) - 2px);
     }
 
+    /* ---- Card footer ---- */
     .mp-card-footer {
-      position: relative;
-      z-index: 1;
       margin-top: auto;
-      padding-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
     }
-
-    /* Connect / action button  */
     .mp-btn {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      height: 38px;
-      border-radius: var(--radius);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: opacity 0.15s, transform 0.1s;
+      width: 100%; height: 34px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 12.5px; font-weight: 600;
+      border-radius: var(--radius); cursor: pointer;
+      border: 1px solid var(--border);
+      transition: background 0.1s, opacity 0.1s;
     }
-    .mp-btn:active { transform: scale(0.97); }
+    .mp-btn:active { transform: scale(0.98); }
     .mp-btn:disabled { cursor: not-allowed; opacity: 0.5; }
-    .mp-btn svg { width: 15px; height: 15px; }
+    .mp-btn svg { width: 13px; height: 13px; }
 
-    /* Yellow (Mercado Livre) */
-    .mp-btn-ml {
-      background: #FFE600;
-      color: #0a0a0a;
+    .mp-btn-primary {
+      background: var(--foreground); color: var(--background);
+      border-color: var(--foreground);
     }
-    .mp-btn-ml:hover:not(:disabled) { background: #f0d900; }
+    .mp-btn-primary:hover:not(:disabled) { opacity: 0.85; }
 
-    /* Purple (Nuvemshop) */
-    .mp-btn-ns {
-      background: #595AD3;
-      color: #ffffff;
+    .mp-btn-secondary {
+      background: var(--secondary); color: var(--foreground);
     }
-    .mp-btn-ns:hover:not(:disabled) { background: #4a4bbf; }
+    .mp-btn-secondary:hover:not(:disabled) { background: var(--accent); }
 
-    /* Green (syncing state — replaces branded color when connected) */
-    .mp-btn-sync {
-      background: var(--success);
-      color: #ffffff;
+    .mp-btn-success {
+      background: color-mix(in srgb, var(--success) 12%, transparent);
+      color: var(--success);
+      border-color: color-mix(in srgb, var(--success) 30%, transparent);
     }
-    .mp-btn-sync:hover:not(:disabled) { opacity: 0.88; }
-
-    /* Muted disabled (Em Breve) */
-    .mp-btn-disabled {
-      background: var(--secondary);
-      color: var(--muted-foreground);
+    .mp-btn-success:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--success) 20%, transparent);
     }
 
-    /* Icon colours per brand */
-    .mp-icon-ml  { background: #FFE600; }
-    .mp-icon-ml svg { color: #0a0a0a; }
-    .mp-icon-ns  { background: #595AD3; }
-    .mp-icon-ns svg { color: #ffffff; }
-    .mp-icon-muted { background: var(--secondary); border: 1px solid var(--border); }
-    .mp-icon-muted svg { color: var(--muted-foreground); }
+    .mp-btn-muted {
+      background: var(--secondary); color: var(--muted-foreground);
+      border-color: var(--border);
+    }
 
-    .mp-glow-ml { background: rgba(255, 230, 0, 0.18); }
-    .mp-glow-ns { background: rgba(89, 90, 211, 0.18); }
-
-    /* No-org empty state */
+    /* ---- No-org empty state ---- */
     .no-org-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 20px;
-      text-align: center;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 64px 20px; text-align: center;
     }
     .no-org-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: calc(var(--radius) + 4px);
+      width: 48px; height: 48px;
+      border-radius: calc(var(--radius) + 2px);
       background: var(--brand-light);
       border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
     }
-    .no-org-icon svg { width: 26px; height: 26px; color: var(--brand); }
-    .no-org-state h2 { font-size: 20px; font-weight: 700; color: var(--foreground); margin: 0 0 8px; }
-    .no-org-state p  { font-size: 13.5px; color: var(--muted-foreground); margin: 0 0 24px; max-width: 340px; }
+    .no-org-icon svg { width: 22px; height: 22px; color: var(--brand); }
+    .no-org-state h2 { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
+    .no-org-state p  { font-size: 13px; color: var(--muted-foreground); margin: 0 0 20px; max-width: 320px; }
+
+    /* ---- Section header ---- */
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-header-text h2 {
+      font-size: 15px; font-weight: 600; color: var(--foreground); margin: 0 0 4px;
+    }
+    .section-header-text p {
+      font-size: 12.5px; color: var(--muted-foreground); margin: 0;
+    }
+    .section-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 600;
+      background: var(--secondary); color: var(--muted-foreground);
+      border: 1px solid var(--border); white-space: nowrap;
+    }
+    .section-badge svg { width: 11px; height: 11px; }
   </style>
 </head>
-
 <body>
 
-<!-- =========================================================
-     SIDEBAR
-========================================================= -->
+<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="sidebar-logo-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M12 2L2 7l10 5 10-5-10-5"/>
         <path d="M2 17l10 5 10-5"/>
         <path d="M2 12l10 5 10-5"/>
       </svg>
@@ -423,28 +305,23 @@
       <p class="nav-label">Principal</p>
       <a href="dashboard.html" class="nav-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect width="7" height="9" x="3" y="3" rx="1"/>
-          <rect width="7" height="5" x="14" y="3" rx="1"/>
-          <rect width="7" height="9" x="14" y="12" rx="1"/>
-          <rect width="7" height="5" x="3" y="16" rx="1"/>
+          <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/>
+          <rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
         </svg>
         Dashboard
       </a>
       <a href="index.html" class="nav-link active">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-          <polyline points="13 2 13 9 20 9"/>
+          <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
         </svg>
         Marketplaces
       </a>
     </div>
-
     <div class="nav-section">
       <p class="nav-label">Operações</p>
       <a href="vendas.html" class="nav-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="8" cy="21" r="1"/>
-          <circle cx="19" cy="21" r="1"/>
+          <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
           <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
         </svg>
         Vendas
@@ -457,13 +334,11 @@
       </a>
       <a href="contabil.html" class="nav-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect width="20" height="14" x="2" y="5" rx="2"/>
-          <line x1="2" x2="22" y1="10" y2="10"/>
+          <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
         </svg>
         Contábil
       </a>
     </div>
-
     <div class="nav-section">
       <p class="nav-label">Conta</p>
       <a href="settings.html" class="nav-link">
@@ -487,9 +362,7 @@
   </div>
 </aside>
 
-<!-- =========================================================
-     MAIN CONTENT
-========================================================= -->
+<!-- MAIN -->
 <div class="main-content">
   <header class="page-header">
     <h1 class="page-title">Marketplaces</h1>
@@ -509,8 +382,7 @@
           <button class="dropdown-item danger" id="signOutBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
+              <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
             Sair
           </button>
@@ -521,207 +393,184 @@
 
   <main class="page-body" id="pageBody">
 
-    <!-- Section heading -->
-    <div class="section-heading">
-      <h2>
+    <div class="section-header">
+      <div class="section-header-text">
+        <h2>Lojas conectadas</h2>
+        <p>Gerencie suas integrações via OAuth 2.0. Suas senhas nunca são armazenadas.</p>
+      </div>
+      <span class="section-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          <rect width="11" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        Lojas &amp; Marketplaces
-      </h2>
-      <p>
-        Conecte suas lojas de forma segura. O E-CONOMIA utiliza criptografia de ponta e OAuth 2.0.
-        <strong>Nós não temos acesso às suas senhas.</strong>
-      </p>
+        OAuth 2.0
+      </span>
     </div>
 
-    <!-- Marketplace grid -->
     <div class="mp-grid" id="integrations-grid">
 
-      <!-- CARD: MERCADO LIVRE -->
+      <!-- MERCADO LIVRE -->
       <div id="card-mercado_livre" class="mp-card">
-        <div class="mp-card-glow mp-glow-ml"></div>
         <div class="mp-card-top">
-          <div class="mp-icon mp-icon-ml">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
+          <div class="mp-logo">
+            <img src="assets/logos/mercado-livre.png" alt="Mercado Livre" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <svg style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
           </div>
           <span id="status-mercado_livre" class="mp-status disconnected">
-            <span class="mp-status-dot"></span>
-            Desconectado
+            <span class="mp-status-dot"></span>Desconectado
           </span>
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Mercado Livre</h3>
-          <p class="mp-desc">Sincronize vendas e gerencie estoque Full/Flex.</p>
+          <p class="mp-desc">Sincronize vendas, taxas e gestão de estoque Full/Flex.</p>
           <ul class="mp-features">
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Importação de Pedidos
             </li>
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Desconto de Taxas Oficiais
             </li>
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FFE600" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Cálculo de Impostos (Simples)
             </li>
           </ul>
           <p id="seller-info-mercado_livre" class="mp-seller-info" style="display:none;"></p>
         </div>
         <div class="mp-card-footer">
-          <button id="btn-mercado_livre" class="mp-btn mp-btn-ml" onclick="handleConnect('mercado_livre')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          <button id="btn-mercado_livre" class="mp-btn mp-btn-primary" onclick="handleConnect('mercado_livre')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
             </svg>
             <span>Conectar</span>
           </button>
         </div>
       </div>
 
-      <!-- CARD: NUVEMSHOP -->
+      <!-- NUVEMSHOP -->
       <div id="card-nuvemshop" class="mp-card">
-        <div class="mp-card-glow mp-glow-ns"></div>
         <div class="mp-card-top">
-          <div class="mp-icon mp-icon-ns">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
+          <div class="mp-logo">
+            <img src="assets/logos/nuvemshop.png" alt="Nuvemshop" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <svg style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
           </div>
           <span id="status-nuvemshop" class="mp-status disconnected">
-            <span class="mp-status-dot"></span>
-            Desconectado
+            <span class="mp-status-dot"></span>Desconectado
           </span>
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Nuvemshop</h3>
-          <p class="mp-desc">E-commerce próprio com controle total de margem.</p>
+          <p class="mp-desc">E-commerce próprio com controle total de margem e sem taxas.</p>
           <ul class="mp-features">
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#595AD3" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Sem taxas de marketplace
             </li>
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#595AD3" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Sync de Pedidos
             </li>
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#595AD3" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               Gestão via Correios/Transp.
             </li>
           </ul>
           <p id="seller-info-nuvemshop" class="mp-seller-info" style="display:none;"></p>
         </div>
         <div class="mp-card-footer">
-          <button id="btn-nuvemshop" class="mp-btn mp-btn-ns" onclick="handleConnect('nuvemshop')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          <button id="btn-nuvemshop" class="mp-btn mp-btn-primary" onclick="handleConnect('nuvemshop')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
             </svg>
             <span>Conectar</span>
           </button>
         </div>
       </div>
 
-      <!-- CARD: AMAZON (Em Breve) -->
+      <!-- AMAZON (Em Breve) -->
       <div class="mp-card mp-disabled">
         <div class="mp-card-top">
-          <div class="mp-icon mp-icon-muted">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-            </svg>
+          <div class="mp-logo">
+            <img src="assets/logos/amazon.png" alt="Amazon" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <svg style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
           </div>
-          <span class="mp-status soon">Em Breve</span>
+          <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Amazon Seller</h3>
-          <p class="mp-desc">Gestão de margem FBA e DBA.</p>
+          <p class="mp-desc">Gestão de margem FBA e DBA com visibilidade de taxas.</p>
         </div>
         <div class="mp-card-footer">
-          <button class="mp-btn mp-btn-disabled" disabled>Em Breve</button>
+          <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
         </div>
       </div>
 
-      <!-- CARD: SHOPEE (Em Breve) -->
+      <!-- SHOPEE (Em Breve) -->
       <div class="mp-card mp-disabled">
         <div class="mp-card-top">
-          <div class="mp-icon mp-icon-muted">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
+          <div class="mp-logo">
+            <img src="assets/logos/shopee.png" alt="Shopee" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <svg style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
           </div>
-          <span class="mp-status soon">Em Breve</span>
+          <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Shopee</h3>
-          <p class="mp-desc">Taxas, Ads e estoque unificado.</p>
+          <p class="mp-desc">Taxas, Ads e controle de estoque unificado.</p>
         </div>
         <div class="mp-card-footer">
-          <button class="mp-btn mp-btn-disabled" disabled>Em Breve</button>
+          <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
         </div>
       </div>
 
-      <!-- CARD: SHEIN (Em Breve) -->
+      <!-- SHEIN (Em Breve) -->
       <div class="mp-card mp-disabled">
         <div class="mp-card-top">
-          <div class="mp-icon mp-icon-muted">
+          <div class="mp-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
             </svg>
           </div>
-          <span class="mp-status soon">Em Breve</span>
+          <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Shein</h3>
           <p class="mp-desc">Marketplace de moda e acessórios.</p>
         </div>
         <div class="mp-card-footer">
-          <button class="mp-btn mp-btn-disabled" disabled>Em Breve</button>
+          <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
         </div>
       </div>
 
-      <!-- CARD: SHOPIFY (Em Breve) -->
+      <!-- SHOPIFY (Em Breve) -->
       <div class="mp-card mp-disabled">
         <div class="mp-card-top">
-          <div class="mp-icon mp-icon-muted">
+          <div class="mp-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
               <line x1="3" x2="21" y1="6" y2="6"/>
               <path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
           </div>
-          <span class="mp-status soon">Em Breve</span>
+          <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Shopify</h3>
-          <p class="mp-desc">Loja própria internacional.</p>
+          <p class="mp-desc">Loja própria internacional com multi-moeda.</p>
         </div>
         <div class="mp-card-footer">
-          <button class="mp-btn mp-btn-disabled" disabled>Em Breve</button>
+          <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
         </div>
       </div>
 
     </div><!-- /integrations-grid -->
   </main>
-</div><!-- /main-content -->
+</div>
 
-<!-- Toast container -->
 <div id="toast"></div>
 
 <script type="module">
@@ -730,15 +579,12 @@
     supabase,
     getCurrentUser,
     getUserOrganization,
-    getIntegrations,
-    connectMarketplace,
-    triggerSync,
     checkOAuthResult,
   } from './js/supabase-client.js';
 
-  /* ------------------------------------------------------------------
-     Theme toggle + dropdown
-  ------------------------------------------------------------------ */
+  const SUPABASE_FUNCTIONS = 'https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1';
+  let currentOrgId = null;
+
   initThemeToggle('themeToggle');
 
   window.toggleDropdown = () =>
@@ -754,171 +600,73 @@
     window.location.href = 'login.html';
   });
 
-  /* ------------------------------------------------------------------
-     Constants
-  ------------------------------------------------------------------ */
-  const SUPABASE_FUNCTIONS = 'https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1';
-  let currentOrgId = null;
-
-  /* ------------------------------------------------------------------
-     OAuth result check on page load
-  ------------------------------------------------------------------ */
+  // OAuth result feedback
   const oauthResult = checkOAuthResult();
-  if (oauthResult.connected) {
-    showToast(`${formatMarketplaceName(oauthResult.connected)} conectado com sucesso!`, 'success');
-  } else if (oauthResult.error) {
-    showToast(`Erro: ${oauthResult.error}`, 'error');
-  }
+  if (oauthResult.connected)
+    showToast(formatMarketplaceName(oauthResult.connected) + ' conectado com sucesso!', 'success');
+  else if (oauthResult.error)
+    showToast('Erro: ' + oauthResult.error, 'error');
 
-  /* ------------------------------------------------------------------
-     Init
-  ------------------------------------------------------------------ */
   async function init() {
-    try {
-      const user = await getCurrentUser();
-      if (!user) {
-        window.location.href = 'login.html';
-        return;
-      }
+    const user = await getCurrentUser();
+    if (!user) { window.location.href = 'login.html'; return; }
 
-      // Populate sidebar + header avatar
-      const initials = (user.user_metadata?.full_name || user.email || '?')
-        .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
-      document.getElementById('userInitials').textContent = initials;
-      document.getElementById('headerAvatar').textContent = initials;
-      document.getElementById('userName').textContent =
-        user.user_metadata?.full_name || user.email || '—';
+    const initials = (user.user_metadata?.full_name || user.email || '?')
+      .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
-      const org = await getUserOrganization();
-      if (org) {
-        currentOrgId = org.organization_id;
-        document.getElementById('userOrg').textContent = org.organizations?.name || '—';
-      } else {
-        showNoOrgState();
-        return;
-      }
-    } catch (err) {
-      console.error('Erro ao verificar auth:', err.message);
-      window.location.href = 'login.html';
-      return;
-    }
+    document.getElementById('userInitials').textContent = initials;
+    document.getElementById('headerAvatar').textContent = initials;
+    document.getElementById('userName').textContent = user.user_metadata?.full_name || user.email || '—';
 
+    const org = await getUserOrganization();
+    if (!org) { window.location.href = 'onboarding.html'; return; }
+
+    currentOrgId = org.organization_id;
+    document.getElementById('userOrg').textContent = org.organizations?.name || '—';
     await loadIntegrations();
   }
 
-  /* ------------------------------------------------------------------
-     No-org empty state
-  ------------------------------------------------------------------ */
-  function showNoOrgState() {
-    const body = document.getElementById('pageBody');
-    if (!body) return;
-    body.innerHTML = `
-      <div class="no-org-state">
-        <div class="no-org-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-        </div>
-        <h2>Configure sua conta</h2>
-        <p>Você precisa criar ou ser adicionado a uma organização para usar o E-CONOMIA.</p>
-        <button class="btn btn-primary" onclick="createOrganization()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          Criar Minha Organização
-        </button>
-      </div>`;
-  }
-
-  window.createOrganization = async () => {
-    const name = prompt('Nome da sua empresa / loja:');
-    if (!name?.trim()) return;
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: org, error } = await supabase
-      .from('organizations')
-      .insert({ name: name.trim(), owner_id: user.id })
-      .select('id')
-      .single();
-
-    if (error) {
-      showToast('Erro ao criar organização: ' + error.message, 'error');
-      return;
-    }
-
-    await supabase.from('org_members').insert({
-      organization_id: org.id,
-      user_id: user.id,
-      role: 'owner',
-      is_active: true,
-    });
-
-    currentOrgId = org.id;
-    showToast('Organização criada com sucesso!', 'success');
-    window.location.reload();
-  };
-
-  /* ------------------------------------------------------------------
-     Load integrations
-  ------------------------------------------------------------------ */
   async function loadIntegrations() {
-    try {
-      const { data, error } = await supabase
-        .from('marketplace_integrations')
-        .select('id, marketplace, status, seller_id, seller_nickname, last_sync_at, last_sync_error, created_at')
-        .eq('organization_id', currentOrgId)
-        .order('marketplace');
+    const { data } = await supabase
+      .from('marketplace_integrations')
+      .select('id, marketplace, status, seller_nickname, last_sync_at')
+      .eq('organization_id', currentOrgId);
 
-      if (data) {
-        for (const integration of data) {
-          updateCardStatus(integration);
-        }
-      }
-    } catch (err) {
-      console.error('Erro ao carregar integrações:', err);
+    for (const integration of data ?? []) {
+      updateCardStatus(integration);
     }
   }
 
-  /* ------------------------------------------------------------------
-     Update card status DOM
-  ------------------------------------------------------------------ */
-  function updateCardStatus(integration) {
-    const { marketplace, status, seller_nickname, last_sync_at } = integration;
-    const statusEl  = document.getElementById(`status-${marketplace}`);
-    const btnEl     = document.getElementById(`btn-${marketplace}`);
-    const sellerEl  = document.getElementById(`seller-info-${marketplace}`);
-
+  function updateCardStatus({ marketplace, status, seller_nickname, last_sync_at }) {
+    const statusEl = document.getElementById('status-' + marketplace);
+    const btnEl    = document.getElementById('btn-' + marketplace);
+    const sellerEl = document.getElementById('seller-info-' + marketplace);
     if (!statusEl || !btnEl) return;
 
     if (status === 'active') {
       statusEl.className = 'mp-status connected';
-      statusEl.innerHTML = '<span class="mp-status-dot"></span> Conectado';
+      statusEl.innerHTML = '<span class="mp-status-dot"></span>Conectado';
 
-      btnEl.className = 'mp-btn mp-btn-sync';
-      const btnSpan = btnEl.querySelector('span');
-      if (btnSpan) btnSpan.textContent = 'Sincronizar Agora';
+      btnEl.className = 'mp-btn mp-btn-success';
+      btnEl.querySelector('span').textContent = 'Sincronizar';
       btnEl.onclick = () => handleSync(marketplace);
 
       if (sellerEl && seller_nickname) {
-        sellerEl.textContent = 'Loja: ' + seller_nickname +
-          (last_sync_at ? ' | Sync: ' + new Date(last_sync_at).toLocaleString('pt-BR') : '');
+        sellerEl.textContent = seller_nickname
+          + (last_sync_at ? ' · sync ' + new Date(last_sync_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '');
         sellerEl.style.display = '';
       }
     } else if (status === 'token_expired') {
       statusEl.className = 'mp-status expired';
-      statusEl.innerHTML = '<span class="mp-status-dot"></span> Token Expirado';
-
-      const btnSpan = btnEl.querySelector('span');
-      if (btnSpan) btnSpan.textContent = 'Reconectar';
+      statusEl.innerHTML = '<span class="mp-status-dot"></span>Token Expirado';
+      btnEl.querySelector('span').textContent = 'Reconectar';
       btnEl.onclick = () => handleConnect(marketplace);
     }
   }
 
-  /* ------------------------------------------------------------------
-     Connect (OAuth)
-  ------------------------------------------------------------------ */
   window.handleConnect = function(marketplace) {
+    if (!currentOrgId) { showToast('Carregando...', 'error'); return; }
+
     const state = btoa(JSON.stringify({ org_id: currentOrgId, marketplace }));
     let authUrl;
 
@@ -927,76 +675,59 @@
         + '&client_id=8352452310875924'
         + '&redirect_uri=' + encodeURIComponent(SUPABASE_FUNCTIONS + '/marketplace-oauth/callback')
         + '&state=' + encodeURIComponent(state);
-    } else if (marketplace === 'nuvemshop') {
-      showToast('Nuvemshop: em breve!', 'error');
-      return;
     } else {
-      showToast('Marketplace não suportado ainda.', 'error');
+      showToast(formatMarketplaceName(marketplace) + ': em breve!', 'error');
       return;
     }
 
     window.location.href = authUrl;
   };
 
-  /* ------------------------------------------------------------------
-     Sync
-  ------------------------------------------------------------------ */
   window.handleSync = async function(marketplace) {
     const btn = document.getElementById('btn-' + marketplace);
-    const btnSpan = btn?.querySelector('span');
-    if (btnSpan) btnSpan.textContent = 'Sincronizando...';
+    const span = btn?.querySelector('span');
+    if (span) span.textContent = 'Sincronizando...';
     if (btn) btn.disabled = true;
 
     try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
       const res = await fetch(SUPABASE_FUNCTIONS + '/sync-orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: 'Bearer ' + token } : {}),
+        },
         body: JSON.stringify({ organization_id: currentOrgId, marketplace }),
       });
       const result = await res.json();
       const synced = result.results?.[0]?.orders_synced ?? 0;
-      showToast(synced + ' pedidos sincronizados do ' + formatMarketplaceName(marketplace) + '!', 'success');
+      showToast(synced + ' pedidos sincronizados!', 'success');
       await loadIntegrations();
     } catch (err) {
-      showToast('Erro ao sincronizar: ' + err.message, 'error');
+      showToast('Erro: ' + err.message, 'error');
     } finally {
-      if (btnSpan) btnSpan.textContent = 'Sincronizar Agora';
+      if (span) span.textContent = 'Sincronizar';
       if (btn) btn.disabled = false;
     }
   };
 
-  /* ------------------------------------------------------------------
-     Helpers
-  ------------------------------------------------------------------ */
   function formatMarketplaceName(key) {
-    const names = {
-      mercado_livre: 'Mercado Livre',
-      nuvemshop: 'Nuvemshop',
-      amazon: 'Amazon',
-      shopee: 'Shopee',
-    };
-    return names[key] || key;
+    return { mercado_livre: 'Mercado Livre', nuvemshop: 'Nuvemshop', amazon: 'Amazon', shopee: 'Shopee' }[key] || key;
   }
 
   function showToast(message, type) {
     const container = document.getElementById('toast');
-    if (!container) return;
-
     const item = document.createElement('div');
     item.className = 'toast-item ' + (type === 'success' ? 'success' : 'error');
-
     const icon = type === 'success'
       ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
       : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-
-    item.innerHTML = icon + `<span>${message}</span>`;
+    item.innerHTML = icon + '<span>' + message + '</span>';
     container.appendChild(item);
     setTimeout(() => item.remove(), 5000);
   }
 
-  /* ------------------------------------------------------------------
-     Boot
-  ------------------------------------------------------------------ */
   init();
 </script>
 </body>
