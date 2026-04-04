@@ -674,7 +674,7 @@
   async function loadIntegrations() {
     const { data: integrations } = await supabase
       .from('marketplace_integrations')
-      .select('id, marketplace, status, seller_nickname, external_id, last_sync_at, created_at')
+      .select('id, marketplace, status, seller_nickname, seller_id, last_sync_at, created_at')
       .eq('organization_id', currentOrgId);
 
     if (!integrations?.length) return;
@@ -695,7 +695,7 @@
     }
   }
 
-  function updateCardStatus({ marketplace, status, seller_nickname, external_id, last_sync_at, created_at, orders_count }) {
+  function updateCardStatus({ marketplace, status, seller_nickname, seller_id, last_sync_at, created_at, orders_count }) {
     const card     = document.getElementById('card-' + marketplace);
     const statusEl = document.getElementById('status-' + marketplace);
     const btnEl    = document.getElementById('btn-' + marketplace);
@@ -716,8 +716,8 @@
         const lastSync = last_sync_at
           ? new Date(last_sync_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
           : 'Nunca';
-        const idTag = external_id
-          ? `<span class="mp-account-id">ID ${external_id}</span>`
+        const idTag = seller_id
+          ? `<span class="mp-account-id">ID ${seller_id}</span>`
           : '';
 
         proofEl.innerHTML = `
@@ -803,20 +803,17 @@
   window.handleConnect = function(marketplace) {
     if (!currentOrgId) { showToast('Carregando...', 'error'); return; }
 
-    const state = btoa(JSON.stringify({ org_id: currentOrgId, marketplace }));
-    let authUrl;
-
-    if (marketplace === 'mercado_livre') {
-      authUrl = 'https://auth.mercadolivre.com.br/authorization?response_type=code'
-        + '&client_id=8352452310875924'
-        + '&redirect_uri=' + encodeURIComponent(SUPABASE_FUNCTIONS + '/marketplace-oauth/callback')
-        + '&state=' + encodeURIComponent(state);
-    } else {
+    if (marketplace !== 'mercado_livre' && marketplace !== 'nuvemshop') {
       showToast(formatMarketplaceName(marketplace) + ': em breve!', 'error');
       return;
     }
 
-    window.location.href = authUrl;
+    // Usa o Edge Function /authorize (lê ML_APP_ID dos secrets — não expõe no frontend)
+    const returnUrl = window.location.origin + '/index.html';
+    window.location.href = SUPABASE_FUNCTIONS + '/marketplace-oauth/authorize'
+      + '?marketplace=' + encodeURIComponent(marketplace)
+      + '&org_id=' + encodeURIComponent(currentOrgId)
+      + '&return_url=' + encodeURIComponent(returnUrl);
   };
 
   window.handleSync = async function(marketplace) {

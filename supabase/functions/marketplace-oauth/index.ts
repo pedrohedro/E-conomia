@@ -30,6 +30,9 @@ serve(async (req: Request) => {
 async function handleAuthorize(_req: Request, url: URL): Promise<Response> {
   const marketplace = url.searchParams.get("marketplace");
   const orgId = url.searchParams.get("org_id");
+  const returnUrl = url.searchParams.get("return_url")
+    || Deno.env.get("FRONTEND_URL")
+    || "https://e-conomia-crm-gamma.vercel.app";
 
   if (!marketplace || !orgId) {
     return new Response(
@@ -38,8 +41,8 @@ async function handleAuthorize(_req: Request, url: URL): Promise<Response> {
     );
   }
 
-  // state codifica org_id + marketplace para recuperar no callback
-  const statePayload = JSON.stringify({ org_id: orgId, marketplace });
+  // state codifica org_id + marketplace + return_url para recuperar no callback
+  const statePayload = JSON.stringify({ org_id: orgId, marketplace, return_url: returnUrl });
   const state = btoa(statePayload);
 
   let authUrl: string;
@@ -73,7 +76,7 @@ async function handleCallback(_req: Request, url: URL): Promise<Response> {
     return errorRedirect("Parametros code/state ausentes");
   }
 
-  let state: { org_id: string; marketplace: string };
+  let state: { org_id: string; marketplace: string; return_url?: string };
   try {
     state = JSON.parse(atob(stateRaw));
   } catch {
@@ -166,7 +169,9 @@ async function handleCallback(_req: Request, url: URL): Promise<Response> {
     return errorRedirect(String(err));
   }
 
-  const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:3000";
+  const frontendUrl = state.return_url
+    || Deno.env.get("FRONTEND_URL")
+    || "https://e-conomia-crm-gamma.vercel.app";
   return Response.redirect(
     `${frontendUrl}/index.html?connected=${marketplace}`,
     302
@@ -187,8 +192,10 @@ async function getIntegrationId(
   return data?.id;
 }
 
-function errorRedirect(message: string): Response {
-  const frontendUrl = Deno.env.get("FRONTEND_URL") || "http://localhost:3000";
+function errorRedirect(message: string, returnUrl?: string): Response {
+  const frontendUrl = returnUrl
+    || Deno.env.get("FRONTEND_URL")
+    || "https://e-conomia-crm-gamma.vercel.app";
   return Response.redirect(
     `${frontendUrl}/index.html?error=${encodeURIComponent(message)}`,
     302
