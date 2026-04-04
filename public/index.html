@@ -193,10 +193,55 @@
       color: var(--success);
     }
 
-    .mp-seller-info {
+    /* ---- Connected card accent ---- */
+    .mp-card.mp-connected {
+      border-color: color-mix(in srgb, var(--success) 40%, transparent);
+    }
+
+    /* ---- Account proof block (visible only when connected) ---- */
+    .mp-account-proof {
+      display: none;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: color-mix(in srgb, var(--success) 7%, var(--secondary));
+      border: 1px solid color-mix(in srgb, var(--success) 22%, transparent);
+      border-radius: calc(var(--radius) - 2px);
+    }
+    .mp-account-name {
+      font-size: 13px; font-weight: 600;
+      color: var(--foreground); margin: 0 0 5px;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .mp-account-id {
+      font-size: 10.5px; font-weight: 500;
+      color: var(--muted-foreground);
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 5px;
+    }
+    .mp-account-meta {
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .mp-account-meta span {
+      display: flex; align-items: center; gap: 5px;
       font-size: 11px; color: var(--muted-foreground);
-      margin-bottom: 4px; padding: 6px 8px;
-      background: var(--secondary); border-radius: calc(var(--radius) - 2px);
+    }
+    .mp-account-meta svg { width: 10px; height: 10px; flex-shrink: 0; }
+    .mp-account-orders {
+      color: var(--success) !important;
+    }
+
+    /* ---- Two-button footer when connected ---- */
+    .mp-footer-actions { display: flex; gap: 6px; }
+    .mp-footer-actions .mp-btn { flex: 1; }
+
+    .mp-btn-danger {
+      background: color-mix(in srgb, var(--destructive) 10%, transparent);
+      color: var(--destructive);
+      border-color: color-mix(in srgb, var(--destructive) 25%, transparent);
+    }
+    .mp-btn-danger:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--destructive) 18%, transparent);
     }
 
     /* ---- Card footer ---- */
@@ -437,9 +482,9 @@
               Cálculo de Impostos (Simples)
             </li>
           </ul>
-          <p id="seller-info-mercado_livre" class="mp-seller-info" style="display:none;"></p>
+          <div id="account-proof-mercado_livre" class="mp-account-proof"></div>
         </div>
-        <div class="mp-card-footer">
+        <div class="mp-card-footer" id="footer-mercado_livre">
           <button id="btn-mercado_livre" class="mp-btn mp-btn-primary" onclick="handleConnect('mercado_livre')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -478,9 +523,9 @@
               Gestão via Correios/Transp.
             </li>
           </ul>
-          <p id="seller-info-nuvemshop" class="mp-seller-info" style="display:none;"></p>
+          <div id="account-proof-nuvemshop" class="mp-account-proof"></div>
         </div>
-        <div class="mp-card-footer">
+        <div class="mp-card-footer" id="footer-nuvemshop">
           <button id="btn-nuvemshop" class="mp-btn mp-btn-primary" onclick="handleConnect('nuvemshop')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -627,35 +672,108 @@
   }
 
   async function loadIntegrations() {
-    const { data } = await supabase
+    const { data: integrations } = await supabase
       .from('marketplace_integrations')
-      .select('id, marketplace, status, seller_nickname, last_sync_at')
+      .select('id, marketplace, status, seller_nickname, external_id, last_sync_at, created_at')
       .eq('organization_id', currentOrgId);
 
-    for (const integration of data ?? []) {
-      updateCardStatus(integration);
+    if (!integrations?.length) return;
+
+    // Fetch orders count per marketplace in a single query
+    const { data: orderCounts } = await supabase
+      .from('orders')
+      .select('marketplace')
+      .eq('organization_id', currentOrgId);
+
+    const countMap = {};
+    for (const row of orderCounts ?? []) {
+      countMap[row.marketplace] = (countMap[row.marketplace] || 0) + 1;
+    }
+
+    for (const integration of integrations) {
+      updateCardStatus({ ...integration, orders_count: countMap[integration.marketplace] ?? 0 });
     }
   }
 
-  function updateCardStatus({ marketplace, status, seller_nickname, last_sync_at }) {
+  function updateCardStatus({ marketplace, status, seller_nickname, external_id, last_sync_at, created_at, orders_count }) {
+    const card     = document.getElementById('card-' + marketplace);
     const statusEl = document.getElementById('status-' + marketplace);
     const btnEl    = document.getElementById('btn-' + marketplace);
-    const sellerEl = document.getElementById('seller-info-' + marketplace);
+    const proofEl  = document.getElementById('account-proof-' + marketplace);
+    const footerEl = document.getElementById('footer-' + marketplace);
     if (!statusEl || !btnEl) return;
 
     if (status === 'active') {
+      card?.classList.add('mp-connected');
       statusEl.className = 'mp-status connected';
       statusEl.innerHTML = '<span class="mp-status-dot"></span>Conectado';
 
-      btnEl.className = 'mp-btn mp-btn-success';
-      btnEl.querySelector('span').textContent = 'Sincronizar';
-      btnEl.onclick = () => handleSync(marketplace);
+      // Build account proof block
+      if (proofEl) {
+        const connectedAt = created_at
+          ? new Date(created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+          : '—';
+        const lastSync = last_sync_at
+          ? new Date(last_sync_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+          : 'Nunca';
+        const idTag = external_id
+          ? `<span class="mp-account-id">ID ${external_id}</span>`
+          : '';
 
-      if (sellerEl && seller_nickname) {
-        sellerEl.textContent = seller_nickname
-          + (last_sync_at ? ' · sync ' + new Date(last_sync_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '');
-        sellerEl.style.display = '';
+        proofEl.innerHTML = `
+          <p class="mp-account-name">
+            ${seller_nickname || 'Conta conectada'}
+            ${idTag}
+          </p>
+          <div class="mp-account-meta">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="16" height="16" x="4" y="4" rx="2"/>
+                <path d="M8 2v4"/><path d="M16 2v4"/><path d="M4 10h16"/>
+              </svg>
+              Conectado em ${connectedAt}
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Último sync: ${lastSync}
+            </span>
+            <span class="mp-account-orders">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+              </svg>
+              ${orders_count} pedido${orders_count !== 1 ? 's' : ''} importado${orders_count !== 1 ? 's' : ''}
+            </span>
+          </div>
+        `;
+        proofEl.style.display = '';
       }
+
+      // Replace footer with two-button layout
+      if (footerEl) {
+        footerEl.innerHTML = `
+          <div class="mp-footer-actions">
+            <button class="mp-btn mp-btn-success" id="btn-${marketplace}" onclick="handleSync('${marketplace}')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              </svg>
+              <span>Sincronizar</span>
+            </button>
+            <button class="mp-btn mp-btn-danger" onclick="handleDisconnect('${marketplace}')" title="Desconectar conta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
+                <line x1="12" y1="2" x2="12" y2="12"/>
+              </svg>
+              <span>Sair</span>
+            </button>
+          </div>
+        `;
+      }
+
     } else if (status === 'token_expired') {
       statusEl.className = 'mp-status expired';
       statusEl.innerHTML = '<span class="mp-status-dot"></span>Token Expirado';
@@ -663,6 +781,24 @@
       btnEl.onclick = () => handleConnect(marketplace);
     }
   }
+
+  window.handleDisconnect = async function(marketplace) {
+    const confirmed = confirm(`Desconectar ${formatMarketplaceName(marketplace)}? Os dados já importados serão mantidos.`);
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from('marketplace_integrations')
+      .delete()
+      .eq('organization_id', currentOrgId)
+      .eq('marketplace', marketplace);
+
+    if (error) {
+      showToast('Erro ao desconectar: ' + error.message, 'error');
+    } else {
+      showToast(formatMarketplaceName(marketplace) + ' desconectado.', 'success');
+      window.location.reload();
+    }
+  };
 
   window.handleConnect = function(marketplace) {
     if (!currentOrgId) { showToast('Carregando...', 'error'); return; }
