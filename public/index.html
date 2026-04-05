@@ -832,20 +832,32 @@
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      const res = await fetch(SUPABASE_FUNCTIONS + '/sync-orders', {
+      
+      const payload = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: 'Bearer ' + token } : {}),
         },
         body: JSON.stringify({ organization_id: currentOrgId, marketplace }),
-      });
-      const result = await res.json();
-      const synced = result.results?.[0]?.orders_synced ?? 0;
-      showToast(synced + ' pedidos sincronizados!', 'success');
+      };
+
+      // Dispara Orders e Inventory em paralelo!
+      const [resOrders, resInv] = await Promise.all([
+        fetch(SUPABASE_FUNCTIONS + '/sync-orders', payload),
+        fetch(SUPABASE_FUNCTIONS + '/sync-inventory', payload)
+      ]);
+
+      const resultOrders = await resOrders.json();
+      const resultInv = await resInv.json();
+      
+      const syncedOrders = resultOrders.results?.[0]?.orders_synced ?? 0;
+      const syncedInv = resultInv.results?.[0]?.products_synced ?? 0;
+      
+      showToast(`${syncedOrders} pedidos e ${syncedInv} produtos sincronizados!`, 'success');
       await loadIntegrations();
     } catch (err) {
-      showToast('Erro: ' + err.message, 'error');
+      showToast('Erro critico na sinc: ' + err.message, 'error');
     } finally {
       if (span) span.textContent = 'Sincronizar';
       if (btn) btn.disabled = false;
