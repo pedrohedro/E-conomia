@@ -783,20 +783,27 @@
   }
 
   window.handleDisconnect = async function(marketplace) {
-    const confirmed = confirm(`Desconectar ${formatMarketplaceName(marketplace)}? Os dados já importados serão mantidos.`);
-    if (!confirmed) return;
+    try {
+      const confirmed = confirm(`Desconectar ${formatMarketplaceName(marketplace)}? Os dados já importados serão mantidos.`);
+      if (!confirmed) return;
 
-    const { error } = await supabase
-      .from('marketplace_integrations')
-      .delete()
-      .eq('organization_id', currentOrgId)
-      .eq('marketplace', marketplace);
+      const { data, error, count } = await supabase
+        .from('marketplace_integrations')
+        .delete({ count: 'exact' })
+        .eq('organization_id', currentOrgId)
+        .eq('marketplace', marketplace);
 
-    if (error) {
-      showToast('Erro ao desconectar: ' + error.message, 'error');
-    } else {
-      showToast(formatMarketplaceName(marketplace) + ' desconectado.', 'success');
-      window.location.reload();
+      if (error) {
+        showToast('Erro ao desconectar: ' + error.message, 'error');
+        console.error("DB Erro:", error);
+      } else if (count === 0) {
+        showToast('Nenhuma integração encontrada para deletar (Permissão ou já removido)', 'error');
+      } else {
+        showToast(formatMarketplaceName(marketplace) + ' desconectado.', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch(err) {
+      showToast('Erro critico: ' + err.message, 'error');
     }
   };
 
