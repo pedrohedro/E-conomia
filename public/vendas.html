@@ -692,6 +692,7 @@
   import { requireAuth } from './js/auth-guard.js';
   import { fetchRecentOrders, formatCurrency } from './js/api.js';
   import { initThemeToggle } from './js/theme.js';
+  import { supabase } from './js/supabase-client.js';
 
   initThemeToggle('themeToggle');
 
@@ -986,6 +987,38 @@
       allOrders = [];
     }
 
+    // Realtime Listener
+    supabase
+      .channel('vendas-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
+        console.log('Realtime Order Change:', payload);
+        
+        // Show Toast
+        const toast = document.getElementById('toast');
+        const item = document.createElement('div');
+        item.className = 'toast-item';
+        item.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Atualização no Pedido ${(payload.new?.order_number || payload.new?.id?.slice(0,8)) || '...'}
+        `;
+        toast.appendChild(item);
+        setTimeout(() => { if (item.parentNode) item.remove(); }, 5000);
+
+        // Update state and UI
+        if (payload.eventType === 'INSERT') {
+          // Fetch complete representation or use partial payload
+          allOrders.unshift(payload.new);
+          renderTable();
+        } else if (payload.eventType === 'UPDATE') {
+          const idx = allOrders.findIndex(o => o.id === payload.new.id);
+          if (idx !== -1) {
+            allOrders[idx] = { ...allOrders[idx], ...payload.new };
+            renderTable();
+          }
+        }
+      })
+      .subscribe();
+
     // Initial render (no animation)
     setActiveTab('geral', false);
   }
@@ -1000,11 +1033,8 @@
     }
   });
 
-  // Sign out — get supabase from requireAuth result
+  // Sign out
   document.getElementById('signOutBtn')?.addEventListener('click', async () => {
-    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
-    // Use the shared client from auth-guard instead
-    const { supabase } = await import('./js/supabase-client.js');
     await supabase.auth.signOut();
     window.location.href = 'login.html';
   });

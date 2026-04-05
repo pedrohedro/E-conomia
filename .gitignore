@@ -1,5 +1,4 @@
 .vercel/
-.agent/
 .DS_Store
 OmniFlow-CRM.code-workspace
 node_modules/
@@ -11,12 +10,10 @@ supabase/.temp/
 .playwright-mcp/
 .cursor/
 .vercel
-.claude-flow/
 .swarm/
 .mcp.json
 public/.claude-flow/
+.claude-flow/
+.claude/
 *.session.json
-dashboard-preview.png
-producao-final.png
-vercel-deploy.png
-
+*.png
