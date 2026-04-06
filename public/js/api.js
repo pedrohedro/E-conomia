@@ -353,7 +353,7 @@ export async function fetchAllInventory(orgId, { search = '', stockFilter = 'all
   // Filtro por marketplace: manter apenas produtos que possuem channel_stock nesse marketplace
   if (marketplace) {
     products = products.filter(p =>
-      (p.channel_stock ?? []).some(cs => cs.marketplace === marketplace)
+      (p.channel_stock ?? []).some(cs => cs.channel === marketplace)
     );
   }
 

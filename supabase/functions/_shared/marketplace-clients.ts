@@ -21,19 +21,20 @@ export const MercadoLivre = {
   },
 
   async exchangeCode(code: string): Promise<MLTokenResponse> {
+    const params = new URLSearchParams();
+    params.append("grant_type", "authorization_code");
+    params.append("client_id", Deno.env.get("ML_APP_ID") || "");
+    params.append("client_secret", Deno.env.get("ML_CLIENT_SECRET") || "");
+    params.append("code", code);
+    params.append("redirect_uri", Deno.env.get("ML_REDIRECT_URI") || "");
+
     const res = await fetch(ML_TOKEN_URL, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        client_id: Deno.env.get("ML_APP_ID")!,
-        client_secret: Deno.env.get("ML_CLIENT_SECRET")!,
-        code,
-        redirect_uri: Deno.env.get("ML_REDIRECT_URI")!,
-      }),
+      body: params.toString(),
     });
     if (!res.ok) {
       const err = await res.json();
@@ -43,22 +44,25 @@ export const MercadoLivre = {
   },
 
   async refreshToken(refreshToken: string): Promise<MLTokenResponse> {
+    const clientId = Deno.env.get("ML_APP_ID") || "";
+    const clientSecret = Deno.env.get("ML_CLIENT_SECRET") || "";
+
+    const bodyStr = `grant_type=refresh_token&client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}&refresh_token=${encodeURIComponent(refreshToken)}`;
+
+    console.log("[ML-DEBUG] refreshToken body:", bodyStr);
+
     const res = await fetch(ML_TOKEN_URL, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        client_id: Deno.env.get("ML_APP_ID")!,
-        client_secret: Deno.env.get("ML_CLIENT_SECRET")!,
-        refresh_token: refreshToken,
-      }),
+      body: bodyStr,
     });
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(`ML token refresh failed: ${JSON.stringify(err)}`);
+      const errText = await res.text();
+      console.error("[ML-DEBUG] refresh error response:", errText);
+      throw new Error(`ML token refresh failed: ${errText}`);
     }
     return res.json();
   },

@@ -459,7 +459,7 @@
           if (el) el.textContent = initials;
           if (avatarEl) avatarEl.textContent = initials;
           if (nameEl) nameEl.textContent = user.user_metadata?.full_name ?? user.email ?? 'Usuário';
-          if (orgEl) orgEl.textContent = window.__ECONOMIA__?.orgName ?? '—';
+          if (orgEl) orgEl.textContent = window.__ECONOMIA__?.org?.name ?? '—';
       }
 
       if (!orgId) {
@@ -517,13 +517,18 @@
       tbody.style.transform = 'translateY(6px)';
 
       if (!products.length) {
+          const isFiltered = searchQuery || stockFilter !== 'all' || activeMarketplace;
+          const emptyTitle = isFiltered ? 'Nenhum produto encontrado' : 'Estoque vazio';
+          const emptyDesc = isFiltered
+              ? 'Ajuste os filtros aplicados para ver resultados.'
+              : 'Conecte um marketplace e sincronize para ver seus produtos aqui.';
           tbody.innerHTML = `
               <tr>
                 <td colspan="8" style="padding:0;">
                   <div class="empty-state">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                    <p class="empty-state-title">Nenhum produto encontrado</p>
-                    <p class="empty-state-desc">Ajuste os filtros aplicados para ver resultados.</p>
+                    <p class="empty-state-title">${emptyTitle}</p>
+                    <p class="empty-state-desc">${emptyDesc}</p>
                   </div>
                 </td>
               </tr>`;

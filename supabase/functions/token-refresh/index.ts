@@ -14,13 +14,26 @@ serve(async (req: Request) => {
 
   const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-  const { data: integrations, error } = await supabase
+  // Buscar integrações que precisam de refresh:
+  // 1) status=active com token expirando em <1h
+  // 2) status=token_expired (qualquer timestamp - precisam de recuperação)
+  const { data: activeExpiring } = await supabase
     .from("marketplace_integrations")
     .select("id, organization_id, marketplace, refresh_token, seller_id")
     .eq("status", "active")
     .eq("marketplace", "mercado_livre")
     .not("refresh_token", "is", null)
     .lt("token_expires_at", oneHourFromNow);
+
+  const { data: expiredOnes } = await supabase
+    .from("marketplace_integrations")
+    .select("id, organization_id, marketplace, refresh_token, seller_id")
+    .eq("status", "token_expired")
+    .eq("marketplace", "mercado_livre")
+    .not("refresh_token", "is", null);
+
+  const integrations = [...(activeExpiring ?? []), ...(expiredOnes ?? [])];
+  const error = null;
 
   if (error) {
     console.error("Error fetching integrations:", error);
