@@ -519,19 +519,19 @@
           Geral
         </button>
         <button class="mkt-tab" onclick="changeContabilTab('ml', this)">
-          <img src="assets/logos/mercado-livre.png" alt="ML">
+          <img src="/assets/logos/mercado-livre.png" alt="ML">
           ML
         </button>
         <button class="mkt-tab" onclick="changeContabilTab('amazon', this)">
-          <img src="assets/logos/amazon.png" alt="Amazon">
+          <img src="/assets/logos/amazon.png" alt="Amazon">
           Amazon
         </button>
         <button class="mkt-tab" onclick="changeContabilTab('shopee', this)">
-          <img src="assets/logos/shopee.png" alt="Shopee">
+          <img src="/assets/logos/shopee.png" alt="Shopee">
           Shopee
         </button>
         <button class="mkt-tab" onclick="changeContabilTab('nuvemshop', this)">
-          <img src="assets/logos/nuvemshop.png" alt="Nuvemshop">
+          <img src="/assets/logos/nuvemshop.png" alt="Nuvemshop">
           Nuvemshop
         </button>
       </div>
@@ -548,7 +548,7 @@
           </div>
         </div>
         <p class="kpi-label">Valores em Caixa</p>
-        <p class="kpi-value" id="kpi-caixa">R$ 142.500</p>
+        <p class="kpi-value" id="kpi-caixa">—</p>
         <p class="kpi-sub">Saldo disponível para saque</p>
       </div>
 
@@ -632,7 +632,7 @@
         <div class="fixed-costs-box">
           <div class="fixed-costs-row">
             <span class="fixed-costs-label">Custos Fixos Mensais</span>
-            <span class="fixed-costs-value">R$ 14.200</span>
+            <span class="fixed-costs-value">R$ 0</span>
           </div>
           <div class="progress-track">
             <div class="progress-fill" style="width:35%"></div>
@@ -973,13 +973,14 @@ function renderPayouts(payouts) {
 // -----------------------------------------------------------------------
 
 async function loadKPIs(orgId) {
-  ['kpi-bruto', 'kpi-taxas', 'kpi-despesas', 'kpi-lucro'].forEach(skeletonKPI);
+  ['kpi-caixa', 'kpi-bruto', 'kpi-taxas', 'kpi-despesas', 'kpi-lucro'].forEach(skeletonKPI);
 
   try {
     const summary = await fetchFinancialSummary(orgId);
-    setKPI('kpi-bruto',     summary.receita);
-    setKPI('kpi-taxas',     summary.taxas);
-    setKPI('kpi-despesas',  summary.despesas);
+    setKPI('kpi-caixa',      summary.caixa);
+    setKPI('kpi-bruto',      summary.receita);
+    setKPI('kpi-taxas',      summary.taxas);
+    setKPI('kpi-despesas',   summary.despesas);
 
     const lucroEl = document.getElementById('kpi-lucro');
     if (lucroEl) {
@@ -995,7 +996,7 @@ async function loadKPIs(orgId) {
     }
   } catch (err) {
     console.error('Erro ao carregar KPIs financeiros:', err);
-    ['kpi-bruto', 'kpi-taxas', 'kpi-despesas', 'kpi-lucro'].forEach(id => {
+    ['kpi-caixa', 'kpi-bruto', 'kpi-taxas', 'kpi-despesas', 'kpi-lucro'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.textContent = '—';
     });

@@ -261,6 +261,7 @@ export async function fetchFinancialSummary(orgId) {
   const despesas = expenses.reduce((s, e) => s + (e.amount ?? 0), 0);
   const despesasPagas = expenses.filter(e => e.is_paid).reduce((s, e) => s + (e.amount ?? 0), 0);
   const recebimentos = payouts.filter(p => p.status === 'paid').reduce((s, p) => s + (p.net_amount ?? 0), 0);
+  const caixa = payouts.reduce((s, p) => s + (p.net_amount ?? 0), 0);
   const lucroEstimado = receita - taxas - despesas;
 
   return {
@@ -269,6 +270,7 @@ export async function fetchFinancialSummary(orgId) {
     despesas: formatCurrency(despesas),
     despesasPagas: formatCurrency(despesasPagas),
     recebimentos: formatCurrency(recebimentos),
+    caixa: formatCurrency(caixa),
     lucroEstimado: formatCurrency(lucroEstimado),
     lucroPositivo: lucroEstimado >= 0,
   };
