@@ -405,7 +405,7 @@ export async function fetchPayouts(orgId, month) {
 
   const { data, error } = await supabase
     .from('marketplace_payouts')
-    .select('id, marketplace, payout_date, gross_amount, net_amount, fees_amount, status')
+    .select('id, marketplace, payout_date, amount, net_amount, fee_amount, status')
     .eq('organization_id', orgId)
     .gte('payout_date', start)
     .order('payout_date', { ascending: false });

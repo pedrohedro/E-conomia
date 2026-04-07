@@ -948,7 +948,7 @@ function renderPayouts(payouts) {
     const payoutDate = p.payout_date
       ? new Date(p.payout_date + 'T00:00:00').toLocaleDateString('pt-BR')
       : '—';
-    const fees = p.fees_amount != null ? formatCurrency(p.fees_amount) : '—';
+    const fees = p.fee_amount != null ? formatCurrency(p.fee_amount) : '—';
 
     const statusBadge = p.status === 'paid'
       ? `<span class="badge badge-success"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block"></span>Pago</span>`
@@ -960,7 +960,7 @@ function renderPayouts(payouts) {
       <tr>
         <td style="font-weight:600;">${mktLabel}</td>
         <td>${payoutDate}</td>
-        <td style="text-align:right;">${formatCurrency(p.gross_amount)}</td>
+        <td style="text-align:right;">${formatCurrency(p.amount)}</td>
         <td style="text-align:right;color:var(--destructive);">- ${fees}</td>
         <td style="text-align:right;font-weight:600;color:var(--success);">${formatCurrency(p.net_amount)}</td>
         <td>${statusBadge}</td>
