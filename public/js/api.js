@@ -27,37 +27,38 @@ export function formatPercent(value, decimals = 1) {
  * @param {string|null} marketplace - 'mercado_livre' | 'nuvemshop' | 'amazon' | 'shopee' | null (geral)
  */
 export async function fetchDashboardKPIs(orgId, marketplace = null) {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
+  try {
+    const { data, error } = await supabase.rpc('get_dashboard_kpis', {
+      p_org_id: orgId,
+      p_marketplace: marketplace
+    });
 
-  let query = supabase
-    .from('orders')
-    .select('gross_amount, marketplace_fee_amt, status, marketplace, created_at')
-    .eq('organization_id', orgId)
-    .gte('created_at', startOfMonth)
-    .neq('status', 'cancelled');
+    if (error) throw error;
 
-  if (marketplace) {
-    query = query.eq('marketplace', marketplace);
+    return {
+      totalRevenue: (data.revenue || 0) / 100,
+      totalOrders: data.orders_count || 0,
+      avgTicket: (data.avg_ticket || 0) / 100,
+      avgMargin: data.margin_percent || 0,
+      revenueGrowth: data.revenue_growth || 0,
+      ordersGrowth: data.orders_growth || 0
+    };
+  } catch (error) {
+    console.error('Error fetching dashboard KPIs:', error);
+    return {
+      totalRevenue: 0,
+      totalOrders: 0,
+      avgTicket: 0,
+      avgMargin: 0,
+      revenueGrowth: 0,
+      ordersGrowth: 0
+    };
   }
+}
 
-  const { data: currentOrders, error } = await query;
-  if (error) throw error;
-
-  // Mês anterior para variação %
-  let queryLast = supabase
-    .from('orders')
-    .select('gross_amount')
-    .eq('organization_id', orgId)
-    .gte('created_at', startOfLastMonth)
-    .lte('created_at', endOfLastMonth)
-    .neq('status', 'cancelled');
-
-  if (marketplace) queryLast = queryLast.eq('marketplace', marketplace);
-
-  const { data: lastOrders } = await queryLast;
+// Codigo antigo removido (migrado para RPC)
+/*
+export async function fetchDashboardKPIs_Legacy(orgId, marketplace = null) {
 
   const totalVendas = (currentOrders ?? []).reduce((sum, o) => sum + (o.gross_amount ?? 0), 0);
   const totalTaxas = (currentOrders ?? []).reduce((sum, o) => sum + (o.marketplace_fee_amt ?? 0), 0);

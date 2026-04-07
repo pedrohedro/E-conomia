@@ -20,9 +20,11 @@ serve(async (req: Request) => {
     .in("marketplace", ["mercado_livre", "nuvemshop"]);
 
   // Permite filtrar por org_id ou marketplace via body
+  let forceAll = false;
   if (req.method === "POST") {
     try {
       const body = await req.json();
+      forceAll = !!body.force_all;
       if (body.organization_id) {
         query = query.eq("organization_id", body.organization_id);
       }
@@ -56,6 +58,7 @@ serve(async (req: Request) => {
       organization_id: integration.organization_id,
       event_type: "orders_sync",
       status: "started",
+      started_at: new Date().toISOString(),
     });
 
     try {
@@ -64,7 +67,8 @@ serve(async (req: Request) => {
       if (integration.marketplace === "mercado_livre") {
         ordersSynced = await syncMercadoLivreOrders(
           supabase,
-          integration
+          integration,
+          forceAll
         );
       } else if (integration.marketplace === "nuvemshop") {
         ordersSynced = await syncNuvemshopOrders(supabase, integration);
@@ -129,11 +133,14 @@ serve(async (req: Request) => {
 // =============================================================================
 async function syncMercadoLivreOrders(
   supabase: ReturnType<typeof getServiceClient>,
-  integration: Record<string, any>
+  integration: Record<string, any>,
+  forceAll = false
 ): Promise<number> {
-  const dateFrom = integration.last_sync_at
+  const mlSearchDate = (integration.last_sync_at && !forceAll)
     ? new Date(integration.last_sync_at).toISOString()
-    : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 dias
+    : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(); 
+
+  console.log(`[ML] Fetching orders for seller ${integration.seller_id} from ${mlSearchDate}`);
 
   let offset = 0;
   let totalSynced = 0;
@@ -143,8 +150,14 @@ async function syncMercadoLivreOrders(
     const data = await MercadoLivre.getOrders(
       integration.access_token,
       integration.seller_id,
-      { offset, limit: 50, dateFrom }
+      { offset, limit: 50, dateFrom: mlSearchDate }
     );
+
+    console.log(`[ML] API Response for offset ${offset}: ${JSON.stringify({
+      total: data.paging?.total,
+      results_length: data.results?.length,
+      first_id: data.results?.[0]?.id
+    })}`);
 
     const orders = data.results ?? [];
     if (orders.length === 0) break;
