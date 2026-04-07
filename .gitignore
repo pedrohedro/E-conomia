@@ -16,4 +16,4 @@ public/.claude-flow/
 .claude-flow/
 .claude/
 *.session.json
-*.png
+# *.png moved to explicit ignores if needed, but not global
