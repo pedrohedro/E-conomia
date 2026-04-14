@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conectando... — E-CONOMIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0a0a0c;
+      color: #fafafa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      text-align: center;
+      max-width: 400px;
+      padding: 32px;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(255,255,255,.1);
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 24px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    p { font-size: 14px; color: rgba(255,255,255,.5); line-height: 1.5; }
+    .status { margin-top: 16px; font-size: 12px; color: #10b981; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="spinner"></div>
+  <h1>Conectando ao marketplace...</h1>
+  <p>Aguarde enquanto validamos a autorização. Você será redirecionado automaticamente.</p>
+  <div class="status" id="status"></div>
+</div>
+<script>
+  // Esta página é apenas um fallback visual. Na maioria dos casos, o 302 da
+  // Edge Function redireciona direto para /?connected=xxx sem passar por aqui.
+  // Se o usuário parar aqui, algo deu errado.
+  setTimeout(() => {
+    document.getElementById('status').textContent = 'Se não for redirecionado em 10s, volte para a tela de Marketplaces.';
+  }, 5000);
+  setTimeout(() => {
+    window.location.href = '/';
+  }, 15000);
+</script>
+</body>
+</html>

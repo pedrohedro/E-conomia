@@ -12,7 +12,8 @@
     { "source": "/onboarding", "destination": "/onboarding.html" },
     { "source": "/anuncios", "destination": "/anuncios.html" },
     { "source": "/compras", "destination": "/compras.html" },
-    { "source": "/conciliacao", "destination": "/conciliacao.html" }
+    { "source": "/conciliacao", "destination": "/conciliacao.html" },
+    { "source": "/oauth/callback", "destination": "/oauth-callback.html" }
   ],
   "headers": [
     {
