@@ -1,203 +1,208 @@
+// ECOM-51 | marketplace-oauth Edge Function
+// Router de OAuth para TODOS os marketplaces — Shopee, Amazon, Bling, Shopify, TikTok
+// Rota: POST /marketplace-oauth  { action, marketplace, ...params }
+//
+// Secrets por marketplace (adicionar no Supabase Dashboard):
+//   Shopee:   SHOPEE_PARTNER_ID, SHOPEE_PARTNER_KEY, SHOPEE_SANDBOX=true/false
+//   Amazon:   AMAZON_APP_ID, AMAZON_LWA_CLIENT_ID, AMAZON_LWA_CLIENT_SECRET, AMAZON_REDIRECT_URI
+//   Bling:    BLING_CLIENT_ID, BLING_CLIENT_SECRET, BLING_REDIRECT_URI
+//   Shopify:  SHOPIFY_CLIENT_ID, SHOPIFY_CLIENT_SECRET, SHOPIFY_REDIRECT_URI
+//   Anymarket:ANYMARKET_API_KEY
+//   TikTok:   TIKTOK_APP_ID, TIKTOK_APP_SECRET
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { corsHeaders, handleCors } from "../_shared/cors.ts";
+import { getCorsHeaders, handleCors } from "../_shared/cors.ts";
 import { getServiceClient, getUserClient } from "../_shared/supabase.ts";
-import { MercadoLivre, Nuvemshop } from "../_shared/marketplace-clients.ts";
+import { Shopee, Amazon, Bling, Anymarket, Shopify } from "../_shared/marketplace-clients.ts";
+
+const REDIRECT_BASE = Deno.env.get("APP_URL") ?? "https://e-conomia.vercel.app";
 
 serve(async (req: Request) => {
   const corsRes = handleCors(req);
   if (corsRes) return corsRes;
+  const corsH = getCorsHeaders(req);
 
-  const url = new URL(req.url);
-  const path = url.pathname.split("/").pop();
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) return json({ error: "Unauthorized" }, 401, corsH);
 
-  try {
-    if (path === "authorize") return handleAuthorize(req, url);
-    if (path === "callback") return handleCallback(req, url);
-    return new Response("Not found", { status: 404 });
-  } catch (err) {
-    console.error("OAuth error:", err);
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
+  const userClient = getUserClient(authHeader);
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return json({ error: "Sessão inválida" }, 401, corsH);
 
-// =============================================================================
-// GET /marketplace-oauth/authorize?marketplace=mercado_livre&org_id=xxx
-// Redireciona o usuario para a tela de autorizacao do marketplace
-// =============================================================================
-async function handleAuthorize(_req: Request, url: URL): Promise<Response> {
-  const marketplace = url.searchParams.get("marketplace");
-  const orgId = url.searchParams.get("org_id");
-  const returnUrl = url.searchParams.get("return_url")
-    || Deno.env.get("FRONTEND_URL")
-    || "https://e-conomia-crm-gamma.vercel.app";
+  let body: OAuthRequest;
+  try { body = await req.json(); } catch { return json({ error: "JSON inválido" }, 400, corsH); }
 
-  if (!marketplace || !orgId) {
-    return new Response(
-      JSON.stringify({ error: "marketplace and org_id are required" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-
-  // state codifica org_id + marketplace + return_url para recuperar no callback
-  const statePayload = JSON.stringify({ org_id: orgId, marketplace, return_url: returnUrl });
-  const state = btoa(statePayload);
-
-  let authUrl: string;
-
-  switch (marketplace) {
-    case "mercado_livre":
-      authUrl = MercadoLivre.getAuthUrl(state);
-      break;
-    case "nuvemshop":
-      authUrl = Nuvemshop.getAuthUrl(state);
-      break;
-    default:
-      return new Response(
-        JSON.stringify({ error: `Marketplace "${marketplace}" not supported yet` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-  }
-
-  return Response.redirect(authUrl, 302);
-}
-
-// =============================================================================
-// GET /marketplace-oauth/callback?code=xxx&state=xxx
-// Recebe o code do marketplace e troca por access_token
-// =============================================================================
-async function handleCallback(_req: Request, url: URL): Promise<Response> {
-  const code = url.searchParams.get("code");
-  const stateRaw = url.searchParams.get("state");
-
-  if (!code || !stateRaw) {
-    return errorRedirect("Parametros code/state ausentes");
-  }
-
-  let state: { org_id: string; marketplace: string; return_url?: string };
-  try {
-    state = JSON.parse(atob(stateRaw));
-  } catch {
-    return errorRedirect("State invalido");
-  }
+  const { action, marketplace, organization_id } = body;
+  if (!action || !marketplace) return json({ error: "action e marketplace são obrigatórios" }, 400, corsH);
 
   const supabase = getServiceClient();
-  const { marketplace, org_id } = state;
 
-  try {
-    if (marketplace === "mercado_livre") {
-      const tokens = await MercadoLivre.exchangeCode(code);
-      const seller = await MercadoLivre.getSellerInfo(tokens.access_token);
+  // ─── STEP 1: Gera URL de autorização ─────────────────────────────────────
+  if (action === "get_auth_url") {
+    const state = `${organization_id}:${user.id}:${Date.now()}`;
+    let url = "";
 
-      const expiresAt = new Date(
-        Date.now() + tokens.expires_in * 1000
-      ).toISOString();
-
-      await supabase.from("marketplace_integrations").upsert(
-        {
-          organization_id: org_id,
-          marketplace: "mercado_livre",
-          status: "active",
-          seller_id: String(tokens.user_id),
-          seller_nickname: seller.nickname,
-          seller_url: seller.permalink,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          token_expires_at: expiresAt,
-          oauth_scope: tokens.scope,
-          config: {
-            site_id: seller.site_id,
-            seller_reputation: seller.seller_reputation?.level_id,
-          },
-          last_sync_at: null,
-          last_sync_error: null,
-        },
-        { onConflict: "organization_id,marketplace" }
-      );
-
-      await supabase.from("sync_logs").insert({
-        integration_id: await getIntegrationId(supabase, org_id, "mercado_livre"),
-        organization_id: org_id,
-        event_type: "oauth_connect",
-        status: "success",
-        metadata: { seller_id: tokens.user_id, nickname: seller.nickname },
-      });
-    } else if (marketplace === "nuvemshop") {
-      const tokens = await Nuvemshop.exchangeCode(code);
-
-      let storeName = "";
-      try {
-        const store = await Nuvemshop.getStoreInfo(
-          tokens.access_token,
-          tokens.user_id
-        );
-        storeName = store.name?.pt || store.name?.es || "";
-      } catch {
-        // store info is optional
+    switch (marketplace) {
+      case "shopee": {
+        const redirectUri = `${REDIRECT_BASE}/oauth/callback?marketplace=shopee`;
+        url = Shopee.getAuthUrl(redirectUri);
+        break;
       }
-
-      await supabase.from("marketplace_integrations").upsert(
-        {
-          organization_id: org_id,
-          marketplace: "nuvemshop",
-          status: "active",
-          seller_id: tokens.user_id,
-          seller_nickname: storeName,
-          access_token: tokens.access_token,
-          refresh_token: null, // Nuvemshop tokens don't expire
-          token_expires_at: null,
-          oauth_scope: tokens.scope,
-          config: { store_id: tokens.user_id },
-          last_sync_at: null,
-          last_sync_error: null,
-        },
-        { onConflict: "organization_id,marketplace" }
-      );
-
-      await supabase.from("sync_logs").insert({
-        integration_id: await getIntegrationId(supabase, org_id, "nuvemshop"),
-        organization_id: org_id,
-        event_type: "oauth_connect",
-        status: "success",
-        metadata: { store_id: tokens.user_id, store_name: storeName },
-      });
+      case "amazon":
+        url = Amazon.getLwaAuthUrl(state);
+        break;
+      case "bling":
+        url = Bling.getAuthUrl(state);
+        break;
+      case "shopify": {
+        const shop = body.shop ?? "";
+        if (!shop) return json({ error: "shop (ex: minhaloja.myshopify.com) é obrigatório" }, 400, corsH);
+        url = Shopify.getAuthUrl(shop, state);
+        break;
+      }
+      case "anymarket":
+        return json({ type: "api_key", message: "Configure ANYMARKET_API_KEY nos Secrets do Supabase" }, 200, corsH);
+      case "tiktok_shop": {
+        const appId = Deno.env.get("TIKTOK_APP_ID") ?? "";
+        url = `https://auth.tiktok-shops.com/oauth/authorize?app_key=${appId}&state=${state}&response_type=code`;
+        break;
+      }
+      default:
+        return json({ error: `Marketplace '${marketplace}' não suportado` }, 400, corsH);
     }
-  } catch (err) {
-    console.error(`OAuth callback error for ${marketplace}:`, err);
-    return errorRedirect(String(err));
+
+    return json({ auth_url: url, state }, 200, corsH);
   }
 
-  const frontendUrl = state.return_url
-    || Deno.env.get("FRONTEND_URL")
-    || "https://e-conomia-crm-gamma.vercel.app";
-  return Response.redirect(
-    `${frontendUrl}/index.html?connected=${marketplace}`,
-    302
-  );
+  // ─── STEP 2: Troca código por token ──────────────────────────────────────
+  if (action === "exchange_code") {
+    const { code, shop_id, shop } = body;
+    if (!code) return json({ error: "code é obrigatório" }, 400, corsH);
+    if (!organization_id) return json({ error: "organization_id é obrigatório" }, 400, corsH);
+
+    try {
+      let tokenData: Record<string, any> = {};
+      let sellerInfo: Record<string, any> = {};
+      let sellerId = "";
+      let sellerName = "";
+
+      switch (marketplace) {
+        case "shopee": {
+          if (!shop_id) return json({ error: "shop_id é obrigatório para Shopee" }, 400, corsH);
+          tokenData = await Shopee.exchangeCode(code, Number(shop_id));
+          const info = await Shopee.getShopInfo(tokenData.access_token, shop_id);
+          sellerId   = String(shop_id);
+          sellerName = info.response?.shop_name ?? `Shopee-${shop_id}`;
+          sellerInfo = info;
+          break;
+        }
+        case "amazon": {
+          tokenData = await Amazon.exchangeCode(code);
+          sellerId   = body.selling_partner_id ?? "BR_SELLER";
+          sellerName = `Amazon BR - ${sellerId}`;
+          break;
+        }
+        case "bling": {
+          tokenData  = await Bling.exchangeCode(code);
+          sellerId   = tokenData.user_store?.id ?? user.id;
+          sellerName = tokenData.user_store?.nome ?? "Bling Store";
+          break;
+        }
+        case "shopify": {
+          if (!shop) return json({ error: "shop é obrigatório" }, 400, corsH);
+          tokenData  = await Shopify.exchangeCode(shop, code);
+          sellerId   = shop;
+          sellerName = shop.replace(".myshopify.com", "");
+          try {
+            await Shopify.registerWebhook(shop, tokenData.access_token, "orders/create",
+              `https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1/shopify-webhook`);
+          } catch { /* webhook pode ser configurado manualmente */ }
+          break;
+        }
+        case "tiktok_shop": {
+          const appKey    = Deno.env.get("TIKTOK_APP_ID") ?? "";
+          const appSecret = Deno.env.get("TIKTOK_APP_SECRET") ?? "";
+          const res = await fetch(`https://auth.tiktok-shops.com/api/v2/token/get?app_key=${appKey}&auth_code=${code}&app_secret=${appSecret}&grant_type=authorized_code`);
+          tokenData  = await res.json();
+          sellerId   = tokenData.data?.seller_id ?? "";
+          sellerName = tokenData.data?.seller_name ?? "TikTok Shop";
+          break;
+        }
+        default:
+          return json({ error: `Marketplace '${marketplace}' não suportado` }, 400, corsH);
+      }
+
+      const expiresAt = tokenData.expires_in
+        ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+        : null;
+
+      const { error: dbErr } = await supabase
+        .from("marketplace_integrations")
+        .upsert({
+          organization_id,
+          marketplace,
+          seller_id:     sellerId,
+          seller_name:   sellerName,
+          access_token:  tokenData.access_token,
+          refresh_token: tokenData.refresh_token ?? null,
+          token_expires_at: expiresAt,
+          status: "active",
+          config: { shop_id: shop_id ?? shop ?? null, seller_info: sellerInfo },
+        }, { onConflict: "organization_id,marketplace" });
+
+      if (dbErr) throw new Error(`DB error: ${dbErr.message}`);
+
+      return json({
+        success: true,
+        marketplace,
+        seller_id: sellerId,
+        seller_name: sellerName,
+        message: `${marketplace.replace(/_/g, " ")} conectado com sucesso!`,
+      }, 200, corsH);
+
+    } catch (err) {
+      console.error(`OAuth exchange error [${marketplace}]:`, err);
+      return json({ error: `Falha ao conectar ${marketplace}`, details: String(err) }, 500, corsH);
+    }
+  }
+
+  // ─── STEP 3: Anymarket / Bling — salva API Key ───────────────────────────
+  if (action === "save_api_key") {
+    const { api_key } = body;
+    if (!api_key || !organization_id) return json({ error: "api_key e organization_id são obrigatórios" }, 400, corsH);
+
+    const displayName = marketplace === "bling" ? "Bling ERP" : "Anymarket Hub";
+
+    const { error: dbErr } = await supabase
+      .from("marketplace_integrations")
+      .upsert({
+        organization_id,
+        marketplace,
+        seller_id:    marketplace,
+        seller_name:  displayName,
+        access_token: api_key,
+        status: "active",
+        config: { type: "api_key" },
+      }, { onConflict: "organization_id,marketplace" });
+
+    if (dbErr) return json({ error: dbErr.message }, 500, corsH);
+    return json({ success: true, message: `${displayName} conectado!` }, 200, corsH);
+  }
+
+  return json({ error: `Action '${action}' desconhecida` }, 400, corsH);
+});
+
+function json(d: unknown, s: number, h: Record<string, string>) {
+  return new Response(JSON.stringify(d), { status: s, headers: { ...h, "Content-Type": "application/json" } });
 }
 
-async function getIntegrationId(
-  supabase: ReturnType<typeof getServiceClient>,
-  orgId: string,
-  marketplace: string
-): Promise<string> {
-  const { data } = await supabase
-    .from("marketplace_integrations")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("marketplace", marketplace)
-    .single();
-  return data?.id;
-}
-
-function errorRedirect(message: string, returnUrl?: string): Response {
-  const frontendUrl = returnUrl
-    || Deno.env.get("FRONTEND_URL")
-    || "https://e-conomia-crm-gamma.vercel.app";
-  return Response.redirect(
-    `${frontendUrl}/index.html?error=${encodeURIComponent(message)}`,
-    302
-  );
+interface OAuthRequest {
+  action: "get_auth_url" | "exchange_code" | "save_api_key";
+  marketplace: string;
+  organization_id?: string;
+  code?: string;
+  shop_id?: string | number;
+  shop?: string;
+  selling_partner_id?: string;
+  api_key?: string;
 }

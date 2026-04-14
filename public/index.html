@@ -469,27 +469,15 @@
           <h3 class="mp-name">Mercado Livre</h3>
           <p class="mp-desc">Sincronize vendas, taxas e gestão de estoque Full/Flex.</p>
           <ul class="mp-features">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Importação de Pedidos
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Desconto de Taxas Oficiais
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Cálculo de Impostos (Simples)
-            </li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Pedidos + Taxas Oficiais</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Edição de Anúncios</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Etiquetas + NF-e</li>
           </ul>
           <div id="account-proof-mercado_livre" class="mp-account-proof"></div>
         </div>
         <div class="mp-card-footer" id="footer-mercado_livre">
           <button id="btn-mercado_livre" class="mp-btn mp-btn-primary" onclick="handleConnect('mercado_livre')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
             <span>Conectar</span>
           </button>
         </div>
@@ -508,113 +496,222 @@
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Nuvemshop</h3>
-          <p class="mp-desc">E-commerce próprio com controle total de margem e sem taxas.</p>
+          <p class="mp-desc">Loja própria sem taxas de marketplace.</p>
           <ul class="mp-features">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Sem taxas de marketplace
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Sync de Pedidos
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Gestão via Correios/Transp.
-            </li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Sem taxas de venda</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Sync de Pedidos + Estoque</li>
           </ul>
           <div id="account-proof-nuvemshop" class="mp-account-proof"></div>
         </div>
         <div class="mp-card-footer" id="footer-nuvemshop">
           <button id="btn-nuvemshop" class="mp-btn mp-btn-primary" onclick="handleConnect('nuvemshop')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
             <span>Conectar</span>
           </button>
         </div>
       </div>
 
-      <!-- AMAZON (Em Breve) -->
-      <div class="mp-card mp-disabled">
+      <!-- SHOPEE -->
+      <div id="card-shopee" class="mp-card">
+        <div class="mp-card-top">
+          <div class="mp-logo">
+            <img src="/assets/logos/shopee.png" alt="Shopee" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <svg style="display:none;color:#ee4d2d" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C9.79 2 8 3.79 8 6H4.5L3 22h18l-1.5-16H16c0-2.21-1.79-4-4-4zm0 2c1.1 0 2 .9 2 2H10c0-1.1.9-2 2-2z"/></svg>
+          </div>
+          <span id="status-shopee" class="mp-status disconnected">
+            <span class="mp-status-dot"></span>Desconectado
+          </span>
+        </div>
+        <div class="mp-card-body">
+          <h3 class="mp-name">Shopee</h3>
+          <p class="mp-desc">Maior marketplace de crescimento no Brasil — sync de pedidos e estoque.</p>
+          <ul class="mp-features">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>OAuth Shopee Open Platform</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Pedidos + Taxas + Estoque</li>
+          </ul>
+          <div id="account-proof-shopee" class="mp-account-proof"></div>
+        </div>
+        <div class="mp-card-footer" id="footer-shopee">
+          <button id="btn-shopee" class="mp-btn mp-btn-primary" onclick="handleConnect('shopee')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Conectar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- AMAZON -->
+      <div id="card-amazon" class="mp-card">
         <div class="mp-card-top">
           <div class="mp-logo">
             <img src="/assets/logos/amazon.png" alt="Amazon" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
             <svg style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
           </div>
-          <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
+          <span id="status-amazon" class="mp-status disconnected">
+            <span class="mp-status-dot"></span>Desconectado
+          </span>
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Amazon Seller</h3>
-          <p class="mp-desc">Gestão de margem FBA e DBA com visibilidade de taxas.</p>
+          <p class="mp-desc">Selling Partner API — pedidos FBA/FBM com visibilidade total de taxas.</p>
+          <ul class="mp-features">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>SP-API Login with Amazon</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Pedidos FBA + DBA</li>
+          </ul>
+          <div id="account-proof-amazon" class="mp-account-proof"></div>
         </div>
-        <div class="mp-card-footer">
-          <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
-        </div>
-      </div>
-
-      <!-- SHOPEE (Em Breve) -->
-      <div class="mp-card mp-disabled">
-        <div class="mp-card-top">
-          <div class="mp-logo">
-            <img src="/assets/logos/shopee.png" alt="Shopee" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-            <svg style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-          </div>
-          <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
-        </div>
-        <div class="mp-card-body">
-          <h3 class="mp-name">Shopee</h3>
-          <p class="mp-desc">Taxas, Ads e controle de estoque unificado.</p>
-        </div>
-        <div class="mp-card-footer">
-          <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
+        <div class="mp-card-footer" id="footer-amazon">
+          <button id="btn-amazon" class="mp-btn mp-btn-primary" onclick="handleConnect('amazon')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Conectar</span>
+          </button>
         </div>
       </div>
 
-      <!-- SHEIN (Em Breve) -->
-      <div class="mp-card mp-disabled">
+      <!-- SHOPIFY -->
+      <div id="card-shopify" class="mp-card">
         <div class="mp-card-top">
           <div class="mp-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/>
-            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#96bf48" stroke-width="2" style="width:24px;height:24px;"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           </div>
-          <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
-        </div>
-        <div class="mp-card-body">
-          <h3 class="mp-name">Shein</h3>
-          <p class="mp-desc">Marketplace de moda e acessórios.</p>
-        </div>
-        <div class="mp-card-footer">
-          <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
-        </div>
-      </div>
-
-      <!-- SHOPIFY (Em Breve) -->
-      <div class="mp-card mp-disabled">
-        <div class="mp-card-top">
-          <div class="mp-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-              <line x1="3" x2="21" y1="6" y2="6"/>
-              <path d="M16 10a4 4 0 0 1-8 0"/>
-            </svg>
-          </div>
-          <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
+          <span id="status-shopify" class="mp-status disconnected">
+            <span class="mp-status-dot"></span>Desconectado
+          </span>
         </div>
         <div class="mp-card-body">
           <h3 class="mp-name">Shopify</h3>
-          <p class="mp-desc">Loja própria internacional com multi-moeda.</p>
+          <p class="mp-desc">Loja própria com multi-moeda, webhook de pedidos em tempo real.</p>
+          <ul class="mp-features">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>OAuth + Webhooks automáticos</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Pedidos + Inventário</li>
+          </ul>
+          <div id="account-proof-shopify" class="mp-account-proof"></div>
         </div>
-        <div class="mp-card-footer">
-          <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
+        <div class="mp-card-footer" id="footer-shopify">
+          <button id="btn-shopify" class="mp-btn mp-btn-primary" onclick="handleConnectShopify()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Conectar</span>
+          </button>
         </div>
       </div>
 
-    </div><!-- /integrations-grid -->
+      <!-- TIKTOK SHOP -->
+      <div id="card-tiktok_shop" class="mp-card">
+        <div class="mp-card-top">
+          <div class="mp-logo" style="background:#010101;">
+            <svg viewBox="0 0 24 24" fill="white" style="width:20px;height:20px;"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34l-.04-8.41a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.32z"/></svg>
+          </div>
+          <span id="status-tiktok_shop" class="mp-status disconnected">
+            <span class="mp-status-dot"></span>Desconectado
+          </span>
+        </div>
+        <div class="mp-card-body">
+          <h3 class="mp-name">TikTok Shop</h3>
+          <p class="mp-desc">Vendas via social commerce — o canal de maior crescimento em 2025.</p>
+          <ul class="mp-features">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>OAuth TikTok Open Platform</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Pedidos + Afiliados</li>
+          </ul>
+          <div id="account-proof-tiktok_shop" class="mp-account-proof"></div>
+        </div>
+        <div class="mp-card-footer" id="footer-tiktok_shop">
+          <button id="btn-tiktok_shop" class="mp-btn mp-btn-primary" onclick="handleConnect('tiktok_shop')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            <span>Conectar</span>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /OAuth grid -->
+
+    <!-- HUB SECTION -->
+    <div style="margin-top:28px;">
+      <div class="section-header" style="margin-bottom:16px;">
+        <div class="section-header-text">
+          <h2>Hubs de E-commerce</h2>
+          <p>Conecte uma chave de API e sincronize dezenas de canais simultaneamente.</p>
+        </div>
+        <span class="section-badge" style="background:rgba(245,158,11,.1);color:#f59e0b;border-color:rgba(245,158,11,.2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          API Key
+        </span>
+      </div>
+      <div class="mp-grid">
+
+        <!-- ANYMARKET -->
+        <div id="card-anymarket" class="mp-card">
+          <div class="mp-card-top">
+            <div class="mp-logo" style="background:#0066cc;">
+              <svg viewBox="0 0 24 24" fill="white" style="width:16px;height:16px;"><path d="M12 2L2 12h4v9h5v-6h2v6h5v-9h4z"/></svg>
+            </div>
+            <span id="status-anymarket" class="mp-status disconnected">
+              <span class="mp-status-dot"></span>Desconectado
+            </span>
+          </div>
+          <div class="mp-card-body">
+            <h3 class="mp-name">Anymarket Hub</h3>
+            <p class="mp-desc">Um único hub que conecta <strong>Magalu, Americanas, Casas Bahia, Carrefour, OLX</strong> e mais.</p>
+            <ul class="mp-features">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>7+ marketplaces em 1 integração</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Sync bidirecional de estoque</li>
+            </ul>
+          </div>
+          <div class="mp-card-footer">
+            <button class="mp-btn mp-btn-primary" onclick="openApiKeyModal('anymarket','Anymarket','Cole sua API Key do painel Anymarket')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              Inserir API Key
+            </button>
+          </div>
+        </div>
+
+        <!-- BLING ERP -->
+        <div id="card-bling" class="mp-card">
+          <div class="mp-card-top">
+            <div class="mp-logo" style="background:#0b7a75;">
+              <svg viewBox="0 0 24 24" fill="white" style="width:16px;height:16px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <span id="status-bling" class="mp-status disconnected">
+              <span class="mp-status-dot"></span>Desconectado
+            </span>
+          </div>
+          <div class="mp-card-body">
+            <h3 class="mp-name">Bling ERP</h3>
+            <p class="mp-desc">ERP líder no Brasil — sync bidirecional de estoque, NF-e e pedidos.</p>
+            <ul class="mp-features">
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>OAuth Bling v3</li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>NF-e + Estoque bidirecional</li>
+            </ul>
+          </div>
+          <div class="mp-card-footer">
+            <button class="mp-btn mp-btn-primary" onclick="handleConnect('bling')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              Conectar via OAuth
+            </button>
+          </div>
+        </div>
+
+        <!-- COMING SOON PLACEHOLDER -->
+        <div class="mp-card" style="opacity:.45;pointer-events:none;">
+          <div class="mp-card-top">
+            <div class="mp-logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:20px;height:20px;"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <span class="mp-status soon"><span class="mp-status-dot" style="background:var(--muted-foreground)"></span>Em Breve</span>
+          </div>
+          <div class="mp-card-body">
+            <h3 class="mp-name">Mais canais chegando</h3>
+            <p class="mp-desc">Netshoes, Dafiti, Centauro, Shein e mais estão no roadmap.</p>
+          </div>
+          <div class="mp-card-footer">
+            <button class="mp-btn mp-btn-muted" disabled>Em Breve</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 </div>
+
 
 <div id="toast"></div>
 
@@ -807,20 +904,74 @@
     }
   };
 
-  window.handleConnect = function(marketplace) {
-    if (!currentOrgId) { showToast('Carregando...', 'error'); return; }
-
-    if (marketplace !== 'mercado_livre' && marketplace !== 'nuvemshop') {
-      showToast(formatMarketplaceName(marketplace) + ': em breve!', 'error');
-      return;
+  window.handleConnect = async function(marketplace) {
+    if (!currentOrgId) { showToast('Carregando organização...', 'error'); return; }
+    const btn = document.getElementById('btn-' + marketplace);
+    if (btn) { btn.disabled = true; btn.querySelector('span').textContent = 'Conectando...'; }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(SUPABASE_FUNCTIONS + '/marketplace-oauth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'get_auth_url', marketplace, organization_id: currentOrgId }),
+      });
+      const data = await res.json();
+      if (data.auth_url) { window.location.href = data.auth_url; }
+      else if (data.type === 'api_key') { openApiKeyModal(marketplace, formatMarketplaceName(marketplace), 'Cole sua API Key'); }
+      else { showToast(data.error ?? 'Erro ao obter URL de autorização', 'error'); }
+    } catch(err) {
+      showToast('Erro: ' + err.message, 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Conectar'; }
     }
+  };
 
-    // Usa o Edge Function /authorize (lê ML_APP_ID dos secrets — não expõe no frontend)
-    const returnUrl = window.location.origin;
-    window.location.href = SUPABASE_FUNCTIONS + '/marketplace-oauth/authorize'
-      + '?marketplace=' + encodeURIComponent(marketplace)
-      + '&org_id=' + encodeURIComponent(currentOrgId)
-      + '&return_url=' + encodeURIComponent(returnUrl);
+  window.handleConnectShopify = function() {
+    const shop = prompt('Insira o domínio da sua loja Shopify (ex: minhaloja.myshopify.com):');
+    if (!shop?.trim()) return;
+    const btn = document.getElementById('btn-shopify');
+    if (btn) { btn.disabled = true; btn.querySelector('span').textContent = 'Conectando...'; }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      return fetch(SUPABASE_FUNCTIONS + '/marketplace-oauth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'get_auth_url', marketplace: 'shopify', organization_id: currentOrgId, shop: shop.trim() }),
+      });
+    }).then(r => r.json()).then(data => {
+      if (data.auth_url) window.location.href = data.auth_url;
+      else showToast(data.error ?? 'Erro Shopify', 'error');
+    }).catch(err => showToast('Erro: ' + err.message, 'error'))
+      .finally(() => { if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Conectar'; } });
+  };
+
+  // API Key modal (Anymarket, Bling API key variation)
+  let _apiKeyMarketplace = null;
+  window.openApiKeyModal = function(marketplace, label, hint) {
+    _apiKeyMarketplace = marketplace;
+    document.getElementById('apikey-modal-title').textContent = 'Conectar ' + label;
+    document.getElementById('apikey-modal-hint').textContent = hint;
+    document.getElementById('apikey-input').value = '';
+    document.getElementById('apikey-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('apikey-input').focus(), 100);
+  };
+  window.closeApiKeyModal = function() { document.getElementById('apikey-modal').style.display = 'none'; };
+  window.saveApiKey = async function() {
+    const key = document.getElementById('apikey-input').value.trim();
+    if (!key) { alert('Insira a API Key'); return; }
+    const btn = document.getElementById('apikey-save-btn');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(SUPABASE_FUNCTIONS + '/marketplace-oauth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'save_api_key', marketplace: _apiKeyMarketplace, organization_id: currentOrgId, api_key: key }),
+      });
+      const data = await res.json();
+      if (data.success) { showToast(data.message, 'success'); closeApiKeyModal(); await loadIntegrations(); }
+      else showToast(data.error ?? 'Erro ao salvar', 'error');
+    } catch(err) { showToast('Erro: ' + err.message, 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'Salvar e Conectar'; }
   };
 
   window.handleSync = async function(marketplace) {
@@ -865,7 +1016,11 @@
   };
 
   function formatMarketplaceName(key) {
-    return { mercado_livre: 'Mercado Livre', nuvemshop: 'Nuvemshop', amazon: 'Amazon', shopee: 'Shopee' }[key] || key;
+    return {
+      mercado_livre: 'Mercado Livre', nuvemshop: 'Nuvemshop', amazon: 'Amazon',
+      shopee: 'Shopee', shopify: 'Shopify', bling: 'Bling ERP',
+      anymarket: 'Anymarket Hub', tiktok_shop: 'TikTok Shop'
+    }[key] || key;
   }
 
   function showToast(message, type) {
@@ -881,6 +1036,27 @@
   }
 
   init();
+</script>
+
+<!-- API Key Modal (Anymarket / Bling) -->
+<div id="apikey-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:440px;padding:28px;margin:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h3 id="apikey-modal-title" style="margin:0;font-size:15px;font-weight:700;">Conectar Hub</h3>
+      <button onclick="closeApiKeyModal()" style="background:transparent;border:none;cursor:pointer;font-size:20px;color:var(--muted-foreground);">×</button>
+    </div>
+    <p id="apikey-modal-hint" style="font-size:13px;color:var(--muted-foreground);margin:0 0 14px;"></p>
+    <input id="apikey-input" type="password" class="input" style="width:100%;margin-bottom:16px;" placeholder="sk-xxxxxxxxxxxx">
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeApiKeyModal()" class="mp-btn mp-btn-muted" style="flex:1;">Cancelar</button>
+      <button id="apikey-save-btn" onclick="saveApiKey()" class="mp-btn mp-btn-primary" style="flex:1;">Salvar e Conectar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initAIChat } from './js/ai-chat-widget.js';
+  initAIChat();
 </script>
 </body>
 </html>
