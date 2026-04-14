@@ -372,6 +372,54 @@
         <option value="ok">Estoque OK</option>
         <option value="empty">Sem estoque</option>
       </select>
+      <button id="btn-csv-import" class="btn btn-secondary" title="Importar produtos via CSV">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Importar CSV
+      </button>
+    </div>
+
+    <!-- CSV Import Modal -->
+    <div id="csv-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;padding:28px;margin:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <h3 style="margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:17px;height:17px;color:var(--brand);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Importar Produtos em Massa
+          </h3>
+          <button onclick="document.getElementById('csv-modal').style.display='none'" style="background:transparent;border:none;cursor:pointer;font-size:20px;color:var(--muted-foreground);">×</button>
+        </div>
+
+        <!-- Format hint -->
+        <div style="background:var(--secondary);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted-foreground);margin-bottom:16px;line-height:1.6;">
+          <strong style="color:var(--foreground);">Formato esperado (CSV):</strong><br>
+          <code style="font-size:11px;">nome, sku, preco, estoque, marketplace, categoria</code><br>
+          Marketplace aceita: <code>mercado_livre</code>, <code>nuvemshop</code>, <code>shopee</code>, <code>proprio</code>
+        </div>
+
+        <!-- Drop zone -->
+        <div id="csv-drop" style="border:2px dashed var(--border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:16px;"
+          onclick="document.getElementById('csv-file-input').click()"
+          ondragover="event.preventDefault();this.style.borderColor='var(--brand)'"
+          ondragleave="this.style.borderColor='var(--border)'"
+          ondrop="handleCsvDrop(event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;color:var(--muted-foreground);margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p style="margin:0;font-size:13px;color:var(--muted-foreground);">Arraste o arquivo CSV aqui ou <span style="color:var(--brand);font-weight:600;">clique para selecionar</span></p>
+          <p id="csv-filename" style="margin:6px 0 0;font-size:12px;font-weight:600;color:var(--foreground);"></p>
+          <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none;" onchange="handleCsvFile(this.files[0])">
+        </div>
+
+        <!-- Preview -->
+        <div id="csv-preview" style="display:none;margin-bottom:16px;">
+          <p id="csv-preview-info" style="font-size:12px;color:var(--muted-foreground);margin:0 0 8px;"></p>
+          <div style="background:var(--secondary);border-radius:6px;padding:8px 12px;font-size:11.5px;font-family:monospace;max-height:100px;overflow-y:auto;" id="csv-preview-rows"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button onclick="document.getElementById('csv-modal').style.display='none'" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+          <button id="btn-csv-do-import" onclick="doCSVImport()" class="btn btn-primary" style="flex:1;" disabled>Importar Produtos</button>
+        </div>
+        <div id="csv-result" style="display:none;margin-top:14px;padding:12px;border-radius:8px;font-size:13px;"></div>
+      </div>
     </div>
 
     <!-- Inventory table -->
@@ -406,11 +454,84 @@
   import { requireAuth } from './js/auth-guard.js';
   import { fetchAllInventory, formatCurrency } from './js/api.js';
   import { initThemeToggle } from './js/theme.js';
+  import { supabase } from './js/supabase-client.js';
+  import { initAIChat } from './js/ai-chat-widget.js';
 
-  // -----------------------------------------------------------------------
-  // Init theme toggle
-  // -----------------------------------------------------------------------
   initThemeToggle('themeToggle');
+  initAIChat();
+
+  // CSV Import helpers
+  const SUPABASE_FN = 'https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1';
+  let csvParsedRows = [];
+
+  document.getElementById('btn-csv-import').addEventListener('click', () => {
+    document.getElementById('csv-modal').style.display = 'flex';
+    csvParsedRows = [];
+    document.getElementById('csv-preview').style.display = 'none';
+    document.getElementById('csv-filename').textContent = '';
+    document.getElementById('csv-result').style.display = 'none';
+    document.getElementById('btn-csv-do-import').disabled = true;
+  });
+
+  window.handleCsvDrop = function(e) {
+    e.preventDefault();
+    document.getElementById('csv-drop').style.borderColor = 'var(--border)';
+    handleCsvFile(e.dataTransfer.files[0]);
+  };
+
+  window.handleCsvFile = function(file) {
+    if (!file) return;
+    document.getElementById('csv-filename').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split('\n').filter(l => l.trim());
+      if (lines.length < 2) { alert('CSV precisa de pelo menos 1 linha de dados.'); return; }
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      csvParsedRows = lines.slice(1).map(line => {
+        const vals = line.split(',').map(v => v.trim().replace(/^"|"|'$/g, ''));
+        const row = {};
+        headers.forEach((h, i) => row[h] = vals[i] ?? '');
+        return row;
+      });
+      // Preview
+      const preview = document.getElementById('csv-preview');
+      document.getElementById('csv-preview-info').textContent = `${csvParsedRows.length} produtos detectados`;
+      document.getElementById('csv-preview-rows').innerHTML = csvParsedRows.slice(0, 5).map(r =>
+        Object.values(r).join(' | ')).join('<br>');
+      preview.style.display = 'block';
+      document.getElementById('btn-csv-do-import').disabled = false;
+    };
+    reader.readAsText(file);
+  };
+
+  window.doCSVImport = async function() {
+    if (!csvParsedRows.length) return;
+    const btn = document.getElementById('btn-csv-do-import');
+    btn.disabled = true; btn.textContent = 'Importando...';
+    const resultEl = document.getElementById('csv-result');
+    try {
+      const auth = await requireAuth();
+      const orgId = window.__ECONOMIA__?.orgId;
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(SUPABASE_FN + '/upload-products-csv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ organization_id: orgId, rows: csvParsedRows }),
+      });
+      const data = await res.json();
+      resultEl.style.display = 'block';
+      resultEl.style.background = data.errors_count === 0 ? 'rgba(16,185,129,.1)' : 'rgba(245,158,11,.1)';
+      resultEl.style.border = data.errors_count === 0 ? '1px solid rgba(16,185,129,.2)' : '1px solid rgba(245,158,11,.2)';
+      resultEl.innerHTML = `✅ <strong>${data.inserted}/${data.total}</strong> produtos importados com sucesso!` +
+        (data.errors_count > 0 ? `<br>⚠️ ${data.errors_count} erros. Primeiro: ${ data.errors[0]?.error }` : '');
+    } catch(err) {
+      resultEl.style.display = 'block'; resultEl.style.background = 'rgba(239,68,68,.1)';
+      resultEl.textContent = 'Erro: ' + err.message;
+    } finally {
+      btn.textContent = 'Importar Produtos';
+    }
+  };
 
   // -----------------------------------------------------------------------
   // Marketplace config: slug → display name, dot color, tab key

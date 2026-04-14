@@ -9,7 +9,10 @@
     { "source": "/contabil", "destination": "/contabil.html" },
     { "source": "/login", "destination": "/login.html" },
     { "source": "/settings", "destination": "/settings.html" },
-    { "source": "/onboarding", "destination": "/onboarding.html" }
+    { "source": "/onboarding", "destination": "/onboarding.html" },
+    { "source": "/anuncios", "destination": "/anuncios.html" },
+    { "source": "/compras", "destination": "/compras.html" },
+    { "source": "/conciliacao", "destination": "/conciliacao.html" }
   ],
   "headers": [
     {
