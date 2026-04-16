@@ -76,14 +76,7 @@
       margin: 4px 0;
     }
 
-    /* Theme toggle icon */
-    #themeToggle::before {
-      content: '☀';
-      font-size: 15px;
-    }
-    html.dark #themeToggle::before {
-      content: '☾';
-    }
+    
 
     /* Toast */
     #toast {
@@ -942,17 +935,40 @@
   let currentTab = 'geral';
   let searchQuery = '';
 
-  function getFilteredOrders() {
+    function getFilteredOrders() {
     let filtered = allOrders;
-    if (currentTab !== 'geral') {
+    
+    // Filter by Tab
+    if (currentTab !== "geral") {
       filtered = filtered.filter(o => o.marketplace === currentTab);
     }
+    
+    // Filter by Period
+    if (currentPeriod !== "all") {
+      const now = new Date();
+      let startPeriod = new Date();
+      if (currentPeriod === "today") {
+        startPeriod.setHours(0,0,0,0);
+      } else if (currentPeriod === "7d") {
+        startPeriod.setDate(now.getDate() - 7);
+      } else if (currentPeriod === "month") {
+        startPeriod.setDate(1);
+        startPeriod.setHours(0,0,0,0);
+      }
+      
+      filtered = filtered.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= startPeriod && d <= now;
+      });
+    }
+
+    // Filter by search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(o => {
-        const num = (o.order_number || o.id || '').toLowerCase();
-        const name = (o.customers?.name || '').toLowerCase();
-        const mkt = (o.marketplace || '').toLowerCase();
+        const num = (o.order_number || o.id || "").toLowerCase();
+        const name = (o.customers?.name || "").toLowerCase();
+        const mkt = (o.marketplace || "").toLowerCase();
         return num.includes(q) || name.includes(q) || mkt.includes(q);
       });
     }

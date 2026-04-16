@@ -341,7 +341,8 @@ export async function fetchAllInventory(orgId, { search = '', stockFilter = 'all
     .eq('organization_id', orgId)
     .eq('is_active', true)
     .order('stock_alert', { ascending: false })
-    .order('total_stock', { ascending: true });
+    .order('total_stock', { ascending: true })
+    .limit(200);
 
   if (search) q = q.ilike('name', `%${search}%`);
   if (stockFilter === 'critical') q = q.in('stock_alert', ['critical', 'low', 'out_of_stock']);
