@@ -13,12 +13,12 @@
   <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
-<aside class="sidebar">
+<aside class="sidebar" role="navigation" aria-label="Menu principal">
   <div class="sidebar-brand">
     <div class="brand-logo"><span>E</span></div>
     <span class="brand-name">E-CONOMIA</span>
   </div>
-  <nav class="sidebar-nav">
+  <nav class="sidebar-nav" aria-label="Navegação principal">
     <p class="nav-section-label">Principal</p>
     <a href="dashboard.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
     <a href="index.html" class="nav-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3zM3 9h18v4H3zM3 15h18v4H3z"/></svg>Marketplaces</a>
@@ -48,7 +48,7 @@
       <input id="search-input" type="text" placeholder="Buscar anúncios por título ou SKU...">
     </div>
     <div class="header-actions">
-      <button class="btn btn-ghost btn-icon" id="themeToggle"></button>
+      <button class="btn btn-ghost btn-icon" id="themeToggle" aria-label="Alternar tema"></button>
       <div class="user-menu">
         <button class="user-avatar-btn" id="headerAvatar" onclick="toggleDropdown()">?</button>
         <div class="dropdown" id="userDropdown">
