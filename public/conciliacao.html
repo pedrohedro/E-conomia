@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conciliação — E-CONOMIA</title>
+  <meta name="description" content="Conciliação bancária automática — compare vendas e recebimentos na E-Conomia CRM.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <script src="js/theme.js" type="module"></script>
+  <style>
+    .user-menu { position: relative; }
+    .user-avatar-btn {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--brand-light); color: var(--brand);
+      border: none; cursor: pointer; font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dropdown {
+      position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 165px;
+      box-shadow: var(--shadow-md); z-index: 50; display: none;
+    }
+    .dropdown.open { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; font-size: 12.5px; color: var(--foreground);
+      cursor: pointer; transition: background 0.1s;
+      border: none; background: transparent; width: 100%; text-align: left; text-decoration: none;
+    }
+    .dropdown-item:hover { background: var(--secondary); }
+    .dropdown-item.danger { color: var(--destructive); }
+    .dropdown-item svg { width: 13px; height: 13px; }
+    .dropdown-sep { border-top: 1px solid var(--border); margin: 4px 0; }
+
+    #toast {
+      position: fixed; bottom: 16px; right: 16px; z-index: 100;
+      background: var(--foreground); color: var(--background);
+      padding: 10px 16px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md);
+      transform: translateX(120%); transition: transform 0.25s ease;
+      display: flex; align-items: center; gap: 8px; max-width: 300px;
+    }
+    #toast.show { transform: translateX(0); }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .kpi-grid { grid-template-columns: 1fr; } }
+
+    .kpi-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px;
+      transition: border-color 0.15s;
+    }
+    .kpi-card:hover { border-color: var(--brand); }
+    .kpi-icon {
+      width: 28px; height: 28px; border-radius: calc(var(--radius) - 2px);
+      background: var(--brand-light); color: var(--brand);
+      display: flex; align-items: center; justify-content: center; margin-bottom: 4px;
+    }
+    .kpi-icon svg { width: 14px; height: 14px; }
+    .kpi-label { font-size: 11.5px; color: var(--muted-foreground); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+    .kpi-value { font-size: 22px; font-weight: 700; color: var(--foreground); }
+
+    .conciliation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .conciliation-grid { grid-template-columns: 1fr; } }
+
+    .table-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+    }
+    .table-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+    }
+    .table-header h2 { font-size: 14px; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      text-align: left; padding: 10px 18px; font-size: 11px; font-weight: 600;
+      color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 1px solid var(--border); background: var(--secondary);
+    }
+    tbody td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:hover { background: var(--secondary); }
+
+    .match-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
+    .match-badge.matched { color: #10b981; }
+    .match-badge.unmatched { color: #f59e0b; }
+    .match-badge svg { width: 12px; height: 12px; }
+
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 48px 24px; text-align: center; color: var(--muted-foreground);
+    }
+    .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: var(--foreground); }
+    .empty-state p { font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" role="navigation" aria-label="Menu principal">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="sidebar-logo-text">E-CONOMIA</span>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Navegação principal">
+    <div class="nav-section">
+      <p class="nav-label">Principal</p>
+      <a href="dashboard.html" class="nav-link" aria-label="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="index.html" class="nav-link" aria-label="Marketplaces">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        Marketplaces
+      </a>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Operações</p>
+      <a href="vendas.html" class="nav-link" aria-label="Vendas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        Vendas
+      </a>
+      <a href="estoque.html" class="nav-link" aria-label="Estoque">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Estoque
+      </a>
+      <a href="contabil.html" class="nav-link" aria-label="Contábil">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        Contábil
+      </a>
+      <a href="conciliacao.html" class="nav-link active" aria-label="Conciliação">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"/><path d="m15 9 6-6"/></svg>
+        Conciliação
+      </a>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Conta</p>
+      <a href="settings.html" class="nav-link" aria-label="Configurações">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Configurações
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="userInitials">?</div>
+      <div class="sidebar-user-info">
+        <p class="sidebar-user-name" id="userName">Carregando...</p>
+        <p class="sidebar-user-role" id="userOrg">—</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Conciliação Bancária</h1>
+      <p class="page-subtitle">Compare vendas em marketplaces com recebimentos bancários</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-icon" id="themeToggle" title="Alternar tema" aria-label="Alternar tema"></button>
+      <div class="user-menu">
+        <button class="user-avatar-btn" id="headerAvatar" onclick="toggleDropdown()" aria-label="Menu do usuário">?</button>
+        <div class="dropdown" id="userDropdown" role="menu">
+          <a href="settings.html" class="dropdown-item" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Configurações
+          </a>
+          <div class="dropdown-sep"></div>
+          <button class="dropdown-item danger" id="signOutBtn" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-body" role="main">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <p class="kpi-label">Receita Esperada</p>
+        <p class="kpi-value" id="kpi-expected">—</p>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div>
+        <p class="kpi-label">Recebido</p>
+        <p class="kpi-value" id="kpi-received">—</p>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <p class="kpi-label">Conciliados</p>
+        <p class="kpi-value" id="kpi-matched">—</p>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <p class="kpi-label">Divergências</p>
+        <p class="kpi-value" id="kpi-divergent">—</p>
+      </div>
+    </div>
+
+    <div class="conciliation-grid">
+      <div class="table-card">
+        <div class="table-header">
+          <h2>Vendas (Marketplaces)</h2>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Pedido</th>
+                <th>Valor Bruto</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="sales-body">
+              <tr>
+                <td colspan="3">
+                  <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                    <h3>Sem vendas para conciliar</h3>
+                    <p>Configure integrações em Marketplaces.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h2>Recebimentos (Banco)</h2>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Match</th>
+              </tr>
+            </thead>
+            <tbody id="bank-body">
+              <tr>
+                <td colspan="3">
+                  <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                    <h3>Sem recebimentos importados</h3>
+                    <p>Importe o extrato bancário para iniciar a conciliação.</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast" role="alert" aria-live="polite"></div>
+
+<script type="module">
+  import { initThemeToggle } from './js/theme.js';
+  import { supabase, getCurrentUser, getUserOrganization } from './js/supabase-client.js';
+
+  initThemeToggle('themeToggle');
+
+  window.toggleDropdown = () => document.getElementById('userDropdown').classList.toggle('open');
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.user-menu')) document.getElementById('userDropdown')?.classList.remove('open');
+  });
+
+  document.getElementById('signOutBtn')?.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = 'login.html';
+  });
+
+  async function init() {
+    const user = await getCurrentUser();
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    const initials = (user.user_metadata?.full_name || user.email || '?')
+      .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+    document.getElementById('userInitials').textContent = initials;
+    document.getElementById('headerAvatar').textContent = initials;
+    document.getElementById('userName').textContent = user.user_metadata?.full_name || user.email || '—';
+
+    const org = await getUserOrganization();
+    if (!org) { window.location.href = 'onboarding.html'; return; }
+    document.getElementById('userOrg').textContent = org.organizations?.name || '—';
+
+    // Placeholder KPIs — will load real data when conciliation feature is complete
+    document.getElementById('kpi-expected').textContent = 'R$ 0';
+    document.getElementById('kpi-received').textContent = 'R$ 0';
+    document.getElementById('kpi-matched').textContent = '0';
+    document.getElementById('kpi-divergent').textContent = '0';
+  }
+
+  init();
+</script>
+</body>
+</html>
