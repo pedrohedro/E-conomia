@@ -76,7 +76,7 @@ alter table public.marketplace_webhooks enable row level security;
 create policy "webhooks: own org"
   on public.marketplace_webhooks for all
   using (organization_id in (
-    select organization_id from public.organization_members where user_id = auth.uid()
+    select organization_id from public.org_members where user_id = auth.uid()
   ));
 
 -- View atualizada para suportar novos canais no AI context

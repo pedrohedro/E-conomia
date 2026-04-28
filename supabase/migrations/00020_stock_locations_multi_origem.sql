@@ -56,7 +56,7 @@ DROP POLICY IF EXISTS "org_members_view_stock_locations" ON stock_locations;
 CREATE POLICY "org_members_view_stock_locations" ON stock_locations
   FOR SELECT USING (
     organization_id IN (
-      SELECT organization_id FROM organization_members
+      SELECT organization_id FROM org_members
       WHERE user_id = auth.uid()
     )
   );
@@ -65,7 +65,7 @@ DROP POLICY IF EXISTS "org_members_manage_stock_locations" ON stock_locations;
 CREATE POLICY "org_members_manage_stock_locations" ON stock_locations
   FOR ALL USING (
     organization_id IN (
-      SELECT organization_id FROM organization_members
+      SELECT organization_id FROM org_members
       WHERE user_id = auth.uid() AND role IN ('owner', 'admin', 'manager')
     )
   );

@@ -23,5 +23,6 @@ ON daily_metrics(organization_id, metric_date DESC);
 
 ALTER TABLE daily_metrics ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS daily_metrics_select ON daily_metrics;
 CREATE POLICY daily_metrics_select ON daily_metrics
   FOR SELECT USING (organization_id IN (SELECT get_user_org_ids()));

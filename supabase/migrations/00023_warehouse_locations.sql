@@ -35,19 +35,19 @@ ALTER TABLE public.product_locations   ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "warehouse_locations: own org" ON public.warehouse_locations;
 CREATE POLICY "warehouse_locations: own org" ON public.warehouse_locations
-  USING (organization_id IN (SELECT organization_id FROM public.organization_members WHERE user_id = auth.uid()));
+  USING (organization_id IN (SELECT organization_id FROM public.org_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "warehouse_locations: insert" ON public.warehouse_locations;
 CREATE POLICY "warehouse_locations: insert" ON public.warehouse_locations FOR INSERT
-  WITH CHECK (organization_id IN (SELECT organization_id FROM public.organization_members WHERE user_id = auth.uid()));
+  WITH CHECK (organization_id IN (SELECT organization_id FROM public.org_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "warehouse_locations: update" ON public.warehouse_locations;
 CREATE POLICY "warehouse_locations: update" ON public.warehouse_locations FOR UPDATE
-  USING (organization_id IN (SELECT organization_id FROM public.organization_members WHERE user_id = auth.uid()));
+  USING (organization_id IN (SELECT organization_id FROM public.org_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "warehouse_locations: delete" ON public.warehouse_locations;
 CREATE POLICY "warehouse_locations: delete" ON public.warehouse_locations FOR DELETE
-  USING (organization_id IN (SELECT organization_id FROM public.organization_members WHERE user_id = auth.uid()));
+  USING (organization_id IN (SELECT organization_id FROM public.org_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "warehouse_locations: service_role" ON public.warehouse_locations;
 CREATE POLICY "warehouse_locations: service_role" ON public.warehouse_locations
@@ -55,19 +55,19 @@ CREATE POLICY "warehouse_locations: service_role" ON public.warehouse_locations
 
 DROP POLICY IF EXISTS "product_locations: own org" ON public.product_locations;
 CREATE POLICY "product_locations: own org" ON public.product_locations
-  USING (organization_id IN (SELECT organization_id FROM public.organization_members WHERE user_id = auth.uid()));
+  USING (organization_id IN (SELECT organization_id FROM public.org_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "product_locations: insert" ON public.product_locations;
 CREATE POLICY "product_locations: insert" ON public.product_locations FOR INSERT
-  WITH CHECK (organization_id IN (SELECT organization_id FROM public.organization_members WHERE user_id = auth.uid()));
+  WITH CHECK (organization_id IN (SELECT organization_id FROM public.org_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "product_locations: update" ON public.product_locations;
 CREATE POLICY "product_locations: update" ON public.product_locations FOR UPDATE
-  USING (organization_id IN (SELECT organization_id FROM public.organization_members WHERE user_id = auth.uid()));
+  USING (organization_id IN (SELECT organization_id FROM public.org_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "product_locations: delete" ON public.product_locations;
 CREATE POLICY "product_locations: delete" ON public.product_locations FOR DELETE
-  USING (organization_id IN (SELECT organization_id FROM public.organization_members WHERE user_id = auth.uid()));
+  USING (organization_id IN (SELECT organization_id FROM public.org_members WHERE user_id = auth.uid()));
 
 DROP POLICY IF EXISTS "product_locations: service_role" ON public.product_locations;
 CREATE POLICY "product_locations: service_role" ON public.product_locations

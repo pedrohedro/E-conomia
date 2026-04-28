@@ -82,7 +82,7 @@ Estoque crítico: ${criticalStock.length} produtos`;
 
       // Busca email do dono da org
       const { data: member } = await supabase
-        .from("organization_members")
+        .from("org_members")
         .select("users:user_id(email)")
         .eq("organization_id", org.id)
         .eq("role", "owner")

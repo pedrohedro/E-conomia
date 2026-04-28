@@ -23,7 +23,7 @@ create policy "ai_chat_history: read own org"
   on public.ai_chat_history for select
   using (
     organization_id in (
-      select organization_id from public.organization_members
+      select organization_id from public.org_members
       where user_id = auth.uid()
     )
   );
@@ -32,7 +32,7 @@ create policy "ai_chat_history: insert own org"
   on public.ai_chat_history for insert
   with check (
     organization_id in (
-      select organization_id from public.organization_members
+      select organization_id from public.org_members
       where user_id = auth.uid()
     )
   );

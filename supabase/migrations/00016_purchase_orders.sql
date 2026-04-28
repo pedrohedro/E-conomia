@@ -46,23 +46,23 @@ alter table public.purchase_orders enable row level security;
 alter table public.purchase_order_items enable row level security;
 
 create policy "suppliers: own org" on public.suppliers
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 create policy "suppliers: insert own org" on public.suppliers for insert
-  with check (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  with check (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 create policy "suppliers: update own org" on public.suppliers for update
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 
 create policy "purchase_orders: own org" on public.purchase_orders
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 create policy "purchase_orders: insert" on public.purchase_orders for insert
-  with check (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  with check (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 create policy "purchase_orders: update" on public.purchase_orders for update
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 
 create policy "purchase_order_items: own org" on public.purchase_order_items
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 create policy "purchase_order_items: insert" on public.purchase_order_items for insert
-  with check (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  with check (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 
 -- Notifications table (caso não exista)
 create table if not exists public.notifications (
@@ -78,10 +78,10 @@ create table if not exists public.notifications (
 );
 alter table public.notifications enable row level security;
 create policy "notifications: own org" on public.notifications
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 create policy "notifications: insert own org" on public.notifications for insert
-  with check (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  with check (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 create policy "notifications: update own org" on public.notifications for update
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 create policy "notifications: delete own org" on public.notifications for delete
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));

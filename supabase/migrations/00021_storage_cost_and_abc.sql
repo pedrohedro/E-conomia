@@ -20,19 +20,19 @@ alter table public.storage_costs enable row level security;
 
 drop policy if exists "storage_costs: own org" on public.storage_costs;
 create policy "storage_costs: own org" on public.storage_costs
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 
 drop policy if exists "storage_costs: insert own org" on public.storage_costs;
 create policy "storage_costs: insert own org" on public.storage_costs for insert
-  with check (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  with check (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 
 drop policy if exists "storage_costs: update own org" on public.storage_costs;
 create policy "storage_costs: update own org" on public.storage_costs for update
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 
 drop policy if exists "storage_costs: delete own org" on public.storage_costs;
 create policy "storage_costs: delete own org" on public.storage_costs for delete
-  using (organization_id in (select organization_id from public.organization_members where user_id = auth.uid()));
+  using (organization_id in (select organization_id from public.org_members where user_id = auth.uid()));
 
 drop policy if exists "storage_costs: service_role bypass" on public.storage_costs;
 create policy "storage_costs: service_role bypass" on public.storage_costs
