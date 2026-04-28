@@ -100,6 +100,16 @@
     setTimeout(() => { window.location.href = url; }, delayMs);
   }
 
+  // Anti-open-redirect: aceita apenas paths internos (mesma origem).
+  function safeReturnUrl(raw, fallback = '/settings') {
+    if (typeof raw !== 'string' || raw.length === 0) return fallback;
+    if (raw[0] !== '/') return fallback;        // precisa ser path
+    if (raw.startsWith('//')) return fallback;  // protocolo-relativo
+    if (raw.startsWith('/\\')) return fallback; // backslash truque
+    if (raw.includes(':')) return fallback;     // scheme embutido
+    return raw;
+  }
+
   if (error) {
     document.getElementById('container').classList.add('error-state');
     document.getElementById('spinner').style.display = 'none';
@@ -113,8 +123,9 @@
     document.getElementById('desc').textContent = decodeURIComponent(error);
     document.getElementById('status').textContent = 'Redirecionando...';
 
-    // Volta para onde viemos
-    const returnTo = sessionStorage.getItem('oauth_return_url') || '/settings';
+    // Volta para onde viemos (validado contra open-redirect)
+    const returnTo = safeReturnUrl(sessionStorage.getItem('oauth_return_url'));
+    sessionStorage.removeItem('oauth_return_url');
     redirect(returnTo + '?error=' + encodeURIComponent(error), 2500);
     return;
   }
@@ -135,13 +146,14 @@
 
     // Roteamento inteligente por sessionStorage
     const onboardingStep = sessionStorage.getItem('onboarding_step');
-    const returnUrl = sessionStorage.getItem('oauth_return_url');
+    const rawReturnUrl = sessionStorage.getItem('oauth_return_url');
 
     if (onboardingStep) {
       // Veio do onboarding — volta para step 3 (sync)
       sessionStorage.setItem('oauth_connected', connected);
       redirect('/onboarding?connected=' + connected, 1500);
-    } else if (returnUrl) {
+    } else if (rawReturnUrl) {
+      const returnUrl = safeReturnUrl(rawReturnUrl, '/settings');
       sessionStorage.removeItem('oauth_return_url');
       redirect(returnUrl + '?connected=' + connected, 1500);
     } else {

@@ -1725,9 +1725,11 @@
 
     if (!locations?.length) {
       container.innerHTML = `<p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:20px 0;">Nenhuma localização cadastrada. Clique em "Nova Localização" para começar.</p>`;
+      for (const k in _whLocMap) delete _whLocMap[k];
       return;
     }
 
+    for (const k in _whLocMap) delete _whLocMap[k];
     for (const loc of locations) _whLocMap[loc.id] = loc;
 
     const grouped = {};

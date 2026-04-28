@@ -186,20 +186,21 @@ async function reconcileForIntegration(
         }
       } else {
         // Flex/Próprio: log como divergência, não aplica automaticamente (usuário decide)
-        await supabase.from("notifications").insert({
+        const { error: notifErr } = await supabase.from("notifications").insert({
           organization_id: orgId,
           type: "stock_divergence",
           title: "Divergência de Estoque Detectada",
-          message: `${(localEntry.products as any)?.name ?? mlId}: Local=${localQty} vs ML=${mlQty} (${localEntry.fulfillment_type})`,
+          message: `${(localEntry.products as any)?.name ?? mlId}: Local=${localQty} vs ML=${mlQty} (${localEntry.channel})`,
           severity: diff > 10 ? "high" : diff > 3 ? "medium" : "low",
           data: {
             channel_sku: mlId,
             local_qty: localQty,
             ml_qty: mlQty,
-            fulfillment_type: localEntry.fulfillment_type,
+            channel: localEntry.channel,
           },
           read: false,
-        }).then(({ error }) => { if (!error) fixed++; else skipped++; });
+        });
+        if (!notifErr) fixed++; else skipped++;
       }
     }
 

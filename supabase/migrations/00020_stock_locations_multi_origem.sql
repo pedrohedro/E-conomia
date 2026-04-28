@@ -52,6 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_sl_external     ON stock_locations(organization_i
 
 ALTER TABLE stock_locations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "org_members_view_stock_locations" ON stock_locations;
 CREATE POLICY "org_members_view_stock_locations" ON stock_locations
   FOR SELECT USING (
     organization_id IN (
@@ -60,6 +61,7 @@ CREATE POLICY "org_members_view_stock_locations" ON stock_locations
     )
   );
 
+DROP POLICY IF EXISTS "org_members_manage_stock_locations" ON stock_locations;
 CREATE POLICY "org_members_manage_stock_locations" ON stock_locations
   FOR ALL USING (
     organization_id IN (
@@ -69,6 +71,7 @@ CREATE POLICY "org_members_manage_stock_locations" ON stock_locations
   );
 
 -- Permite service_role (Edge Functions) gerenciar sem RLS
+DROP POLICY IF EXISTS "service_role_all_stock_locations" ON stock_locations;
 CREATE POLICY "service_role_all_stock_locations" ON stock_locations
   FOR ALL USING (auth.role() = 'service_role');
 
@@ -76,6 +79,7 @@ CREATE POLICY "service_role_all_stock_locations" ON stock_locations
 -- Trigger de atualização de updated_at
 -- ============================================================================
 
+DROP TRIGGER IF EXISTS trg_stock_locations_updated_at ON stock_locations;
 CREATE TRIGGER trg_stock_locations_updated_at
   BEFORE UPDATE ON stock_locations
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
