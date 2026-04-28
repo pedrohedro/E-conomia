@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Conexão com gateway autorizador.">
+  <meta name="description" content="Conexão com marketplace autorizada — E-CONOMIA.">
   <title>Conectando... — E-CONOMIA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,9 +20,20 @@
     }
     .container {
       text-align: center;
-      max-width: 400px;
-      padding: 32px;
+      max-width: 420px;
+      padding: 40px 32px;
     }
+    .icon-wrapper {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(16,185,129,.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .icon-wrapper svg { width: 28px; height: 28px; color: #10b981; }
     .spinner {
       width: 48px;
       height: 48px;
@@ -33,28 +44,122 @@
       margin: 0 auto 24px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    h1 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    p { font-size: 14px; color: rgba(255,255,255,.5); line-height: 1.5; }
-    .status { margin-top: 16px; font-size: 12px; color: #10b981; }
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    p { font-size: 14px; color: rgba(255,255,255,.55); line-height: 1.6; }
+    .status {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #10b981;
+      font-weight: 500;
+    }
+    .error-state .icon-wrapper { background: rgba(239,68,68,.15); }
+    .error-state .icon-wrapper svg { color: #ef4444; }
+    .error-state .status { color: #ef4444; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #10b981;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="spinner"></div>
-  <h1>Conectando ao marketplace...</h1>
-  <p>Aguarde enquanto validamos a autorização. Você será redirecionado automaticamente.</p>
+<div class="container" id="container">
+  <div class="spinner" id="spinner"></div>
+  <h1 id="title">Conectando...</h1>
+  <p id="desc">Finalizando a autorização com o marketplace. Aguarde um instante.</p>
   <div class="status" id="status"></div>
 </div>
+
 <script>
-  // Esta página é apenas um fallback visual. Na maioria dos casos, o 302 da
-  // Edge Function redireciona direto para /?connected=xxx sem passar por aqui.
-  // Se o usuário parar aqui, algo deu errado.
-  setTimeout(() => {
-    document.getElementById('status').textContent = 'Se não for redirecionado em 10s, volte para a tela de Marketplaces.';
-  }, 5000);
-  setTimeout(() => {
-    window.location.href = '/';
-  }, 15000);
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const connected = params.get('connected');
+  const error = params.get('error');
+
+  const marketplaceNames = {
+    mercado_livre: 'Mercado Livre',
+    nuvemshop: 'Nuvemshop',
+    shopee: 'Shopee',
+    amazon: 'Amazon',
+    bling: 'Bling ERP',
+    shopify: 'Shopify',
+    tiktok_shop: 'TikTok Shop',
+  };
+
+  function redirect(url, delayMs = 1500) {
+    setTimeout(() => { window.location.href = url; }, delayMs);
+  }
+
+  if (error) {
+    document.getElementById('container').classList.add('error-state');
+    document.getElementById('spinner').style.display = 'none';
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'icon-wrapper';
+    iconWrap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    document.getElementById('container').prepend(iconWrap);
+
+    document.getElementById('title').textContent = 'Erro na conexão';
+    document.getElementById('desc').textContent = decodeURIComponent(error);
+    document.getElementById('status').textContent = 'Redirecionando...';
+
+    // Volta para onde viemos
+    const returnTo = sessionStorage.getItem('oauth_return_url') || '/settings';
+    redirect(returnTo + '?error=' + encodeURIComponent(error), 2500);
+    return;
+  }
+
+  if (connected) {
+    const marketplaceName = marketplaceNames[connected] || connected;
+
+    document.getElementById('spinner').style.display = 'none';
+
+    const iconWrap = document.createElement('div');
+    iconWrap.className = 'icon-wrapper';
+    iconWrap.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+    document.getElementById('container').prepend(iconWrap);
+
+    document.getElementById('title').textContent = marketplaceName + ' conectado!';
+    document.getElementById('desc').textContent = 'Sua conta foi autorizada com sucesso. Você será redirecionado automaticamente.';
+    document.getElementById('status').textContent = 'Conexão estabelecida ✓';
+
+    // Roteamento inteligente por sessionStorage
+    const onboardingStep = sessionStorage.getItem('onboarding_step');
+    const returnUrl = sessionStorage.getItem('oauth_return_url');
+
+    if (onboardingStep) {
+      // Veio do onboarding — volta para step 3 (sync)
+      sessionStorage.setItem('oauth_connected', connected);
+      redirect('/onboarding?connected=' + connected, 1500);
+    } else if (returnUrl) {
+      sessionStorage.removeItem('oauth_return_url');
+      redirect(returnUrl + '?connected=' + connected, 1500);
+    } else {
+      // Fallback: vai para settings
+      redirect('/settings?connected=' + connected, 1500);
+    }
+  } else {
+    // Sem parâmetros: algo correu mal
+    document.getElementById('title').textContent = 'Verificando autorização...';
+    document.getElementById('status').textContent = 'Se não for redirecionado, clique abaixo.';
+    const btn = document.createElement('a');
+    btn.href = '/settings';
+    btn.className = 'btn';
+    btn.textContent = 'Ir para Configurações';
+    document.getElementById('container').appendChild(btn);
+    redirect('/settings', 10000);
+  }
+})();
 </script>
 </body>
 </html>

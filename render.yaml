@@ -1,0 +1,10 @@
+services:
+  - type: worker
+    name: e-conomia-worker
+    env: node
+    buildCommand: npm install
+    startCommand: node worker.js
+    rootDir: render-worker
+    envVars:
+      - key: SUPABASE_DB_URL
+        sync: false

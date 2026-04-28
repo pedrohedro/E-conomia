@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Pipeline de pedidos do Mercado Livre em tempo real.">
+  <title>Pedidos — E-CONOMIA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <script src="js/theme.js" type="module"></script>
+  <style>
+    .user-menu { position: relative; }
+    .user-avatar-btn {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--brand-light); color: var(--brand);
+      border: none; cursor: pointer; font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dropdown {
+      position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 165px;
+      box-shadow: var(--shadow-md); z-index: 50; display: none;
+    }
+    .dropdown.open { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; font-size: 12.5px; color: var(--foreground);
+      cursor: pointer; border: none; background: transparent; width: 100%;
+      text-align: left; text-decoration: none; transition: background .1s;
+    }
+    .dropdown-item:hover { background: var(--secondary); }
+    .dropdown-item.danger { color: var(--destructive); }
+    .dropdown-item svg { width: 13px; height: 13px; }
+    .dropdown-sep { border-top: 1px solid var(--border); margin: 4px 0; }
+
+    #toast {
+      position: fixed; bottom: 16px; right: 16px; z-index: 100;
+      background: var(--foreground); color: var(--background);
+      padding: 10px 16px; border-radius: var(--radius);
+      font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md);
+      transform: translateX(120%); transition: transform .25s ease;
+      max-width: 300px;
+    }
+    #toast.show { transform: translateX(0); }
+
+    /* ---- KPIs ---- */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 14px; margin-bottom: 20px;
+    }
+    @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 700px)  { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+    .kpi-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-label { font-size: 11px; color: var(--muted-foreground); font-weight: 500;
+      text-transform: uppercase; letter-spacing: .04em; margin: 0 0 4px; }
+    .kpi-value { font-size: 22px; font-weight: 700; margin: 0; line-height: 1.2; }
+
+    /* ---- Pipeline Kanban ---- */
+    .pipeline-scroll {
+      overflow-x: auto; padding-bottom: 16px;
+    }
+    .pipeline {
+      display: flex; gap: 14px; min-width: max-content;
+      align-items: flex-start;
+    }
+    .pipeline-col {
+      width: 280px; flex-shrink: 0;
+      background: var(--secondary); border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .pipeline-col-header {
+      padding: 12px 14px; display: flex; align-items: center;
+      justify-content: space-between; border-bottom: 1px solid var(--border);
+    }
+    .pipeline-col-title {
+      font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 7px;
+    }
+    .pipeline-badge {
+      font-size: 11px; font-weight: 700; padding: 2px 7px;
+      border-radius: 99px; background: var(--card); color: var(--foreground);
+      border: 1px solid var(--border);
+    }
+    .pipeline-col-body {
+      padding: 10px; display: flex; flex-direction: column; gap: 8px;
+      max-height: 600px; overflow-y: auto;
+    }
+    .order-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: calc(var(--radius) - 2px);
+      padding: 12px 14px; cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .order-card:hover { border-color: var(--brand); box-shadow: var(--shadow); }
+    .order-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 7px;
+    }
+    .order-number { font-size: 12px; font-weight: 700; color: var(--brand); }
+    .order-amount { font-size: 13px; font-weight: 700; }
+    .order-buyer  { font-size: 12px; color: var(--muted-foreground); margin: 3px 0; }
+    .order-items  { font-size: 11.5px; color: var(--muted-foreground); }
+    .order-date   { font-size: 11px; color: var(--muted-foreground); margin-top: 6px; }
+    .order-status-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* status colors */
+    .dot-pending    { background: var(--muted-foreground); }
+    .dot-approved   { background: #3b82f6; }
+    .dot-preparing  { background: #f59e0b; }
+    .dot-shipped    { background: #8b5cf6; }
+    .dot-delivered  { background: #10b981; }
+    .dot-cancelled  { background: var(--destructive); }
+
+    /* ---- Filter bar ---- */
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-bottom: 18px; align-items: center;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-wrap svg {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      width: 14px; height: 14px; color: var(--muted-foreground); pointer-events: none;
+    }
+    .search-wrap input { padding-left: 32px !important; }
+
+    /* ---- Order detail modal ---- */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; width: 100%; max-width: 520px;
+      padding: 26px; margin: 16px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .modal-title { font-size: 15px; font-weight: 700; margin: 0; }
+    .modal-close {
+      background: transparent; border: none; cursor: pointer;
+      font-size: 20px; color: var(--muted-foreground); line-height: 1;
+    }
+    .detail-row {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: var(--muted-foreground); font-weight: 500; }
+    .detail-val   { font-weight: 600; text-align: right; max-width: 60%; }
+    .items-list { margin-top: 16px; }
+    .item-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px;
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-img {
+      width: 36px; height: 36px; border-radius: 6px; object-fit: cover;
+      background: var(--secondary); flex-shrink: 0;
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600;
+    }
+    .pill-pending   { background: color-mix(in srgb, var(--muted-foreground) 15%, transparent); color: var(--muted-foreground); }
+    .pill-approved  { background: #dbeafe; color: #1d4ed8; }
+    .pill-preparing { background: #fef3c7; color: #92400e; }
+    .pill-shipped   { background: #ede9fe; color: #6d28d9; }
+    .pill-delivered { background: #d1fae5; color: #065f46; }
+    .pill-cancelled { background: color-mix(in srgb,var(--destructive) 12%,transparent); color: var(--destructive); }
+
+    /* skeleton */
+    .skeleton {
+      background: linear-gradient(90deg,var(--border) 25%,var(--secondary) 50%,var(--border) 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+    }
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar" role="navigation" aria-label="Menu principal">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="sidebar-logo-text">E-CONOMIA</span>
+  </div>
+  <nav class="sidebar-nav" aria-label="Navegação principal">
+    <div class="nav-section">
+      <p class="nav-label">Principal</p>
+      <a href="dashboard.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="index.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        Marketplaces
+      </a>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Operações</p>
+      <a href="pedidos.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        Pedidos
+      </a>
+      <a href="vendas.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Vendas
+      </a>
+      <a href="estoque.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Estoque
+      </a>
+      <a href="contabil.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        Contábil
+      </a>
+    </div>
+    <div class="nav-section">
+      <p class="nav-label">Conta</p>
+      <a href="settings.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Configurações
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar" id="userInitials">?</div>
+      <div class="sidebar-user-info">
+        <p class="sidebar-user-name" id="userName">Carregando...</p>
+        <p class="sidebar-user-role" id="userOrg">—</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Pedidos</h1>
+      <p class="page-subtitle" id="sync-status">Pipeline do Mercado Livre</p>
+    </div>
+    <div class="header-actions">
+      <button id="btn-sync" class="btn btn-secondary" title="Sincronizar pedidos">
+        <svg id="sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
+        </svg>
+        Sincronizar
+      </button>
+      <button class="btn btn-ghost btn-icon" id="themeToggle" aria-label="Alternar tema"></button>
+      <div class="user-menu">
+        <button class="user-avatar-btn" id="headerAvatar" onclick="toggleDropdown()">?</button>
+        <div class="dropdown" id="userDropdown">
+          <a href="settings.html" class="dropdown-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Configurações
+          </a>
+          <div class="dropdown-sep"></div>
+          <button class="dropdown-item danger" id="signOutBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-body">
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <p class="kpi-label">Pedidos Hoje</p>
+        <p class="kpi-value" id="kpi-today">—</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Pendentes</p>
+        <p class="kpi-value" id="kpi-pending" style="color:#6b7280;">—</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Preparando</p>
+        <p class="kpi-value" id="kpi-preparing" style="color:#f59e0b;">—</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Enviados</p>
+        <p class="kpi-value" id="kpi-shipped" style="color:#8b5cf6;">—</p>
+      </div>
+      <div class="kpi-card">
+        <p class="kpi-label">Faturamento Hoje</p>
+        <p class="kpi-value" id="kpi-revenue">—</p>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="searchInput" type="text" class="input" placeholder="Buscar pedido, comprador...">
+      </div>
+      <select id="periodSelect" class="select" style="width:auto;">
+        <option value="today">Hoje</option>
+        <option value="7d" selected>Últimos 7 dias</option>
+        <option value="30d">Últimos 30 dias</option>
+        <option value="all">Todos</option>
+      </select>
+      <select id="marketplaceSelect" class="select" style="width:auto;">
+        <option value="all">Todos os canais</option>
+        <option value="mercado_livre">Mercado Livre</option>
+        <option value="nuvemshop">Nuvemshop</option>
+      </select>
+    </div>
+
+    <!-- Kanban Pipeline -->
+    <div class="pipeline-scroll">
+      <div class="pipeline" id="pipeline">
+        <!-- preenchido por JS -->
+      </div>
+    </div>
+
+    <!-- Picking Dirigido (ECOM-84) -->
+    <div id="picking-section" style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-top:20px;box-shadow:var(--shadow);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--brand);"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Lista de Separação (Picking)
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span id="picking-status" style="font-size:12px;color:var(--muted-foreground);">Pedidos aprovados/preparando</span>
+          <button class="btn btn-ghost" style="font-size:12px;padding:5px 10px;height:28px;" onclick="printPickingList()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            Imprimir
+          </button>
+        </div>
+      </div>
+      <div id="picking-list" style="padding:16px 18px;">
+        <p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:16px 0;">Carregando lista de separação...</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay" id="order-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-order-number">Pedido</h2>
+      <button class="modal-close" onclick="closeOrderModal()">×</button>
+    </div>
+    <div id="modal-content"><!-- preenchido por JS --></div>
+  </div>
+</div>
+
+<!-- Label Modal (ECOM-88) -->
+<div class="modal-overlay" id="label-modal" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div class="modal-box" style="max-width:520px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-header">
+      <h2 class="modal-title">Gerar Etiqueta de Envio</h2>
+      <button class="modal-close" onclick="closeLabelModal()">×</button>
+    </div>
+    <div style="padding:0 20px 20px;">
+      <p style="font-size:12.5px;color:var(--muted-foreground);margin-bottom:16px;">Preencha o endereço do remetente. O destinatário é preenchido automaticamente com o comprador.</p>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:0 0 10px;">Remetente (sua empresa)</h4>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:11.5px;font-weight:500;display:block;margin-bottom:3px;">Nome</label>
+            <input id="lbl-from-name" type="text" class="input" placeholder="Sua empresa" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:11.5px;font-weight:500;display:block;margin-bottom:3px;">CEP</label>
+            <input id="lbl-from-cep" type="text" class="input" placeholder="00000-000" style="width:100%;">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:11.5px;font-weight:500;display:block;margin-bottom:3px;">Endereço</label>
+            <input id="lbl-from-address" type="text" class="input" placeholder="Rua, Av..." style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:11.5px;font-weight:500;display:block;margin-bottom:3px;">Número</label>
+            <input id="lbl-from-number" type="text" class="input" placeholder="123" style="width:100%;">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div>
+            <label style="font-size:11.5px;font-weight:500;display:block;margin-bottom:3px;">Bairro</label>
+            <input id="lbl-from-district" type="text" class="input" placeholder="Bairro" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:11.5px;font-weight:500;display:block;margin-bottom:3px;">Cidade</label>
+            <input id="lbl-from-city" type="text" class="input" placeholder="Cidade" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:11.5px;font-weight:500;display:block;margin-bottom:3px;">UF</label>
+            <input id="lbl-from-state" type="text" class="input" placeholder="SP" maxlength="2" style="width:100%;">
+          </div>
+        </div>
+      </div>
+
+      <h4 style="font-size:12.5px;font-weight:600;margin:0 0 10px;">Serviço de Frete</h4>
+      <select id="lbl-service" class="select" style="width:100%;margin-bottom:16px;">
+        <option value="1">PAC — Correios</option>
+        <option value="2">SEDEX — Correios</option>
+        <option value="3">Mini Envios — Correios</option>
+        <option value="85">Jadlog Package</option>
+        <option value="86">Jadlog .Com</option>
+      </select>
+
+      <div id="lbl-result" style="display:none;padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px;"></div>
+
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeLabelModal()">Cancelar</button>
+        <button class="btn btn-primary" style="flex:1;" id="lbl-submit" onclick="submitLabel()">Gerar Etiqueta</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { requireAuth } from './js/auth-guard.js';
+import { initThemeToggle } from './js/theme.js';
+  import { initSidebar } from './js/sidebar-component.js';
+import { supabase } from './js/supabase-client.js';
+import { formatCurrency } from './js/utils.js';
+import { initAIChat } from './js/ai-chat-widget.js';
+
+initThemeToggle('themeToggle');
+  initSidebar();
+initAIChat();
+
+const SUPABASE_FN = 'https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1';
+
+const STAGES = [
+  { key: 'pending',   label: 'Pendente',   dotClass: 'dot-pending',   pillClass: 'pill-pending'   },
+  { key: 'approved',  label: 'Aprovado',   dotClass: 'dot-approved',  pillClass: 'pill-approved'  },
+  { key: 'preparing', label: 'Preparando', dotClass: 'dot-preparing', pillClass: 'pill-preparing' },
+  { key: 'shipped',   label: 'Enviado',    dotClass: 'dot-shipped',   pillClass: 'pill-shipped'   },
+  { key: 'delivered', label: 'Entregue',   dotClass: 'dot-delivered', pillClass: 'pill-delivered' },
+];
+
+let orgId = null;
+let allOrders = [];
+let searchQuery = '';
+let periodFilter = '7d';
+let mpFilter = 'all';
+let realtimeCh = null;
+
+// ---- Init ----
+(async () => {
+  const auth = await requireAuth();
+  if (!auth) return;
+
+  const user = window.__ECONOMIA__?.user;
+  orgId = window.__ECONOMIA__?.orgId;
+
+  if (user) {
+    const initials = (user.email ?? 'U').charAt(0).toUpperCase();
+    document.getElementById('userInitials').textContent  = initials;
+    document.getElementById('headerAvatar').textContent  = initials;
+    document.getElementById('userName').textContent = user.user_metadata?.full_name ?? user.email ?? 'Usuário';
+    document.getElementById('userOrg').textContent  = window.__ECONOMIA__?.org?.name ?? '—';
+  }
+
+  if (!orgId) return;
+
+  await loadOrders();
+  subscribeRealtime();
+})();
+
+// ---- Load orders ----
+async function loadOrders() {
+  renderPipelineSkeleton();
+
+  const cutoff = getCutoff(periodFilter);
+
+  let q = supabase
+    .from('orders')
+    .select('id, order_number, status, marketplace, gross_amount, buyer_data, raw_data, marketplace_created_at, created_at, shipping_id')
+    .eq('organization_id', orgId)
+    .not('status', 'in', '("cancelled")')
+    .order('marketplace_created_at', { ascending: false })
+    .limit(500);
+
+  if (cutoff) q = q.gte('marketplace_created_at', cutoff);
+  if (mpFilter !== 'all') q = q.eq('marketplace', mpFilter);
+
+  const { data, error } = await q;
+  if (error) { console.error(error); return; }
+
+  allOrders = data ?? [];
+  renderAll();
+}
+
+function getCutoff(period) {
+  const now = new Date();
+  if (period === 'today') { now.setHours(0,0,0,0); return now.toISOString(); }
+  if (period === '7d')  { now.setDate(now.getDate() - 7); return now.toISOString(); }
+  if (period === '30d') { now.setDate(now.getDate() - 30); return now.toISOString(); }
+  return null;
+}
+
+// ---- Render ----
+function renderAll() {
+  const filtered = filterOrders(allOrders);
+  renderKPIs(filtered);
+  renderPipeline(filtered);
+}
+
+function filterOrders(orders) {
+  if (!searchQuery) return orders;
+  const q = searchQuery.toLowerCase();
+  return orders.filter(o =>
+    o.order_number?.toLowerCase().includes(q) ||
+    o.buyer_data?.nickname?.toLowerCase().includes(q) ||
+    o.buyer_data?.email?.toLowerCase().includes(q)
+  );
+}
+
+function renderKPIs(orders) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayOrders = orders.filter(o => new Date(o.marketplace_created_at ?? o.created_at) >= today);
+
+  document.getElementById('kpi-today').textContent      = todayOrders.length.toLocaleString('pt-BR');
+  document.getElementById('kpi-pending').textContent    = orders.filter(o => o.status === 'pending').length;
+  document.getElementById('kpi-preparing').textContent  = orders.filter(o => o.status === 'preparing').length;
+  document.getElementById('kpi-shipped').textContent    = orders.filter(o => o.status === 'shipped').length;
+  const rev = todayOrders.reduce((s, o) => s + (o.gross_amount ?? 0), 0);
+  document.getElementById('kpi-revenue').textContent    = formatCurrency(rev);
+}
+
+function renderPipeline(orders) {
+  const pipeline = document.getElementById('pipeline');
+  const grouped = {};
+  STAGES.forEach(s => { grouped[s.key] = []; });
+  orders.forEach(o => {
+    const key = STAGES.find(s => s.key === o.status) ? o.status : 'pending';
+    grouped[key].push(o);
+  });
+
+  pipeline.innerHTML = STAGES.map(stage => {
+    const cols = grouped[stage.key] ?? [];
+    return `
+      <div class="pipeline-col">
+        <div class="pipeline-col-header">
+          <span class="pipeline-col-title">
+            <span class="order-status-dot ${stage.dotClass}"></span>
+            ${escHtml(stage.label)}
+          </span>
+          <span class="pipeline-badge">${cols.length}</span>
+        </div>
+        <div class="pipeline-col-body">
+          ${cols.length === 0
+            ? `<div style="text-align:center;padding:20px 0;font-size:12px;color:var(--muted-foreground);">Sem pedidos</div>`
+            : cols.map(o => buildOrderCard(o, stage)).join('')
+          }
+        </div>
+      </div>`;
+  }).join('');
+
+  // Attach click handlers
+  pipeline.querySelectorAll('.order-card').forEach(card => {
+    card.addEventListener('click', () => openOrderModal(card.dataset.id));
+  });
+}
+
+function buildOrderCard(o, stage) {
+  const buyer = o.buyer_data?.nickname ?? o.buyer_data?.email ?? 'Comprador desconhecido';
+  const items = o.raw_data?.order_items ?? [];
+  const itemsText = items.length > 0
+    ? items.map(i => `${i.quantity}× ${i.item?.title ?? 'Item'}`).slice(0, 2).join(', ')
+    : '—';
+  const dateStr = o.marketplace_created_at
+    ? new Date(o.marketplace_created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
+    : '—';
+
+  return `
+    <div class="order-card" data-id="${o.id}">
+      <div class="order-card-header">
+        <span class="order-number">${escHtml(o.order_number ?? '—')}</span>
+        <span class="order-amount">${formatCurrency(o.gross_amount ?? 0)}</span>
+      </div>
+      <div class="order-buyer">${escHtml(buyer)}</div>
+      <div class="order-items">${escHtml(itemsText)}</div>
+      <div class="order-date">${dateStr}</div>
+    </div>`;
+}
+
+function renderPipelineSkeleton() {
+  const pipeline = document.getElementById('pipeline');
+  pipeline.innerHTML = STAGES.map(stage => `
+    <div class="pipeline-col">
+      <div class="pipeline-col-header">
+        <span class="pipeline-col-title">
+          <span class="order-status-dot ${stage.dotClass}"></span>
+          ${stage.label}
+        </span>
+      </div>
+      <div class="pipeline-col-body">
+        ${Array.from({length:3},()=>`
+          <div class="order-card" style="pointer-events:none;">
+            <div class="skeleton" style="height:13px;width:50%;margin-bottom:8px;"></div>
+            <div class="skeleton" style="height:11px;width:70%;margin-bottom:6px;"></div>
+            <div class="skeleton" style="height:11px;width:85%;"></div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ---- Order Detail Modal ----
+function openOrderModal(orderId) {
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order) return;
+
+  const stage = STAGES.find(s => s.key === order.status) ?? STAGES[0];
+  const buyer = order.buyer_data?.nickname ?? order.buyer_data?.email ?? 'Desconhecido';
+  const items = order.raw_data?.order_items ?? [];
+
+  document.getElementById('modal-order-number').textContent = order.order_number ?? '—';
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="detail-row">
+      <span class="detail-label">Status</span>
+      <span class="detail-val">
+        <span class="status-pill ${stage.pillClass}">${stage.label}</span>
+      </span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Marketplace</span>
+      <span class="detail-val">${escHtml(order.marketplace ?? '—')}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Comprador</span>
+      <span class="detail-val">${escHtml(buyer)}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Valor Bruto</span>
+      <span class="detail-val">${formatCurrency(order.gross_amount ?? 0)}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Data do Pedido</span>
+      <span class="detail-val">${order.marketplace_created_at ? new Date(order.marketplace_created_at).toLocaleString('pt-BR') : '—'}</span>
+    </div>
+    ${order.shipping_id ? `<div class="detail-row"><span class="detail-label">Envio</span><span class="detail-val">#${escHtml(order.shipping_id)}</span></div>` : ''}
+
+    ${items.length > 0 ? `
+      <h3 style="font-size:13px;font-weight:600;margin:16px 0 8px;">Itens do Pedido</h3>
+      <div class="items-list">
+        ${items.map(item => `
+          <div class="item-row">
+            ${item.item?.thumbnail ? `<img class="item-img" src="${escHtml(item.item.thumbnail)}" alt="">` : `<div class="item-img"></div>`}
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(item.item?.title ?? 'Item')}</div>
+              <div style="font-size:11.5px;color:var(--muted-foreground);">${item.quantity}× — ${formatCurrency((item.unit_price ?? 0) * (item.quantity ?? 1))}</div>
+            </div>
+          </div>`).join('')}
+      </div>` : ''}
+
+    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn btn-secondary" style="flex:1;min-width:80px;" onclick="closeOrderModal()">Fechar</button>
+      ${order.marketplace === 'mercado_livre' ? `
+        <button class="btn btn-secondary" style="flex:1;min-width:120px;" onclick="openLabelModal('${order.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Gerar Etiqueta
+        </button>` : ''}
+      ${stage.key !== 'delivered' && stage.key !== 'cancelled' ? `
+        <button class="btn btn-primary" style="flex:1;min-width:100px;" onclick="advanceOrder('${order.id}', '${stage.key}')">
+          Avançar Status
+        </button>` : ''}
+    </div>`;
+
+  document.getElementById('order-modal').classList.add('open');
+}
+
+window.closeOrderModal = () => document.getElementById('order-modal').classList.remove('open');
+document.getElementById('order-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeOrderModal();
+});
+
+window.advanceOrder = async (orderId, currentStatus) => {
+  const NEXT = { pending:'approved', approved:'preparing', preparing:'shipped', shipped:'delivered' };
+  const next = NEXT[currentStatus];
+  if (!next) return;
+
+  const { error } = await supabase
+    .from('orders')
+    .update({ status: next, updated_at: new Date().toISOString() })
+    .eq('id', orderId);
+
+  if (error) { showToast('Erro ao atualizar pedido'); return; }
+
+  // Atualiza localmente
+  const idx = allOrders.findIndex(o => o.id === orderId);
+  if (idx >= 0) allOrders[idx].status = next;
+
+  closeOrderModal();
+  renderAll();
+  showToast('Status atualizado');
+};
+
+// ---- Realtime ----
+function subscribeRealtime() {
+  if (realtimeCh) supabase.removeChannel(realtimeCh);
+  realtimeCh = supabase
+    .channel(`orders:${orgId}`)
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'orders', filter: `organization_id=eq.${orgId}` },
+      (payload) => {
+        if (payload.eventType === 'INSERT') {
+          allOrders.unshift(payload.new);
+        } else if (payload.eventType === 'UPDATE') {
+          const idx = allOrders.findIndex(o => o.id === payload.new.id);
+          if (idx >= 0) allOrders[idx] = { ...allOrders[idx], ...payload.new };
+          else allOrders.unshift(payload.new);
+        } else if (payload.eventType === 'DELETE') {
+          allOrders = allOrders.filter(o => o.id !== payload.old.id);
+        }
+        renderAll();
+      }
+    )
+    .subscribe();
+}
+
+// ---- Sync button ----
+document.getElementById('btn-sync').addEventListener('click', async () => {
+  const btn  = document.getElementById('btn-sync');
+  const icon = document.getElementById('sync-icon');
+  btn.disabled = true;
+  icon.style.animation = 'spin 1s linear infinite';
+  icon.style.transformOrigin = 'center';
+  document.getElementById('sync-status').textContent = 'Sincronizando pedidos...';
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    await fetch(`${SUPABASE_FN}/sync-orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ organization_id: orgId }),
+    });
+    await loadOrders();
+    document.getElementById('sync-status').textContent = `Sincronizado em ${new Date().toLocaleTimeString('pt-BR')}`;
+    showToast('Pedidos sincronizados');
+  } catch (err) {
+    showToast('Erro ao sincronizar: ' + err.message);
+    document.getElementById('sync-status').textContent = 'Pipeline do Mercado Livre';
+  } finally {
+    btn.disabled = false;
+    icon.style.animation = '';
+  }
+});
+
+// ---- Filters ----
+const searchInput = document.getElementById('searchInput');
+let debounce;
+searchInput.addEventListener('input', e => {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => { searchQuery = e.target.value.trim(); renderAll(); }, 300);
+});
+document.getElementById('periodSelect').addEventListener('change', e => {
+  periodFilter = e.target.value; loadOrders();
+});
+document.getElementById('marketplaceSelect').addEventListener('change', e => {
+  mpFilter = e.target.value; loadOrders();
+});
+
+// ---- User dropdown ----
+window.toggleDropdown = () => document.getElementById('userDropdown').classList.toggle('open');
+document.addEventListener('click', e => {
+  if (!e.target.closest('.user-menu')) document.getElementById('userDropdown').classList.remove('open');
+});
+document.getElementById('signOutBtn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  window.location.href = 'login.html';
+});
+
+// ---- Toast ----
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ---- Spin keyframe ----
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }';
+document.head.appendChild(style);
+
+// ---- Escape ----
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ---- Label Generation (ECOM-88) ----
+let _labelOrderId = null;
+
+window.openLabelModal = (orderId) => {
+  _labelOrderId = orderId;
+  document.getElementById('lbl-result').style.display = 'none';
+
+  // Pre-fill from localStorage if available
+  const saved = JSON.parse(localStorage.getItem('label_from_address') || '{}');
+  if (saved.name)     document.getElementById('lbl-from-name').value     = saved.name;
+  if (saved.cep)      document.getElementById('lbl-from-cep').value      = saved.cep;
+  if (saved.address)  document.getElementById('lbl-from-address').value  = saved.address;
+  if (saved.number)   document.getElementById('lbl-from-number').value   = saved.number;
+  if (saved.district) document.getElementById('lbl-from-district').value = saved.district;
+  if (saved.city)     document.getElementById('lbl-from-city').value     = saved.city;
+  if (saved.state)    document.getElementById('lbl-from-state').value    = saved.state;
+
+  document.getElementById('label-modal').style.display = 'flex';
+};
+
+window.closeLabelModal = () => {
+  document.getElementById('label-modal').style.display = 'none';
+};
+
+window.submitLabel = async () => {
+  const order = allOrders.find(o => o.id === _labelOrderId);
+  if (!order) return;
+
+  const from = {
+    name:     document.getElementById('lbl-from-name').value.trim(),
+    cep:      document.getElementById('lbl-from-cep').value.replace(/\D/g, ''),
+    address:  document.getElementById('lbl-from-address').value.trim(),
+    number:   document.getElementById('lbl-from-number').value.trim(),
+    district: document.getElementById('lbl-from-district').value.trim(),
+    city:     document.getElementById('lbl-from-city').value.trim(),
+    state:    document.getElementById('lbl-from-state').value.trim().toUpperCase(),
+  };
+
+  if (!from.name || !from.cep || !from.address || !from.city || !from.state) {
+    showLabelResult('error', 'Preencha todos os campos do remetente.');
+    return;
+  }
+
+  // Save for next time
+  localStorage.setItem('label_from_address', JSON.stringify(from));
+
+  const buyer = order.buyer_data ?? {};
+  const shipping = order.raw_data?.shipping ?? {};
+  const receiverAddr = shipping.receiver_address ?? {};
+
+  const to = {
+    name:    buyer.nickname ?? `${buyer.first_name ?? ''} ${buyer.last_name ?? ''}`.trim() || 'Comprador',
+    cep:     receiverAddr.zip_code?.replace(/\D/g, '') ?? '',
+    address: receiverAddr.street_name ?? '',
+    number:  receiverAddr.street_number ?? 'S/N',
+    city:    receiverAddr.city?.name ?? '',
+    state:   receiverAddr.state?.name ?? '',
+  };
+
+  const serviceId = parseInt(document.getElementById('lbl-service').value);
+  const items = (order.raw_data?.order_items ?? []).map(i => ({
+    name: i.item?.title ?? 'Produto',
+    quantity: i.quantity ?? 1,
+    value: i.unit_price ?? 0,
+    weight: 0.3,
+    width: 15, height: 15, length: 15,
+  }));
+  if (!items.length) items.push({ name: 'Produto', quantity: 1, value: order.gross_amount ?? 0, weight: 0.3, width: 15, height: 15, length: 15 });
+
+  const btn = document.getElementById('lbl-submit');
+  btn.disabled = true; btn.textContent = 'Gerando...';
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${SUPABASE_FN}/generate-label`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ order_id: order.id, service_id: serviceId, from, to, products: items }),
+    });
+
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.error ?? 'Erro ao gerar etiqueta');
+    }
+
+    const html = `Etiqueta gerada! ${result.tracking_code ? `Rastreio: <strong>${result.tracking_code}</strong><br>` : ''}
+      <a href="${result.label_url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;margin-top:8px;color:var(--brand);font-weight:600;font-size:13px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Baixar PDF da etiqueta
+      </a>`;
+    showLabelResult('success', html);
+    showToast('Etiqueta gerada com sucesso!');
+  } catch (err) {
+    showLabelResult('error', err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Gerar Etiqueta';
+  }
+};
+
+function showLabelResult(type, html) {
+  const el = document.getElementById('lbl-result');
+  el.style.display = 'block';
+  el.style.background = type === 'success' ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)';
+  el.style.border     = type === 'success' ? '1px solid rgba(16,185,129,.2)' : '1px solid rgba(239,68,68,.2)';
+  el.style.color      = type === 'success' ? '#10b981' : '#ef4444';
+  el.innerHTML = html;
+}
+
+// ---- Picking Dirigido (ECOM-84) ----
+async function loadPickingList() {
+  const container = document.getElementById('picking-list');
+  if (!container) return;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  const { data: orderItems, error } = await supabase
+    .from('order_items')
+    .select('product_id, product_name, sku, quantity, orders!inner(id, status, organization_id)')
+    .eq('orders.organization_id', orgId)
+    .in('orders.status', ['approved', 'preparing']);
+
+  if (error) {
+    container.innerHTML = `<p style="font-size:13px;color:var(--destructive);text-align:center;padding:16px 0;">Erro ao carregar: ${escHtml(error.message)}</p>`;
+    return;
+  }
+
+  if (!orderItems?.length) {
+    container.innerHTML = `<p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:16px 0;">Nenhum pedido aguardando separação.</p>`;
+    document.getElementById('picking-status').textContent = '0 pedidos aguardando';
+    return;
+  }
+
+  // Agrupa por produto
+  const byProduct = {};
+  for (const item of orderItems) {
+    const key = item.product_id ?? item.product_name ?? 'unknown';
+    if (!byProduct[key]) {
+      byProduct[key] = {
+        product_name: item.product_name ?? 'Produto sem nome',
+        sku: item.sku ?? '—',
+        total_qty: 0,
+        order_count: 0,
+      };
+    }
+    byProduct[key].total_qty  += item.quantity ?? 1;
+    byProduct[key].order_count += 1;
+  }
+
+  const rows = Object.values(byProduct).sort((a, b) => b.total_qty - a.total_qty);
+  const orderSet = new Set(orderItems.map(i => i.orders?.id).filter(Boolean));
+
+  document.getElementById('picking-status').textContent = `${orderSet.size} pedido(s) aguardando`;
+
+  container.innerHTML = `
+    <div id="picking-print-header" style="display:none;margin-bottom:16px;">
+      <h2 style="margin:0;font-size:16px;">Lista de Separação (Picking)</h2>
+      <p style="margin:4px 0 0;font-size:12px;color:#666;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);">
+          <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--muted-foreground);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">#</th>
+          <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--muted-foreground);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">Produto</th>
+          <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--muted-foreground);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">SKU</th>
+          <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--muted-foreground);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">Qtd. Pedidos</th>
+          <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--muted-foreground);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">Total Unid.</th>
+          <th style="text-align:center;padding:8px 10px;font-weight:600;color:var(--muted-foreground);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">Separado?</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map((r, i) => `
+          <tr style="border-bottom:1px solid var(--border);" class="picking-row">
+            <td style="padding:10px;color:var(--muted-foreground);">${i + 1}</td>
+            <td style="padding:10px;font-weight:500;">${escHtml(r.product_name)}</td>
+            <td style="padding:10px;font-family:monospace;font-size:12px;color:var(--muted-foreground);">${escHtml(r.sku)}</td>
+            <td style="padding:10px;text-align:right;">${r.order_count}</td>
+            <td style="padding:10px;text-align:right;font-weight:700;font-size:15px;">${r.total_qty}</td>
+            <td style="padding:10px;text-align:center;">
+              <input type="checkbox" style="width:16px;height:16px;cursor:pointer;accent-color:var(--brand);">
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+window.printPickingList = () => {
+  const header = document.getElementById('picking-print-header');
+  if (header) header.style.display = 'block';
+
+  const style = document.createElement('style');
+  style.id = 'print-picking-style';
+  style.textContent = `
+    @media print {
+      body > *:not(main) { display: none !important; }
+      main > *:not(#picking-section) { display: none !important; }
+      #picking-section { display: block !important; }
+      .btn, button { display: none !important; }
+      .picking-row input[type=checkbox] { -webkit-print-color-adjust: exact; }
+    }`;
+  document.head.appendChild(style);
+
+  window.print();
+
+  setTimeout(() => {
+    style.remove();
+    if (header) header.style.display = 'none';
+  }, 500);
+};
+
+// Carrega picking list ao iniciar (após loadOrders)
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(loadPickingList, 1500);
+});
+</script>
+</body>
+</html>

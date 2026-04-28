@@ -6,11 +6,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Configuracao - sera substituida pelas variaveis reais do projeto Supabase
-const SUPABASE_URL = window.__ENV__?.SUPABASE_URL || "https://rqmpqxguecuhrsbzcwgb.supabase.co";
-const SUPABASE_ANON_KEY = window.__ENV__?.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxbXBxeGd1ZWN1aHJzYnpjd2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDA0NjUsImV4cCI6MjA5MDU3NjQ2NX0.NctXATRekxQh0R3zSTlMmW673ZtJog6aBeeNrrSu0hU";
+const SUPABASE_URL = window.__ENV__?.SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = window.__ENV__?.SUPABASE_ANON_KEY || "";
 const SUPABASE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.supabase = supabase; // Expose global for legacy scripts
+
 
 // =============================================================================
 // Auth helpers

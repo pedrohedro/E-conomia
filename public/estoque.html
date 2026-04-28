@@ -131,7 +131,7 @@
     }
     .mp-tab:hover { background: var(--accent); color: var(--foreground); }
     .mp-tab.active { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
-    .mp-tab img { width: 14px; height: 14px; object-fit: contain; }
+    .mp-tab img { height: 16px; width: auto; max-width: 32px; object-fit: contain; flex-shrink: 0; }
 
     /* Stock status badge */
     .stock-badge {
@@ -267,12 +267,32 @@
 
 <!-- Main -->
 <div class="main-content">
+  <!-- ML Status Banner (ECOM-95) -->
+  <div id="ml-status-banner" style="display:none;"></div>
+
   <header class="page-header">
     <div>
       <h1 class="page-title">Estoque</h1>
-      <p class="page-subtitle">Disponibilidade por canal de venda</p>
+      <p class="page-subtitle" id="sync-subtitle">Disponibilidade por canal de venda</p>
     </div>
     <div class="header-actions">
+      <!-- Notificações de alerta (ECOM-80) -->
+      <div style="position:relative;">
+        <button class="btn btn-ghost btn-icon" id="alertBellBtn" title="Alertas de estoque" style="position:relative;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="alert-badge" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--destructive);"></span>
+        </button>
+        <!-- Alert panel -->
+        <div id="alert-panel" style="display:none;position:absolute;right:0;top:calc(100%+6px);width:320px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);z-index:60;max-height:360px;overflow-y:auto;">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;">Alertas de Estoque</div>
+          <div id="alert-list"></div>
+        </div>
+      </div>
+      <!-- Sync button -->
+      <button class="btn btn-secondary" id="syncBtn" title="Sincronizar estoque com ML" style="font-size:12.5px;gap:6px;">
+        <svg id="sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        Sync
+      </button>
       <button class="btn btn-ghost btn-icon" id="themeToggle" aria-label="Alternar tema" title="Alternar tema"></button>
       <div class="user-menu">
         <button class="user-avatar-btn" id="headerAvatar" onclick="toggleDropdown()">?</button>
@@ -446,7 +466,242 @@
       </div>
     </div>
 
+    <!-- Movimentações de Estoque (ECOM-81) -->
+    <div class="card" style="margin-top:20px;" id="movements-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--brand);">
+            <path d="M3 3h18v18H3z"/><path d="M21 9H3"/><path d="M21 15H3"/><path d="M12 3v18"/>
+          </svg>
+          Movimentações Recentes
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="movement-type-filter" class="select" style="font-size:12px;padding:4px 8px;height:30px;">
+            <option value="all">Todos os tipos</option>
+            <option value="purchase">Compra</option>
+            <option value="sale">Venda</option>
+            <option value="adjustment">Ajuste</option>
+            <option value="transfer">Transferência</option>
+            <option value="return">Devolução</option>
+          </select>
+          <button class="btn btn-primary" id="btn-adj-stock" style="font-size:12px;padding:5px 12px;height:30px;gap:5px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Registrar Movimentação
+          </button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="table" id="movements-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Produto</th>
+              <th>Tipo</th>
+              <th style="text-align:center;">Qtd</th>
+              <th>Canal</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody id="movements-body">
+            <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted-foreground);font-size:13px;">Carregando movimentações...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Reposição de Estoque Full — Inbound (ECOM-89) -->
+    <div class="card" style="margin-top:20px;" id="inbound-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--brand);"><path d="M12 2v20M2 7l10 5 10-5M2 17l10 5 10-5"/></svg>
+          Reposição de Estoque Full
+        </div>
+        <button class="btn btn-primary" id="btn-new-inbound" style="font-size:12px;padding:5px 12px;height:30px;gap:5px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Registrar Inbound
+        </button>
+      </div>
+      <div id="inbound-content" style="padding:16px 18px;">
+        <p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:20px 0;">Carregando produtos que precisam de reposição...</p>
+      </div>
+    </div>
+
+    <!-- Endereçamento de Armazém (ECOM-83) -->
+    <div class="card" style="margin-top:20px;" id="warehouse-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--brand);"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          Localizações do Armazém
+        </div>
+        <button class="btn btn-primary" id="btn-new-location" style="font-size:12px;padding:5px 12px;height:30px;gap:5px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova Localização
+        </button>
+      </div>
+      <div id="warehouse-content" style="padding:16px 18px;">
+        <p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:20px 0;">Carregando localizações...</p>
+      </div>
+    </div>
+
+    <!-- Curva ABC (ECOM-90) -->
+    <div class="card" style="margin-top:20px;" id="abc-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--brand);"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Curva ABC — Análise de Giro
+        </div>
+        <span style="font-size:11.5px;color:var(--muted-foreground);">Últimos 30 dias</span>
+      </div>
+      <div id="abc-content" style="padding:16px 18px;">
+        <p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:20px 0;">Carregando análise...</p>
+      </div>
+    </div>
+
   </main>
+</div>
+
+<!-- Inbound Modal (ECOM-89) -->
+<div id="inbound-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:480px;padding:26px;margin:16px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h3 style="margin:0;font-size:15px;font-weight:700;">Registrar Inbound Full</h3>
+      <button onclick="document.getElementById('inbound-modal').style.display='none'" style="background:transparent;border:none;cursor:pointer;font-size:20px;color:var(--muted-foreground);">×</button>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted-foreground);margin-bottom:16px;">Registre o envio de produtos ao Centro de Distribuição do ML Full. O ML atualiza o estoque após conferência (1–3 dias úteis).</p>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Produto</label>
+        <select id="inbound-product" class="select" style="width:100%;"><option value="">Selecione um produto...</option></select>
+      </div>
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Quantidade enviada ao CD</label>
+        <input id="inbound-qty" type="number" min="1" value="10" class="input" style="width:100%;">
+      </div>
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Nº NF ou Código de Rastreio</label>
+        <input id="inbound-ref" type="text" class="input" placeholder="NF-001 ou código de envio" style="width:100%;">
+      </div>
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Observações</label>
+        <input id="inbound-notes" type="text" class="input" placeholder="Ex: Remessa para CD SP, produtos novos..." style="width:100%;">
+      </div>
+      <div id="inbound-msg" style="display:none;padding:10px 12px;border-radius:8px;font-size:12.5px;"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="document.getElementById('inbound-modal').style.display='none'" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+      <button id="inbound-submit" onclick="submitInbound()" class="btn btn-primary" style="flex:1;">Registrar Inbound</button>
+    </div>
+  </div>
+</div>
+
+<!-- Warehouse Location Modal (ECOM-83) -->
+<div id="wh-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:500px;padding:26px;margin:16px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h3 id="wh-modal-title" style="margin:0;font-size:15px;font-weight:700;">Nova Localização</h3>
+      <button onclick="closeWhModal()" style="background:transparent;border:none;cursor:pointer;font-size:20px;color:var(--muted-foreground);">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Código <span style="color:var(--destructive);">*</span></label>
+          <input id="wh-code" type="text" class="input" placeholder="A-01-02" style="width:100%;font-family:monospace;">
+        </div>
+        <div>
+          <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Zona</label>
+          <select id="wh-zone" class="select" style="width:100%;">
+            <option value="geral">Geral</option>
+            <option value="picking">Picking</option>
+            <option value="storage">Storage</option>
+            <option value="expedição">Expedição</option>
+            <option value="quarentena">Quarentena</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Corredor</label>
+          <input id="wh-aisle" type="text" class="input" placeholder="A" style="width:100%;">
+        </div>
+        <div>
+          <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Prateleira</label>
+          <input id="wh-shelf" type="text" class="input" placeholder="01" style="width:100%;">
+        </div>
+        <div>
+          <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Posição</label>
+          <input id="wh-position" type="text" class="input" placeholder="02" style="width:100%;">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Descrição</label>
+        <input id="wh-description" type="text" class="input" placeholder="Corredor A, Prateleira 1, Posição 2" style="width:100%;">
+      </div>
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Capacidade máxima (unidades)</label>
+        <input id="wh-capacity" type="number" min="0" value="0" class="input" style="width:100%;">
+      </div>
+      <div id="wh-msg" style="display:none;padding:10px 12px;border-radius:8px;font-size:12.5px;"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="closeWhModal()" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+      <button id="wh-submit" onclick="submitWhLocation()" class="btn btn-primary" style="flex:1;">Salvar Localização</button>
+    </div>
+  </div>
+</div>
+
+<!-- Adjust Stock Modal (ECOM-81) -->
+<div id="adj-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:440px;padding:26px;margin:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h3 style="margin:0;font-size:15px;font-weight:700;">Registrar Movimentação</h3>
+      <button onclick="document.getElementById('adj-modal').style.display='none'" style="background:transparent;border:none;cursor:pointer;font-size:20px;color:var(--muted-foreground);">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Produto</label>
+        <select id="adj-product" class="select" style="width:100%;">
+          <option value="">Selecione um produto...</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Tipo</label>
+        <select id="adj-type" class="select" style="width:100%;">
+          <option value="purchase">Compra (entrada)</option>
+          <option value="adjustment">Ajuste manual</option>
+          <option value="return">Devolução (entrada)</option>
+          <option value="transfer">Transferência</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Canal</label>
+          <select id="adj-channel" class="select" style="width:100%;">
+            <option value="ml_full">ML Full</option>
+            <option value="ml_flex">ML Flex</option>
+            <option value="seller_warehouse">Estoque Próprio</option>
+            <option value="nuvemshop">Nuvemshop</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Quantidade</label>
+          <input id="adj-qty" type="number" min="1" value="1" class="input" style="width:100%;">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12.5px;font-weight:500;display:block;margin-bottom:4px;">Justificativa <span style="color:var(--muted-foreground);font-weight:400;">(obrigatória)</span></label>
+        <input id="adj-notes" type="text" class="input" placeholder="Ex: Recebimento NF #123, Inventário físico..." style="width:100%;">
+      </div>
+      <div id="adj-sync-ml" style="display:flex;align-items:center;gap:8px;font-size:12.5px;">
+        <input type="checkbox" id="adj-push-ml" checked style="width:14px;height:14px;">
+        <label for="adj-push-ml">Sincronizar com o Mercado Livre</label>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button onclick="document.getElementById('adj-modal').style.display='none'" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+      <button id="adj-submit" onclick="submitAdjustment()" class="btn btn-primary" style="flex:1;">Registrar</button>
+    </div>
+    <div id="adj-result" style="display:none;margin-top:12px;padding:10px;border-radius:8px;font-size:12.5px;"></div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -455,10 +710,12 @@
   import { requireAuth } from './js/auth-guard.js';
   import { fetchAllInventory, formatCurrency } from './js/api.js';
   import { initThemeToggle } from './js/theme.js';
+  import { initSidebar } from './js/sidebar-component.js';
   import { supabase } from './js/supabase-client.js';
   import { initAIChat } from './js/ai-chat-widget.js';
 
   initThemeToggle('themeToggle');
+  initSidebar();
   initAIChat();
 
   // CSV Import helpers
@@ -845,7 +1102,6 @@
   });
 
   document.getElementById('signOutBtn')?.addEventListener('click', async () => {
-      const { supabase } = await import('./js/supabase-client.js');
       await supabase.auth.signOut();
       window.location.href = 'login.html';
   });
@@ -860,6 +1116,666 @@
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;');
   }
+
+  // -----------------------------------------------------------------------
+  // Sync button (ECOM-79)
+  // -----------------------------------------------------------------------
+  const SUPABASE_FN = 'https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1';
+
+  document.getElementById('syncBtn')?.addEventListener('click', async () => {
+    const btn  = document.getElementById('syncBtn');
+    const icon = document.getElementById('sync-icon');
+    const sub  = document.getElementById('sync-subtitle');
+    btn.disabled = true;
+    icon.style.animation = 'spin 1s linear infinite';
+    icon.style.transformOrigin = 'center';
+    if (sub) sub.textContent = 'Sincronizando...';
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await fetch(`${SUPABASE_FN}/sync-inventory`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ organization_id: orgId }),
+      });
+      if (sub) sub.textContent = `Sincronizado em ${new Date().toLocaleTimeString('pt-BR')}`;
+      await loadAndRender();
+      showToast('Estoque sincronizado com o ML');
+    } catch (err) {
+      if (sub) sub.textContent = 'Disponibilidade por canal de venda';
+      showToast('Erro ao sincronizar: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      icon.style.animation = '';
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Real-time subscription (ECOM-78)
+  // -----------------------------------------------------------------------
+  let realtimeCh = null;
+
+  function subscribeRealtime() {
+    if (realtimeCh) supabase.removeChannel(realtimeCh);
+    realtimeCh = supabase
+      .channel(`channel_stock:${orgId}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'channel_stock', filter: `organization_id=eq.${orgId}` },
+        async () => { if (orgId) await loadAndRender(); }
+      )
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications',
+          filter: `organization_id=eq.${orgId}` },
+        (payload) => {
+          if (payload.new?.type === 'stock_alert') loadAlerts();
+        }
+      )
+      .subscribe();
+  }
+
+  // Start realtime after auth
+  const origLoadAndRender = loadAndRender;
+  (async () => {
+    // pequeno delay para garantir que orgId está preenchido
+    await new Promise(r => setTimeout(r, 200));
+    if (orgId) {
+      subscribeRealtime();
+      loadMovements();
+      loadAlerts();
+      populateProductsSelect();
+    }
+  })();
+
+  // -----------------------------------------------------------------------
+  // Alerts panel (ECOM-80)
+  // -----------------------------------------------------------------------
+  const MOVEMENT_TYPE_LABELS = { purchase:'Compra', sale:'Venda', adjustment:'Ajuste', transfer:'Transferência', return:'Devolução' };
+  const MOVEMENT_COLORS = {
+    purchase:   { color:'#10b981', bg:'rgba(16,185,129,.12)' },
+    sale:       { color:'#3b82f6', bg:'rgba(59,130,246,.12)' },
+    adjustment: { color:'#f59e0b', bg:'rgba(245,158,11,.12)' },
+    transfer:   { color:'#8b5cf6', bg:'rgba(139,92,246,.12)' },
+    return:     { color:'#6b7280', bg:'rgba(107,114,128,.12)' },
+  };
+
+  async function loadAlerts() {
+    if (!orgId) return;
+    const { data } = await supabase
+      .from('notifications')
+      .select('id, title, message, severity, created_at, read, data')
+      .eq('organization_id', orgId)
+      .eq('type', 'stock_alert')
+      .eq('read', false)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    const list = document.getElementById('alert-list');
+    const badge = document.getElementById('alert-badge');
+    if (!list) return;
+
+    const alerts = data ?? [];
+    badge.style.display = alerts.length > 0 ? 'block' : 'none';
+
+    if (!alerts.length) {
+      list.innerHTML = `<div style="padding:14px;font-size:12.5px;color:var(--muted-foreground);text-align:center;">Nenhum alerta ativo</div>`;
+      return;
+    }
+
+    list.innerHTML = alerts.map(a => {
+      const sev = a.severity === 'high' ? { color:'var(--destructive)', icon:'🚨' }
+        : a.severity === 'medium' ? { color:'#f59e0b', icon:'⚠️' }
+        : { color:'#6b7280', icon:'📉' };
+      return `
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;" onclick="markAlertRead('${a.id}', this)">
+          <div style="display:flex;align-items:flex-start;gap:7px;">
+            <span style="font-size:14px;">${sev.icon}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12.5px;font-weight:600;color:${sev.color};">${escHtml(a.title ?? 'Alerta')}</div>
+              <div style="font-size:12px;color:var(--muted-foreground);margin-top:2px;">${escHtml(a.message ?? '')}</div>
+              <div style="font-size:11px;color:var(--muted-foreground);margin-top:4px;">${new Date(a.created_at).toLocaleString('pt-BR')}</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  window.markAlertRead = async (id, el) => {
+    await supabase.from('notifications').update({ read: true }).eq('id', id);
+    el?.remove();
+    await loadAlerts();
+  };
+
+  // Toggle alert panel
+  document.getElementById('alertBellBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    const panel = document.getElementById('alert-panel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#alertBellBtn') && !e.target.closest('#alert-panel')) {
+      const panel = document.getElementById('alert-panel');
+      if (panel) panel.style.display = 'none';
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Movements (ECOM-81)
+  // -----------------------------------------------------------------------
+  async function loadMovements() {
+    if (!orgId) return;
+    const typeFilter = document.getElementById('movement-type-filter')?.value ?? 'all';
+
+    let q = supabase
+      .from('stock_movements')
+      .select('id, created_at, movement_type, quantity, channel, notes, products(name,sku)')
+      .eq('organization_id', orgId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (typeFilter !== 'all') q = q.eq('movement_type', typeFilter);
+
+    const { data, error } = await q;
+    const tbody = document.getElementById('movements-body');
+    if (!tbody) return;
+
+    if (error || !data?.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted-foreground);font-size:13px;">${error ? 'Erro ao carregar movimentações.' : 'Nenhuma movimentação registrada.'}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map(m => {
+      const cfg = MOVEMENT_COLORS[m.movement_type] ?? MOVEMENT_COLORS.adjustment;
+      const label = MOVEMENT_TYPE_LABELS[m.movement_type] ?? m.movement_type;
+      const qtySign = ['sale'].includes(m.movement_type) ? (m.quantity < 0 ? '' : '-') : '+';
+      const qtyColor = ['sale'].includes(m.movement_type) ? 'var(--destructive)' : '#10b981';
+      return `
+        <tr>
+          <td style="font-size:12px;color:var(--muted-foreground);">${new Date(m.created_at).toLocaleString('pt-BR')}</td>
+          <td>
+            <div style="font-weight:600;font-size:13px;">${escHtml(m.products?.name ?? '—')}</div>
+            <div style="font-size:11.5px;color:var(--muted-foreground);">SKU: ${escHtml(m.products?.sku ?? '—')}</div>
+          </td>
+          <td>
+            <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:600;background:${cfg.bg};color:${cfg.color};">
+              ${escHtml(label)}
+            </span>
+          </td>
+          <td style="text-align:center;font-weight:700;color:${qtyColor};">${qtySign}${Math.abs(m.quantity).toLocaleString('pt-BR')}</td>
+          <td style="font-size:12px;color:var(--muted-foreground);">${escHtml(m.channel ?? '—')}</td>
+          <td style="font-size:12px;color:var(--muted-foreground);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(m.notes ?? '—')}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('movement-type-filter')?.addEventListener('change', loadMovements);
+
+  // -----------------------------------------------------------------------
+  // Adjust stock modal
+  // -----------------------------------------------------------------------
+  document.getElementById('btn-adj-stock')?.addEventListener('click', () => {
+    document.getElementById('adj-modal').style.display = 'flex';
+    document.getElementById('adj-result').style.display = 'none';
+    document.getElementById('adj-notes').value = '';
+  });
+
+  async function populateProductsSelect() {
+    if (!orgId) return;
+    const { data } = await supabase
+      .from('products')
+      .select('id, name, sku')
+      .eq('organization_id', orgId)
+      .eq('is_active', true)
+      .order('name')
+      .limit(200);
+    const sel = document.getElementById('adj-product');
+    if (!sel || !data) return;
+    sel.innerHTML = `<option value="">Selecione um produto...</option>` +
+      data.map(p => `<option value="${p.id}" data-sku="${escHtml(p.sku ?? '')}">${escHtml(p.name)} (${escHtml(p.sku ?? '—')})</option>`).join('');
+  }
+
+  window.submitAdjustment = async () => {
+    const productId = document.getElementById('adj-product').value;
+    const type      = document.getElementById('adj-type').value;
+    const channel   = document.getElementById('adj-channel').value;
+    const qty       = parseInt(document.getElementById('adj-qty').value, 10);
+    const notes     = document.getElementById('adj-notes').value.trim();
+    const pushML    = document.getElementById('adj-push-ml').checked;
+    const resultEl  = document.getElementById('adj-result');
+    const btn       = document.getElementById('adj-submit');
+
+    if (!productId) { showAdjResult('error', 'Selecione um produto.'); return; }
+    if (!notes)     { showAdjResult('error', 'A justificativa é obrigatória.'); return; }
+    if (isNaN(qty) || qty <= 0) { showAdjResult('error', 'Quantidade inválida.'); return; }
+
+    btn.disabled = true; btn.textContent = 'Registrando...';
+
+    try {
+      const movQty = ['sale'].includes(type) ? -qty : qty;
+
+      // Insere movimentação
+      const { error: mvErr } = await supabase.from('stock_movements').insert({
+        organization_id: orgId,
+        product_id: productId,
+        channel,
+        movement_type: type,
+        quantity: movQty,
+        notes,
+      });
+      if (mvErr) throw mvErr;
+
+      // Atualiza channel_stock
+      const { data: cs } = await supabase
+        .from('channel_stock')
+        .select('id, quantity')
+        .eq('organization_id', orgId)
+        .eq('product_id', productId)
+        .eq('channel', channel)
+        .single();
+
+      if (cs) {
+        const newQty = Math.max(0, (cs.quantity ?? 0) + movQty);
+        await supabase.from('channel_stock').update({ quantity: newQty }).eq('id', cs.id);
+
+        // Push para ML se checkbox marcado e canal é Flex/Próprio
+        if (pushML && ['ml_flex','seller_warehouse'].includes(channel)) {
+          const { data: product } = await supabase
+            .from('products').select('sku').eq('id', productId).single();
+          const { data: csFull } = await supabase
+            .from('channel_stock').select('channel_sku').eq('id', cs.id).single();
+          const channelSku = csFull?.channel_sku ?? product?.sku;
+
+          if (channelSku) {
+            const { data: { session } } = await supabase.auth.getSession();
+            fetch(`${SUPABASE_FN}/push-stock-to-ml`, {
+              method: 'POST',
+              headers: { 'Content-Type':'application/json', Authorization:`Bearer ${session.access_token}` },
+              body: JSON.stringify({ organization_id: orgId, product_id: productId, channel_sku: channelSku, quantity: newQty }),
+            }).catch(e => console.warn('[push-stock-ml]', e));
+          }
+        }
+      }
+
+      showAdjResult('success', 'Movimentação registrada com sucesso!');
+      await loadAndRender();
+      await loadMovements();
+      setTimeout(() => { document.getElementById('adj-modal').style.display = 'none'; }, 1200);
+
+    } catch (err) {
+      showAdjResult('error', 'Erro: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Registrar';
+    }
+  };
+
+  function showAdjResult(type, msg) {
+    const el = document.getElementById('adj-result');
+    el.style.display = 'block';
+    el.style.background = type === 'success' ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)';
+    el.style.border = type === 'success' ? '1px solid rgba(16,185,129,.2)' : '1px solid rgba(239,68,68,.2)';
+    el.textContent = msg;
+  }
+
+  // Toast
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Spin animation
+  const _spinStyle = document.createElement('style');
+  _spinStyle.textContent = '@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }';
+  document.head.appendChild(_spinStyle);
+
+  // ─── Inbound Full (ECOM-89) ────────────────────────────────────────────────
+  document.getElementById('btn-new-inbound')?.addEventListener('click', () => {
+    populateInboundSelect();
+    document.getElementById('inbound-modal').style.display = 'flex';
+    document.getElementById('inbound-msg').style.display = 'none';
+  });
+
+  async function populateInboundSelect() {
+    const { data: products } = await supabase
+      .from('products').select('id, name, sku')
+      .eq('organization_id', orgId).eq('active', true).order('name');
+    const sel = document.getElementById('inbound-product');
+    sel.innerHTML = '<option value="">Selecione um produto...</option>' +
+      (products ?? []).map(p => `<option value="${p.id}">${escHtml(p.name)} — ${escHtml(p.sku ?? '')}</option>`).join('');
+  }
+
+  window.submitInbound = async () => {
+    const productId = document.getElementById('inbound-product').value;
+    const qty       = parseInt(document.getElementById('inbound-qty').value) || 0;
+    const ref       = document.getElementById('inbound-ref').value.trim();
+    const notes     = document.getElementById('inbound-notes').value.trim();
+    const msg       = document.getElementById('inbound-msg');
+
+    if (!productId || qty < 1) {
+      msg.style.display = 'block';
+      msg.style.background = 'rgba(239,68,68,.1)';
+      msg.style.border = '1px solid rgba(239,68,68,.2)';
+      msg.textContent = 'Selecione um produto e informe uma quantidade válida.';
+      return;
+    }
+
+    const btn = document.getElementById('inbound-submit');
+    btn.disabled = true; btn.textContent = 'Registrando...';
+
+    try {
+      const { error } = await supabase.from('stock_movements').insert({
+        organization_id: orgId,
+        product_id: productId,
+        movement_type: 'purchase',
+        quantity: qty,
+        channel: 'ml_full',
+        notes: [ref ? `Ref: ${ref}` : null, notes || null].filter(Boolean).join(' — ') || 'Inbound Full',
+      });
+      if (error) throw error;
+
+      msg.style.display = 'block';
+      msg.style.background = 'rgba(16,185,129,.1)';
+      msg.style.border = '1px solid rgba(16,185,129,.2)';
+      msg.textContent = `Inbound de ${qty} unidades registrado! O ML atualizará o estoque em 1–3 dias úteis.`;
+
+      await loadAndRender();
+      await loadMovements();
+      setTimeout(() => { document.getElementById('inbound-modal').style.display = 'none'; }, 1800);
+    } catch (err) {
+      msg.style.display = 'block';
+      msg.style.background = 'rgba(239,68,68,.1)';
+      msg.style.border = '1px solid rgba(239,68,68,.2)';
+      msg.textContent = 'Erro: ' + err.message;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Registrar Inbound';
+    }
+  };
+
+  async function loadInboundNeeds() {
+    const { data } = await supabase
+      .from('channel_stock')
+      .select('available, products(id, name, sku)')
+      .eq('organization_id', orgId)
+      .eq('channel', 'ml_full')
+      .lte('available', 5)
+      .order('available', { ascending: true })
+      .limit(20);
+
+    const container = document.getElementById('inbound-content');
+    if (!data?.length) {
+      container.innerHTML = '<p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:20px 0;">Nenhum produto Full precisa de reposição urgente.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <p style="font-size:12.5px;color:var(--muted-foreground);margin-bottom:12px;">${data.length} produto(s) com estoque Full crítico ou zerado</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${data.map(cs => {
+          const p = cs.products;
+          const qty = cs.available ?? 0;
+          const color = qty === 0 ? '#ef4444' : '#f59e0b';
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--secondary);border-radius:8px;border:1px solid var(--border);">
+            <div>
+              <strong style="font-size:13px;">${escHtml(p?.name ?? '—')}</strong>
+              <span style="font-size:11.5px;color:var(--muted-foreground);margin-left:8px;">${escHtml(p?.sku ?? '')}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:12px;font-weight:700;color:${color};">${qty} unid. Full</span>
+              <button class="btn btn-primary" style="font-size:11.5px;padding:4px 10px;height:26px;" onclick="document.getElementById('inbound-product').value='${p?.id}';document.getElementById('btn-new-inbound').click();">
+                Repor
+              </button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  loadInboundNeeds();
+
+  // ─── Curva ABC (ECOM-90) ───────────────────────────────────────────────────
+  async function loadAbcAnalysis() {
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString();
+    const { data: movements } = await supabase
+      .from('stock_movements')
+      .select('product_id, quantity')
+      .eq('organization_id', orgId)
+      .eq('movement_type', 'sale')
+      .gte('created_at', cutoff);
+
+    const container = document.getElementById('abc-content');
+
+    if (!movements?.length) {
+      container.innerHTML = '<p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:20px 0;">Nenhuma venda registrada nos últimos 30 dias para análise.</p>';
+      return;
+    }
+
+    // Agrega por produto
+    const byProduct = {};
+    for (const m of movements) {
+      if (!m.product_id) continue;
+      byProduct[m.product_id] = (byProduct[m.product_id] || 0) + Math.abs(m.quantity);
+    }
+
+    // Busca nomes dos produtos
+    const productIds = Object.keys(byProduct);
+    const { data: products } = await supabase
+      .from('products').select('id, name, sku').in('id', productIds);
+    const productMap = Object.fromEntries((products ?? []).map(p => [p.id, p]));
+
+    // Ordena por volume de vendas (desc)
+    const sorted = productIds
+      .map(id => ({ id, name: productMap[id]?.name ?? id, sku: productMap[id]?.sku ?? '', qty: byProduct[id] }))
+      .sort((a, b) => b.qty - a.qty);
+
+    const totalQty = sorted.reduce((s, p) => s + p.qty, 0);
+    let cumulative = 0;
+    const classified = sorted.map(p => {
+      cumulative += p.qty;
+      const pct = cumulative / totalQty;
+      const cls = pct <= 0.8 ? 'A' : pct <= 0.95 ? 'B' : 'C';
+      return { ...p, cls, cumPct: pct };
+    });
+
+    const countA = classified.filter(p => p.cls === 'A').length;
+    const countB = classified.filter(p => p.cls === 'B').length;
+    const countC = classified.filter(p => p.cls === 'C').length;
+
+    const clsConfig = {
+      A: { bg: 'rgba(16,185,129,.12)', border: 'rgba(16,185,129,.25)', color: '#10b981', label: 'Alto Giro', tip: 'Manter estoque alto, priorizar reposição' },
+      B: { bg: 'rgba(245,158,11,.12)', border: 'rgba(245,158,11,.25)', color: '#f59e0b', label: 'Médio Giro', tip: 'Monitorar estoque regularmente' },
+      C: { bg: 'rgba(148,163,184,.08)', border: 'rgba(148,163,184,.2)', color: '#94a3b8', label: 'Baixo Giro', tip: 'Evitar excesso de estoque' },
+    };
+
+    container.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;">
+        ${['A','B','C'].map(cls => {
+          const cfg = clsConfig[cls];
+          const count = { A: countA, B: countB, C: countC }[cls];
+          const pcts = { A:'80%', B:'95%', C:'100%' };
+          return `<div style="background:${cfg.bg};border:1px solid ${cfg.border};border-radius:10px;padding:14px;text-align:center;">
+            <div style="font-size:22px;font-weight:800;color:${cfg.color};">Classe ${cls}</div>
+            <div style="font-size:13px;font-weight:600;margin:4px 0;">${count} produto${count !== 1 ? 's' : ''}</div>
+            <div style="font-size:11.5px;color:var(--muted-foreground);">${cfg.label}</div>
+            <div style="font-size:10.5px;color:${cfg.color};margin-top:4px;">${cfg.tip}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;">
+        ${classified.map((p, i) => {
+          const cfg = clsConfig[p.cls];
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--secondary);border-radius:8px;border:1px solid var(--border);">
+            <span style="font-size:11px;font-weight:700;min-width:20px;color:var(--muted-foreground);">#${i+1}</span>
+            <span style="font-size:11.5px;font-weight:700;min-width:22px;color:${cfg.color};">${p.cls}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.name)}</div>
+              <div style="font-size:11px;color:var(--muted-foreground);">${escHtml(p.sku)}</div>
+            </div>
+            <span style="font-size:12px;font-weight:700;">${p.qty} un.</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  loadAbcAnalysis();
+
+  // ─── Localizações do Armazém (ECOM-83) ─────────────────────────────────────
+  let _whEditId = null;
+
+  document.getElementById('btn-new-location')?.addEventListener('click', () => {
+    _whEditId = null;
+    document.getElementById('wh-modal-title').textContent = 'Nova Localização';
+    document.getElementById('wh-code').value = '';
+    document.getElementById('wh-zone').value = 'geral';
+    document.getElementById('wh-aisle').value = '';
+    document.getElementById('wh-shelf').value = '';
+    document.getElementById('wh-position').value = '';
+    document.getElementById('wh-description').value = '';
+    document.getElementById('wh-capacity').value = '0';
+    document.getElementById('wh-msg').style.display = 'none';
+    document.getElementById('wh-modal').style.display = 'flex';
+  });
+
+  window.closeWhModal = () => { document.getElementById('wh-modal').style.display = 'none'; };
+
+  window.openWhEdit = (loc) => {
+    _whEditId = loc.id;
+    document.getElementById('wh-modal-title').textContent = 'Editar Localização';
+    document.getElementById('wh-code').value        = loc.code ?? '';
+    document.getElementById('wh-zone').value        = loc.zone ?? 'geral';
+    document.getElementById('wh-aisle').value       = loc.aisle ?? '';
+    document.getElementById('wh-shelf').value       = loc.shelf ?? '';
+    document.getElementById('wh-position').value    = loc.position ?? '';
+    document.getElementById('wh-description').value = loc.description ?? '';
+    document.getElementById('wh-capacity').value    = loc.capacity ?? 0;
+    document.getElementById('wh-msg').style.display = 'none';
+    document.getElementById('wh-modal').style.display = 'flex';
+  };
+
+  window.submitWhLocation = async () => {
+    const code = document.getElementById('wh-code').value.trim();
+    if (!code) { showWhMsg('Código é obrigatório.', 'error'); return; }
+
+    const payload = {
+      organization_id: orgId,
+      code,
+      zone:        document.getElementById('wh-zone').value,
+      aisle:       document.getElementById('wh-aisle').value.trim() || null,
+      shelf:       document.getElementById('wh-shelf').value.trim() || null,
+      position:    document.getElementById('wh-position').value.trim() || null,
+      description: document.getElementById('wh-description').value.trim() || null,
+      capacity:    parseInt(document.getElementById('wh-capacity').value) || 0,
+      active:      true,
+    };
+
+    const btn = document.getElementById('wh-submit');
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    let error;
+    if (_whEditId) {
+      ({ error } = await supabase.from('warehouse_locations').update(payload).eq('id', _whEditId));
+    } else {
+      ({ error } = await supabase.from('warehouse_locations').insert(payload));
+    }
+
+    btn.disabled = false; btn.textContent = 'Salvar Localização';
+
+    if (error) { showWhMsg('Erro: ' + error.message, 'error'); return; }
+
+    showWhMsg(_whEditId ? 'Localização atualizada!' : 'Localização criada!', 'success');
+    setTimeout(() => {
+      closeWhModal();
+      loadWarehouseLocations();
+    }, 1000);
+  };
+
+  window.deleteWhLocation = async (id) => {
+    if (!confirm('Remover esta localização?')) return;
+    const { error } = await supabase.from('warehouse_locations').delete().eq('id', id);
+    if (error) { alert('Erro ao remover: ' + error.message); return; }
+    loadWarehouseLocations();
+  };
+
+  function showWhMsg(text, type) {
+    const el = document.getElementById('wh-msg');
+    el.style.display = 'block';
+    el.style.background = type === 'success' ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)';
+    el.style.border     = type === 'success' ? '1px solid rgba(16,185,129,.2)' : '1px solid rgba(239,68,68,.2)';
+    el.style.color      = type === 'success' ? '#10b981' : '#ef4444';
+    el.textContent      = text;
+  }
+
+  const ZONE_LABELS = { geral:'Geral', picking:'Picking', storage:'Storage', 'expedição':'Expedição', quarentena:'Quarentena' };
+  const ZONE_COLORS = { picking:'#3b82f6', storage:'#8b5cf6', 'expedição':'#10b981', quarentena:'#f59e0b', geral:'#94a3b8' };
+  const _whLocMap = {};
+
+  async function loadWarehouseLocations() {
+    const container = document.getElementById('warehouse-content');
+
+    const { data: locations, error } = await supabase
+      .from('warehouse_locations')
+      .select('*, product_locations(id, product_id, quantity, products(name, sku))')
+      .eq('organization_id', orgId)
+      .eq('active', true)
+      .order('code', { ascending: true });
+
+    if (error) {
+      container.innerHTML = `<p style="font-size:13px;color:var(--destructive);text-align:center;padding:20px 0;">Erro: ${escHtml(error.message)}</p>`;
+      return;
+    }
+
+    if (!locations?.length) {
+      container.innerHTML = `<p style="font-size:13px;color:var(--muted-foreground);text-align:center;padding:20px 0;">Nenhuma localização cadastrada. Clique em "Nova Localização" para começar.</p>`;
+      return;
+    }
+
+    for (const loc of locations) _whLocMap[loc.id] = loc;
+
+    const grouped = {};
+    for (const loc of locations) {
+      const zone = loc.zone ?? 'geral';
+      if (!grouped[zone]) grouped[zone] = [];
+      grouped[zone].push(loc);
+    }
+
+    container.innerHTML = Object.entries(grouped).map(([zone, locs]) => `
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${ZONE_COLORS[zone] ?? '#94a3b8'};"></span>
+          <span style="font-size:12.5px;font-weight:600;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.04em;">${ZONE_LABELS[zone] ?? zone}</span>
+          <span style="font-size:11.5px;color:var(--muted-foreground);">(${locs.length})</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+          ${locs.map(loc => {
+            const prodCount = loc.product_locations?.length ?? 0;
+            const capUsed   = loc.product_locations?.reduce((s, pl) => s + (pl.quantity ?? 0), 0) ?? 0;
+            const capPct    = loc.capacity > 0 ? Math.min(100, Math.round(capUsed / loc.capacity * 100)) : null;
+            return `<div style="background:var(--secondary);border:1px solid var(--border);border-radius:10px;padding:14px;">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-family:monospace;font-size:14px;font-weight:700;color:${ZONE_COLORS[loc.zone ?? 'geral'] ?? '#94a3b8'};">${escHtml(loc.code)}</span>
+                <div style="display:flex;gap:4px;">
+                  <button onclick="openWhEdit(_whLocMap['${loc.id}'])" style="background:transparent;border:none;cursor:pointer;color:var(--muted-foreground);padding:2px;" title="Editar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onclick="deleteWhLocation('${loc.id}')" style="background:transparent;border:none;cursor:pointer;color:var(--destructive);padding:2px;" title="Remover">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                  </button>
+                </div>
+              </div>
+              ${loc.description ? `<p style="font-size:11.5px;color:var(--muted-foreground);margin:0 0 8px;">${escHtml(loc.description)}</p>` : ''}
+              <div style="font-size:11.5px;color:var(--muted-foreground);margin-bottom:6px;">
+                ${prodCount} produto${prodCount !== 1 ? 's' : ''}
+                ${loc.capacity > 0 ? ` · Cap. ${capUsed}/${loc.capacity}` : ''}
+              </div>
+              ${capPct !== null ? `<div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;background:${capPct >= 90 ? '#ef4444' : capPct >= 70 ? '#f59e0b' : '#10b981'};width:${capPct}%;transition:width .3s;"></div>
+              </div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  loadWarehouseLocations();
 </script>
 <script type="module">
   import { initAIChat } from '/js/ai-chat-widget.js';

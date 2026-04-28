@@ -3,5 +3,4 @@ supabase/
 .swarm/
 .mcp.json
 docs/
-*.png
 *.md

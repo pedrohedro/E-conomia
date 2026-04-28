@@ -803,12 +803,14 @@ import {
   formatCurrency
 } from './js/api.js';
 import { initThemeToggle } from './js/theme.js';
+  import { initSidebar } from './js/sidebar-component.js';
 
 // -----------------------------------------------------------------------
 // Theme toggle + dropdown
 // -----------------------------------------------------------------------
 
 initThemeToggle('themeToggle');
+  initSidebar();
 
 window.toggleDropdown = () =>
   document.getElementById('userDropdown').classList.toggle('open');

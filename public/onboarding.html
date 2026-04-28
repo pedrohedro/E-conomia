@@ -3,240 +3,613 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Crie sua organização inicial.">
-  <title>Configurar Loja — E-CONOMIA</title>
+  <meta name="description" content="Configure sua conta em menos de 5 minutos.">
+  <title>Bem-vindo — E-CONOMIA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/tokens.css">
-  <script src="js/theme.js" type="module"></script>
-
-  <!-- Supabase Config -->
   <script>
     window.__ENV__ = {
       SUPABASE_URL: 'https://rqmpqxguecuhrsbzcwgb.supabase.co',
       SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxbXBxeGd1ZWN1aHJzYnpjd2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMDA0NjUsImV4cCI6MjA5MDU3NjQ2NX0.NctXATRekxQh0R3zSTlMmW673ZtJog6aBeeNrrSu0hU',
     };
   </script>
-
   <style>
-    .onboarding-wrap {
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      min-height: 100vh;
+    }
+
+    .wrap {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px;
     }
-    .onboarding-card {
+
+    .card {
       width: 100%;
-      max-width: 420px;
+      max-width: 460px;
     }
-    .onboarding-logo {
+
+    /* ---- Logo ---- */
+    .logo {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 28px;
     }
-    .onboarding-logo-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
+    .logo-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
       background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+    }
+    .logo-icon svg { width: 24px; height: 24px; color: var(--primary-foreground); }
+    .logo h1 { font-size: 19px; font-weight: 700; margin: 0 0 3px; }
+    .logo p  { font-size: 13px; color: var(--muted-foreground); text-align: center; }
+
+    /* ---- Progress bar ---- */
+    .progress-wrap {
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 24px;
     }
-    .onboarding-logo-icon svg { width: 22px; height: 22px; color: var(--primary-foreground); }
-    .onboarding-logo h1 { font-size: 18px; font-weight: 600; margin: 0 0 4px; color: var(--foreground); }
-    .onboarding-logo p  { font-size: 13px; color: var(--muted-foreground); margin: 0; text-align: center; }
-
-    .form-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
+    .progress-step {
+      flex: 1;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--border);
+      transition: background .3s;
     }
-    .form-card-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--foreground);
-      margin: 0 0 6px;
-    }
-    .form-card-subtitle {
-      font-size: 13px;
-      color: var(--muted-foreground);
-      margin: 0 0 22px;
-    }
-
-    .form-group { margin-bottom: 16px; }
-    .form-label {
-      display: block;
-      font-size: 12.5px;
-      font-weight: 500;
-      color: var(--foreground);
-      margin-bottom: 5px;
-    }
-    .form-hint {
+    .progress-step.done   { background: var(--success, #10b981); }
+    .progress-step.active { background: var(--primary); }
+    .progress-label {
       font-size: 11.5px;
       color: var(--muted-foreground);
-      margin-top: 4px;
+      white-space: nowrap;
     }
 
+    /* ---- Panel card ---- */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+    }
+    .panel-title    { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+    .panel-subtitle { font-size: 13px; color: var(--muted-foreground); margin: 0 0 22px; line-height: 1.5; }
+
+    /* ---- Form ---- */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block; font-size: 12.5px; font-weight: 500;
+      margin-bottom: 5px;
+    }
+    .form-hint { font-size: 11.5px; color: var(--muted-foreground); margin-top: 4px; }
+    .input {
+      width: 100%; padding: 9px 12px;
+      background: var(--background); border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 13.5px; color: var(--foreground);
+      outline: none; transition: border-color .15s;
+    }
+    .input:focus { border-color: var(--primary); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 7px; padding: 9px 16px; border-radius: var(--radius);
+      font-size: 13.5px; font-weight: 600; cursor: pointer;
+      border: none; transition: opacity .15s, background .15s;
+    }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--primary); color: var(--primary-foreground);
+      width: 100%; height: 42px; font-size: 14px; margin-top: 4px;
+    }
+    .btn-secondary {
+      background: var(--secondary); color: var(--foreground);
+      border: 1px solid var(--border);
+      width: 100%; height: 42px; font-size: 14px; margin-top: 4px;
+    }
+    .btn-ml {
+      background: #ffe900; color: #333;
+      width: 100%; height: 48px; font-size: 14px; font-weight: 700;
+      margin-top: 4px; border-radius: 10px; gap: 10px;
+    }
+    .btn-ml:hover:not(:disabled) { background: #f0d800; }
+
+    /* ---- Error ---- */
     .error-box {
-      display: none;
-      align-items: center;
-      gap: 8px;
+      display: none; align-items: center; gap: 8px;
       padding: 10px 12px;
       background: color-mix(in srgb, var(--destructive) 10%, transparent);
       color: var(--destructive);
-      border-radius: var(--radius);
-      font-size: 12.5px;
-      margin-bottom: 16px;
+      border-radius: var(--radius); font-size: 12.5px; margin-bottom: 16px;
     }
     .error-box.show { display: flex; }
     .error-box svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-    .steps {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 24px;
+    /* ---- Connect ML panel ---- */
+    .ml-feature {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
     }
-    .step-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--border);
+    .ml-feature:last-child { border-bottom: none; }
+    .ml-feature-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--secondary); display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0;
     }
-    .step-dot.active { background: var(--primary); }
-    .step-dot.done { background: var(--success); }
-    .steps-label {
-      font-size: 12px;
-      color: var(--muted-foreground);
-      margin-left: 4px;
-    }
+    .ml-feature-icon svg { width: 14px; height: 14px; color: var(--primary); }
+    .ml-feature-title { font-size: 13px; font-weight: 600; }
+    .ml-feature-desc  { font-size: 12px; color: var(--muted-foreground); }
 
-    .submit-btn {
-      width: 100%;
-      justify-content: center;
-      height: 40px;
-      margin-top: 4px;
-      font-size: 14px;
+    /* ---- Loading state ---- */
+    .sync-progress {
+      text-align: center; padding: 10px 0;
     }
+    .sync-spinner {
+      width: 48px; height: 48px; margin: 0 auto 18px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .sync-title { font-size: 16px; font-weight: 700; margin: 0 0 6px; }
+    .sync-subtitle { font-size: 13px; color: var(--muted-foreground); }
+    .sync-bar-wrap {
+      background: var(--border); border-radius: 99px;
+      height: 6px; margin: 16px 0 8px; overflow: hidden;
+    }
+    .sync-bar {
+      height: 100%; background: var(--primary);
+      border-radius: 99px;
+      transition: width .5s ease;
+    }
+    .sync-step-text { font-size: 12px; color: var(--muted-foreground); }
+
+    /* ---- AHA moment ---- */
+    .aha-emoji { font-size: 52px; text-align: center; margin-bottom: 10px; }
+    .stat-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin: 20px 0;
+    }
+    .stat-box {
+      background: var(--secondary); border-radius: 10px;
+      padding: 14px; text-align: center;
+    }
+    .stat-val { font-size: 26px; font-weight: 700; color: var(--primary); }
+    .stat-lbl { font-size: 11.5px; color: var(--muted-foreground); }
+
+    /* ---- Tour step ---- */
+    .tour-steps {
+      display: flex; flex-direction: column; gap: 10px; margin: 16px 0;
+    }
+    .tour-step {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; border: 1px solid var(--border);
+      border-radius: 10px; cursor: pointer;
+      transition: border-color .15s, background .15s;
+      text-decoration: none; color: inherit;
+    }
+    .tour-step:hover { border-color: var(--primary); background: color-mix(in srgb,var(--primary) 5%,transparent); }
+    .tour-step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--primary); color: var(--primary-foreground);
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .tour-step-title { font-size: 13.5px; font-weight: 600; }
+    .tour-step-desc  { font-size: 12px; color: var(--muted-foreground); }
+
     .skip-link {
-      display: block;
-      text-align: center;
-      margin-top: 14px;
-      font-size: 12.5px;
-      color: var(--muted-foreground);
-      cursor: pointer;
+      display: block; text-align: center; margin-top: 14px;
+      font-size: 12.5px; color: var(--muted-foreground); cursor: pointer;
     }
     .skip-link:hover { color: var(--foreground); }
+
+    /* ---- Steps display ---- */
+    #step-2, #step-3, #step-4, #step-5 { display: none; }
   </style>
 </head>
 <body>
-  <div class="onboarding-wrap">
-    <div class="onboarding-card">
-      <div class="onboarding-logo">
-        <div class="onboarding-logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-        <h1>E-CONOMIA</h1>
-        <p>Vamos configurar sua loja para começar</p>
+<div class="wrap">
+  <div class="card">
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <h1>E-CONOMIA</h1>
+      <p>Controle de estoque para vendedores do ML</p>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-step active" id="prog-1"></div>
+      <div class="progress-step" id="prog-2"></div>
+      <div class="progress-step" id="prog-3"></div>
+      <div class="progress-step" id="prog-4"></div>
+      <span class="progress-label" id="prog-label">Passo 1 de 4</span>
+    </div>
+
+    <!-- Step 1: Nome da loja -->
+    <div id="step-1" class="panel">
+      <p class="panel-title">Como se chama sua loja?</p>
+      <p class="panel-subtitle">Dê um nome para organizar seus dados. Você pode mudar depois.</p>
+
+      <div id="onb-error" class="error-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="onb-error-msg"></span>
       </div>
 
-      <div class="form-card">
-        <!-- Steps indicator -->
-        <div class="steps">
-          <div class="step-dot done"></div>
-          <div class="step-dot active"></div>
-          <div class="step-dot"></div>
-          <span class="steps-label">Passo 2 de 3 — Sua loja</span>
+      <div class="form-group">
+        <label class="form-label" for="org-name">Nome da loja / empresa</label>
+        <input class="input" type="text" id="org-name" placeholder="Ex: Minha Loja Online" autofocus maxlength="80">
+        <p class="form-hint">Aparecerá nos relatórios e cabeçalho da plataforma.</p>
+      </div>
+
+      <button id="create-btn" class="btn btn-primary" onclick="handleCreate()">
+        Continuar →
+      </button>
+      <span class="skip-link" onclick="handleSignOut()">Sair e usar outra conta</span>
+    </div>
+
+    <!-- Step 2: Conectar ML -->
+    <div id="step-2" class="panel">
+      <p class="panel-title">Conecte sua conta Mercado Livre</p>
+      <p class="panel-subtitle">Importamos seus produtos e estoque automaticamente. É rápido e seguro.</p>
+
+      <div style="margin-bottom:20px;">
+        <div class="ml-feature">
+          <div class="ml-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <div>
+            <div class="ml-feature-title">Estoque em tempo real</div>
+            <div class="ml-feature-desc">Full, Flex e estoque próprio sincronizados automaticamente.</div>
+          </div>
         </div>
-
-        <p class="form-card-title">Crie sua organização</p>
-        <p class="form-card-subtitle">Dê um nome para sua loja. Você poderá alterar isso depois nas configurações.</p>
-
-        <div id="onb-error" class="error-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="onb-error-msg"></span>
+        <div class="ml-feature">
+          <div class="ml-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+          </div>
+          <div>
+            <div class="ml-feature-title">Pipeline de pedidos</div>
+            <div class="ml-feature-desc">Todos os pedidos novos aparecem automaticamente.</div>
+          </div>
         </div>
-
-        <div class="form-group">
-          <label class="form-label" for="org-name">Nome da loja / empresa</label>
-          <input class="input" type="text" id="org-name" placeholder="Ex: Minha Loja Online" autofocus>
-          <p class="form-hint">Este nome aparecerá nos relatórios e no cabeçalho da plataforma.</p>
+        <div class="ml-feature">
+          <div class="ml-feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/></svg>
+          </div>
+          <div>
+            <div class="ml-feature-title">Alertas inteligentes</div>
+            <div class="ml-feature-desc">Notificação quando estoque atingir nível crítico.</div>
+          </div>
         </div>
+      </div>
 
-        <button id="create-btn" class="btn btn-primary submit-btn" onclick="handleCreate()">
-          Criar loja e continuar
-        </button>
+      <button id="ml-connect-btn" class="btn btn-ml" onclick="handleMLConnect()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Conectar com Mercado Livre
+      </button>
 
-        <span class="skip-link" onclick="handleSignOut()">Sair e usar outra conta</span>
+      <div id="ml-connect-error" class="error-box" style="margin-top:12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+        <span id="ml-connect-error-msg">Erro ao conectar. Tente novamente.</span>
+      </div>
+
+      <button class="btn btn-secondary" style="margin-top:10px;" onclick="skipMLConnect()">
+        Pular por agora — conectar depois
+      </button>
+    </div>
+
+    <!-- Step 3: Sync loading -->
+    <div id="step-3" class="panel">
+      <div class="sync-progress">
+        <div class="sync-spinner" id="sync-spinner"></div>
+        <p class="sync-title" id="sync-title">Importando seus produtos…</p>
+        <p class="sync-subtitle" id="sync-subtitle">Buscando estoque no Mercado Livre</p>
+        <div class="sync-bar-wrap">
+          <div class="sync-bar" id="sync-bar" style="width:0%"></div>
+        </div>
+        <p class="sync-step-text" id="sync-step">Iniciando sincronização...</p>
       </div>
     </div>
+
+    <!-- Step 4: AHA moment -->
+    <div id="step-4" class="panel">
+      <div class="aha-emoji">🎉</div>
+      <p class="panel-title" style="text-align:center;">Estoque importado!</p>
+      <p class="panel-subtitle" style="text-align:center;">Seu estoque do Mercado Livre está disponível agora.</p>
+
+      <div class="stat-grid" id="aha-stats">
+        <div class="stat-box">
+          <div class="stat-val" id="stat-products">—</div>
+          <div class="stat-lbl">Produtos</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-alerts">—</div>
+          <div class="stat-lbl">Alertas de estoque</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-ml-full">—</div>
+          <div class="stat-lbl">Unidades Full</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-orders">—</div>
+          <div class="stat-lbl">Pedidos pendentes</div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;font-weight:600;margin-bottom:10px;">Próximos passos:</p>
+      <div class="tour-steps">
+        <a href="estoque.html" class="tour-step">
+          <div class="tour-step-num">1</div>
+          <div>
+            <div class="tour-step-title">Ver meu estoque</div>
+            <div class="tour-step-desc">Visualize estoque por canal (Full, Flex, Próprio)</div>
+          </div>
+        </a>
+        <a href="pedidos.html" class="tour-step">
+          <div class="tour-step-num">2</div>
+          <div>
+            <div class="tour-step-title">Pipeline de pedidos</div>
+            <div class="tour-step-desc">Acompanhe todos os pedidos do ML em tempo real</div>
+          </div>
+        </a>
+        <a href="dashboard.html" class="tour-step">
+          <div class="tour-step-num">3</div>
+          <div>
+            <div class="tour-step-title">Dashboard principal</div>
+            <div class="tour-step-desc">Visão geral de vendas, margem e performance</div>
+          </div>
+        </a>
+      </div>
+
+      <button class="btn btn-primary" onclick="goToDashboard()">
+        Ir para o Dashboard →
+      </button>
+    </div>
+
+    <!-- Step 5: Sem ML (empty state) -->
+    <div id="step-5" class="panel" style="text-align:center;">
+      <div style="font-size:44px;margin-bottom:12px;">📦</div>
+      <p class="panel-title">Tudo pronto!</p>
+      <p class="panel-subtitle">
+        Você pode conectar o Mercado Livre a qualquer momento nas configurações para importar seu estoque automaticamente.
+      </p>
+
+      <a href="estoque.html" class="btn btn-primary" style="display:flex;">
+        Explorar o estoque manualmente
+      </a>
+      <button class="btn btn-secondary" style="margin-top:0;" onclick="goToSettings()">
+        Conectar ML agora nas configurações
+      </button>
+    </div>
+
   </div>
+</div>
 
-  <script type="module">
-    import { supabase, getCurrentUser, getUserOrganization, createOrganization } from './js/supabase-client.js';
+<script type="module">
+import { supabase, getCurrentUser, getUserOrganization, createOrganization } from './js/supabase-client.js';
 
-    // Verificar autenticação
-    const user = await getCurrentUser();
-    if (!user) {
-      window.location.href = 'login.html';
-    }
+const SUPABASE_FN = 'https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1';
+const PROGRESS_STEPS = ['prog-1','prog-2','prog-3','prog-4'];
+let currentStep = 1;
+let orgId = null;
 
-    // Se já tem organização, ir para dashboard
-    const orgData = await getUserOrganization();
-    if (orgData?.organization_id) {
-      window.location.href = 'index.html';
-    }
+// ---- Init ----
+const user = await getCurrentUser();
+if (!user) { window.location.href = 'login.html'; }
 
-    window.handleCreate = async () => {
-      const orgName = document.getElementById('org-name').value.trim();
-      const errEl   = document.getElementById('onb-error');
-      const errMsg  = document.getElementById('onb-error-msg');
-      const btn     = document.getElementById('create-btn');
+// Se já tem org, ir para step 2 (conectar ML)
+const orgData = await getUserOrganization();
+if (orgData?.organization_id) {
+  orgId = orgData.organization_id;
+  showStep(2);
+}
 
-      errEl.classList.remove('show');
+// ---- Step helpers ----
+function showStep(n) {
+  currentStep = n;
+  document.querySelectorAll('[id^="step-"]').forEach(el => el.style.display = 'none');
+  const el = document.getElementById(`step-${n}`);
+  if (el) el.style.display = 'block';
 
-      if (!orgName) {
-        errMsg.textContent = 'Digite o nome da sua loja.';
-        errEl.classList.add('show');
-        return;
-      }
-      if (orgName.length < 2) {
-        errMsg.textContent = 'O nome precisa ter pelo menos 2 caracteres.';
-        errEl.classList.add('show');
-        return;
-      }
+  PROGRESS_STEPS.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'progress-step';
+    if (i + 1 < n) el.classList.add('done');
+    else if (i + 1 === n) el.classList.add('active');
+  });
 
-      btn.disabled = true;
-      btn.textContent = 'Criando...';
+  const labels = { 1:'Passo 1 de 4 — Sua loja', 2:'Passo 2 de 4 — Conectar ML', 3:'Passo 3 de 4 — Importando...', 4:'Passo 4 de 4 — Pronto!', 5:'Configurado!' };
+  document.getElementById('prog-label').textContent = labels[n] ?? '';
 
-      try {
-        await createOrganization(orgName);
-        window.location.href = 'index.html';
-      } catch (err) {
-        errMsg.textContent = err.message || 'Erro ao criar organização. Tente novamente.';
-        errEl.classList.add('show');
-        btn.disabled = false;
-        btn.textContent = 'Criar loja e continuar';
-      }
-    };
+  if (n >= 4) document.getElementById('progress-wrap').style.display = 'none';
+}
 
-    window.handleSignOut = async () => {
-      await supabase.auth.signOut();
-      window.location.href = 'login.html';
-    };
+// ---- Step 1: Criar org ----
+window.handleCreate = async () => {
+  const orgName = document.getElementById('org-name').value.trim();
+  const errEl   = document.getElementById('onb-error');
+  const errMsg  = document.getElementById('onb-error-msg');
+  const btn     = document.getElementById('create-btn');
 
-    // Enter key
-    document.getElementById('org-name')?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') window.handleCreate();
+  errEl.classList.remove('show');
+  if (!orgName || orgName.length < 2) {
+    errMsg.textContent = 'Digite o nome da sua loja (mín. 2 caracteres).';
+    errEl.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Criando...';
+  try {
+    const org = await createOrganization(orgName);
+    orgId = org?.id ?? (await getUserOrganization())?.organization_id;
+    showStep(2);
+  } catch (err) {
+    errMsg.textContent = err.message || 'Erro ao criar organização. Tente novamente.';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Continuar →';
+  }
+};
+
+document.getElementById('org-name')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.handleCreate();
+});
+
+// ---- Step 2: Conectar ML ----
+window.handleMLConnect = async () => {
+  const btn = document.getElementById('ml-connect-btn');
+  btn.disabled = true;
+  btn.textContent = 'Redirecionando...';
+  document.getElementById('ml-connect-error').classList.remove('show');
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${SUPABASE_FN}/marketplace-authorize?marketplace=mercado_livre&organization_id=${orgId}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
     });
-  </script>
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { url } = await res.json();
+
+    // Salva estado para retorno do OAuth
+    sessionStorage.setItem('onboarding_org_id', orgId);
+    sessionStorage.setItem('onboarding_step', '3');
+    window.location.href = url;
+
+  } catch (err) {
+    document.getElementById('ml-connect-error-msg').textContent =
+      err.message || 'Erro ao iniciar autenticação ML.';
+    document.getElementById('ml-connect-error').classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Tentar novamente`;
+  }
+};
+
+window.skipMLConnect = () => showStep(5);
+
+// ---- Volta do OAuth ML (session storage check) ----
+const pendingOrgId = sessionStorage.getItem('onboarding_org_id');
+const pendingStep  = sessionStorage.getItem('onboarding_step');
+if (pendingOrgId && pendingStep === '3') {
+  sessionStorage.removeItem('onboarding_org_id');
+  sessionStorage.removeItem('onboarding_step');
+  orgId = pendingOrgId;
+  await startSync();
+}
+
+// ---- Step 3: Sync Loading ----
+async function startSync() {
+  showStep(3);
+  const bar    = document.getElementById('sync-bar');
+  const title  = document.getElementById('sync-title');
+  const sub    = document.getElementById('sync-subtitle');
+  const step   = document.getElementById('sync-step');
+  const spinner= document.getElementById('sync-spinner');
+
+  const steps = [
+    { pct:15, title:'Conectando ao Mercado Livre…',    sub:'Verificando credenciais', step:'Autenticando...' },
+    { pct:35, title:'Buscando seus anúncios…',          sub:'Encontrando produtos ativos', step:'Importando catálogo...' },
+    { pct:60, title:'Sincronizando estoque…',           sub:'Full, Flex e estoque próprio', step:'Atualizando channel_stock...' },
+    { pct:80, title:'Importando pedidos recentes…',     sub:'Últimos 30 dias', step:'Processando ordens...' },
+    { pct:95, title:'Finalizando…',                     sub:'Calculando alertas de estoque', step:'Quase lá...' },
+  ];
+
+  const animate = (i) => {
+    if (i >= steps.length) return;
+    const s = steps[i];
+    bar.style.width   = `${s.pct}%`;
+    title.textContent = s.title;
+    sub.textContent   = s.sub;
+    step.textContent  = s.step;
+  };
+
+  // Anima progressivamente
+  let i = 0;
+  const interval = setInterval(() => { animate(i++); if (i >= steps.length) clearInterval(interval); }, 1400);
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` };
+
+    // Sincroniza inventário
+    await Promise.allSettled([
+      fetch(`${SUPABASE_FN}/sync-inventory`, { method:'POST', headers, body: JSON.stringify({ organization_id: orgId }) }),
+      fetch(`${SUPABASE_FN}/sync-orders`,    { method:'POST', headers, body: JSON.stringify({ organization_id: orgId }) }),
+    ]);
+
+    clearInterval(interval);
+    bar.style.width   = '100%';
+    title.textContent = 'Importação concluída!';
+    sub.textContent   = 'Tudo sincronizado com sucesso';
+    spinner.style.borderTopColor = 'var(--success, #10b981)';
+
+    await loadAHAStats();
+    setTimeout(() => showStep(4), 600);
+
+  } catch (err) {
+    clearInterval(interval);
+    title.textContent = 'Erro na importação';
+    sub.textContent   = 'Não foi possível sincronizar: ' + err.message;
+    step.textContent  = 'Você pode sincronizar manualmente depois.';
+    spinner.style.animation = 'none';
+    setTimeout(() => showStep(5), 3000);
+  }
+}
+
+async function loadAHAStats() {
+  if (!orgId) return;
+
+  const [{ count: pcount }, { count: acount }, { count: ocount }] = await Promise.all([
+    supabase.from('products').select('*', { count:'exact', head:true }).eq('organization_id', orgId),
+    supabase.from('products').select('*', { count:'exact', head:true }).eq('organization_id', orgId).neq('stock_alert','normal'),
+    supabase.from('orders').select('*', { count:'exact', head:true }).eq('organization_id', orgId).eq('status','pending'),
+  ]);
+
+  const { data: mlFull } = await supabase
+    .from('channel_stock')
+    .select('quantity')
+    .eq('organization_id', orgId)
+    .eq('channel', 'ml_full');
+
+  const mlFullTotal = (mlFull ?? []).reduce((s, r) => s + (r.quantity ?? 0), 0);
+
+  document.getElementById('stat-products').textContent = (pcount ?? 0).toLocaleString('pt-BR');
+  document.getElementById('stat-alerts').textContent   = (acount ?? 0).toLocaleString('pt-BR');
+  document.getElementById('stat-ml-full').textContent  = mlFullTotal.toLocaleString('pt-BR');
+  document.getElementById('stat-orders').textContent   = (ocount ?? 0).toLocaleString('pt-BR');
+}
+
+// ---- Navigation ----
+window.goToDashboard  = () => { window.location.href = 'dashboard.html'; };
+window.goToSettings   = () => { window.location.href = 'settings.html'; };
+
+window.handleSignOut = async () => {
+  await supabase.auth.signOut();
+  window.location.href = 'login.html';
+};
+</script>
 </body>
 </html>

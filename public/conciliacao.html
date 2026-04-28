@@ -277,9 +277,11 @@
 
 <script type="module">
   import { initThemeToggle } from './js/theme.js';
+  import { initSidebar } from './js/sidebar-component.js';
   import { supabase, getCurrentUser, getUserOrganization } from './js/supabase-client.js';
 
   initThemeToggle('themeToggle');
+  initSidebar();
 
   window.toggleDropdown = () => document.getElementById('userDropdown').classList.toggle('open');
   document.addEventListener('click', (e) => {

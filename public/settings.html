@@ -803,6 +803,7 @@
 import { requireAuth } from './js/auth-guard.js';
 import { supabase }    from './js/supabase-client.js';
 import { initThemeToggle } from './js/theme.js';
+  import { initSidebar } from './js/sidebar-component.js';
 
 const SUPABASE_URL = window.__ENV__?.SUPABASE_URL ?? '';
 const ANON_KEY     = window.__ENV__?.SUPABASE_ANON_KEY ?? '';
@@ -811,6 +812,7 @@ const ANON_KEY     = window.__ENV__?.SUPABASE_ANON_KEY ?? '';
 /* Theme toggle                                                          */
 /* ------------------------------------------------------------------ */
 initThemeToggle('themeToggle');
+  initSidebar();
 
 /* ------------------------------------------------------------------ */
 /* Dropdown                                                              */

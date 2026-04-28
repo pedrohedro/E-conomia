@@ -7,10 +7,7 @@
   <meta name="description" content="Gerencie e edite seus anúncios do Mercado Livre diretamente no painel E-conomia.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/global.css">
-  <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/header.css">
-  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/tokens.css">
 </head>
 <body>
 <aside class="sidebar" role="navigation" aria-label="Menu principal">
@@ -175,10 +172,12 @@
   import { requireAuth } from './js/auth-guard.js';
   import { formatCurrency } from './js/api.js';
   import { initThemeToggle } from './js/theme.js';
+  import { initSidebar } from './js/sidebar-component.js';
   import { supabase } from './js/supabase-client.js';
   import { initAIChat } from './js/ai-chat-widget.js';
 
   initThemeToggle('themeToggle');
+  initSidebar();
   initAIChat();
 
   const ML_API = 'https://api.mercadolibre.com';

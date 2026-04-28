@@ -752,9 +752,11 @@
   import { requireAuth } from './js/auth-guard.js';
   import { fetchRecentOrders, formatCurrency } from './js/api.js';
   import { initThemeToggle } from './js/theme.js';
+  import { initSidebar } from './js/sidebar-component.js';
   import { supabase } from './js/supabase-client.js';
 
   initThemeToggle('themeToggle');
+  initSidebar();
 
   // ---------------------------------------------------------------
   // Helpers

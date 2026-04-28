@@ -24,7 +24,7 @@
     }
     .mp-tab:hover { background: var(--accent); color: var(--foreground); }
     .mp-tab.active { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
-    .mp-tab img { width: 14px; height: 14px; object-fit: contain; }
+    .mp-tab img { height: 16px; width: auto; max-width: 32px; object-fit: contain; flex-shrink: 0; }
 
     .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 18px; }
     @media(max-width:900px){ .kpi-grid{ grid-template-columns: repeat(2,1fr); } }
@@ -112,8 +112,12 @@
 
     <div class="nav-section">
       <p class="nav-label">Operações</p>
-      <a href="vendas.html" class="nav-link">
+      <a href="pedidos.html" class="nav-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        Pedidos
+      </a>
+      <a href="vendas.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Vendas
       </a>
       <a href="estoque.html" class="nav-link">
@@ -258,6 +262,7 @@
 <script type="module">
 import { requireAuth, signOut } from './js/auth-guard.js';
 import { initThemeToggle } from './js/theme.js';
+  import { initSidebar } from './js/sidebar-component.js';
 import {
     fetchDashboardKPIs,
     fetchMonthlyRevenue,
@@ -269,6 +274,7 @@ import {
 
 // Theme toggle
 initThemeToggle('themeToggle');
+  initSidebar();
 
 // Dropdown
 window.toggleDropdown = () => {

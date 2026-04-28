@@ -1,0 +1,13 @@
+{
+  "name": "e-conomia-worker",
+  "version": "1.0.0",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js",
+    "dev": "node worker.js"
+  },
+  "dependencies": {
+    "graphile-worker": "^0.16.1",
+    "pg": "^8.11.3"
+  }
+}

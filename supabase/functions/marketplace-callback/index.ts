@@ -172,7 +172,7 @@ async function handleShopeeCallback(url: URL, supabase: any): Promise<Response> 
     { shop_id: shopId }
   );
 
-  return redirect(`${APP_URL()}/?connected=shopee`);
+  return redirect(`${APP_URL()}/oauth/callback?connected=shopee&marketplace=shopee`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -218,7 +218,7 @@ async function handleAmazonCallback(url: URL, supabase: any): Promise<Response> 
     { selling_partner_id: sellerId }
   );
 
-  return redirect(`${APP_URL()}/?connected=amazon`);
+  return redirect(`${APP_URL()}/oauth/callback?connected=amazon&marketplace=amazon`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -264,7 +264,7 @@ async function handleBlingCallback(url: URL, supabase: any): Promise<Response> {
     { scope: tokenData.scope }
   );
 
-  return redirect(`${APP_URL()}/?connected=bling`);
+  return redirect(`${APP_URL()}/oauth/callback?connected=bling&marketplace=bling`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -327,7 +327,7 @@ async function handleShopifyCallback(url: URL, supabase: any): Promise<Response>
     { shop, scope: tokenData.scope }
   );
 
-  return redirect(`${APP_URL()}/?connected=shopify`);
+  return redirect(`${APP_URL()}/oauth/callback?connected=shopify&marketplace=shopify`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -367,7 +367,7 @@ async function handleTikTokCallback(url: URL, supabase: any): Promise<Response> 
     {}
   );
 
-  return redirect(`${APP_URL()}/?connected=tiktok_shop`);
+  return redirect(`${APP_URL()}/oauth/callback?connected=tiktok_shop&marketplace=tiktok_shop`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -415,7 +415,7 @@ async function handleMLCallback(url: URL, supabase: any): Promise<Response> {
     { user_id: tokenData.user_id }
   );
 
-  return redirect(`${APP_URL()}/?connected=mercado_livre`);
+  return redirect(`${APP_URL()}/oauth/callback?connected=mercado_livre&marketplace=mercado_livre`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -456,7 +456,7 @@ async function handleNuvemshopCallback(url: URL, supabase: any): Promise<Respons
     { store_id: tokenData.user_id }
   );
 
-  return redirect(`${APP_URL()}/?connected=nuvemshop`);
+  return redirect(`${APP_URL()}/oauth/callback?connected=nuvemshop&marketplace=nuvemshop`);
 }
 
 // ─── Utilitários ────────────────────────────────────────────────────────────
