@@ -1,63 +1,23 @@
 -- 00017_marketplace_expansions.sql
 -- ECOM-51..55 | Suporte a novos marketplaces
--- Expande o check constraint de marketplace para incluir todos os canais
+-- Adiciona novos valores ao enum marketplace_type (a coluna é enum, não text+check)
 
--- Adiciona novos valores ao enum de marketplace (se existir como tipo)
--- Caso seja text com check constraint, atualiza a constraint
-
--- marketplace_integrations: alarga constraint
-alter table public.marketplace_integrations
-  drop constraint if exists marketplace_integrations_marketplace_check;
-
-alter table public.marketplace_integrations
-  add constraint marketplace_integrations_marketplace_check
-  check (marketplace in (
-    'mercado_livre',
-    'nuvemshop',
-    'amazon',
-    'shopee',
-    'shopify',
-    'bling',        -- ERP: sync bidirecional
-    'anymarket',    -- Hub: Magalu, Americanas, Casas Bahia, Carrefour, OLX
-    'magazine_luiza',
-    'americanas',
-    'casas_bahia',
-    'carrefour',
-    'via_varejo',
-    'tiktok_shop',
-    'shoptime',
-    'olx',
-    'samsung_shop',
-    'netshoes',
-    'dafiti',
-    'centauro'
-  ));
-
--- orders: mesmos canais
-alter table public.orders
-  drop constraint if exists orders_marketplace_check;
-
-alter table public.orders
-  add constraint orders_marketplace_check
-  check (marketplace in (
-    'mercado_livre', 'nuvemshop', 'amazon', 'shopee', 'shopify',
-    'bling', 'anymarket', 'magazine_luiza', 'americanas', 'casas_bahia',
-    'carrefour', 'via_varejo', 'tiktok_shop', 'shoptime', 'olx',
-    'samsung_shop', 'netshoes', 'dafiti', 'centauro'
-  ));
-
--- customers: mesmos canais
-alter table public.customers
-  drop constraint if exists customers_marketplace_check;
-
-alter table public.customers
-  add constraint customers_marketplace_check
-  check (marketplace in (
-    'mercado_livre', 'nuvemshop', 'amazon', 'shopee', 'shopify',
-    'bling', 'anymarket', 'magazine_luiza', 'americanas', 'casas_bahia',
-    'carrefour', 'via_varejo', 'tiktok_shop', 'shoptime', 'olx',
-    'samsung_shop', 'netshoes', 'dafiti', 'centauro', 'proprio'
-  ));
+-- ALTER TYPE ADD VALUE IF NOT EXISTS (Postgres 9.6+)
+-- IMPORTANTE: cada ADD VALUE deve estar em statement separado e os valores
+-- não podem ser usados na mesma transação em que são adicionados.
+alter type public.marketplace_type add value if not exists 'bling';
+alter type public.marketplace_type add value if not exists 'anymarket';
+alter type public.marketplace_type add value if not exists 'magazine_luiza';
+alter type public.marketplace_type add value if not exists 'americanas';
+alter type public.marketplace_type add value if not exists 'casas_bahia';
+alter type public.marketplace_type add value if not exists 'carrefour';
+alter type public.marketplace_type add value if not exists 'via_varejo';
+alter type public.marketplace_type add value if not exists 'shoptime';
+alter type public.marketplace_type add value if not exists 'samsung_shop';
+alter type public.marketplace_type add value if not exists 'netshoes';
+alter type public.marketplace_type add value if not exists 'dafiti';
+alter type public.marketplace_type add value if not exists 'centauro';
+alter type public.marketplace_type add value if not exists 'proprio';
 
 -- Tabela de configuração de webhooks por marketplace
 create table if not exists public.marketplace_webhooks (
@@ -73,6 +33,8 @@ create table if not exists public.marketplace_webhooks (
 );
 
 alter table public.marketplace_webhooks enable row level security;
+
+drop policy if exists "webhooks: own org" on public.marketplace_webhooks;
 create policy "webhooks: own org"
   on public.marketplace_webhooks for all
   using (organization_id in (

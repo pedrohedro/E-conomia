@@ -58,9 +58,10 @@ where o.marketplace_created_at > now() - interval '90 days'
 group by 1, 2, 3;
 
 -- View: top produtos mais vendidos (context para o AI)
+-- Nota: order_items não tem organization_id; obtemos via join com orders.
 create or replace view public.vw_ai_top_products as
 select
-  oi.organization_id,
+  o.organization_id,
   oi.product_name,
   oi.sku,
   sum(oi.quantity)                as units_sold,

@@ -22,16 +22,10 @@ CREATE INDEX IF NOT EXISTS idx_channel_stock_marketplace
   ON public.channel_stock(organization_id, marketplace)
   WHERE marketplace IS NOT NULL;
 
--- Atualiza marketplace com base no channel enum já existente
-UPDATE public.channel_stock SET marketplace =
-  CASE
-    WHEN channel IN ('ml_full', 'ml_flex') THEN 'mercado_livre'
-    WHEN channel = 'amazon_fba'            THEN 'amazon'
-    WHEN channel = 'nuvemshop'             THEN 'nuvemshop'
-    WHEN channel = 'shopee'                THEN 'shopee'
-    ELSE NULL
-  END
-WHERE marketplace IS NULL;
+-- Atualiza marketplace a partir do enum channel (marketplace_type)
+UPDATE public.channel_stock
+   SET marketplace = channel::text
+ WHERE marketplace IS NULL;
 
 -- Popula channel_sku a partir de stock_locations.external_id onde disponível
 UPDATE public.channel_stock cs

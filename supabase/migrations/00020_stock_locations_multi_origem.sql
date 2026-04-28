@@ -123,6 +123,9 @@ COMMENT ON VIEW vw_stock_by_origin IS
 -- Migração dos dados existentes de channel_stock → stock_locations
 -- ============================================================================
 
+-- channel_stock.channel é marketplace_type (mercado_livre, amazon, ...).
+-- Sem distinção entre Full/Flex no schema atual, todo channel_stock vira seller_warehouse.
+-- Sync futura via webhooks/cron preencherá meli_facility/flex_origin corretamente.
 INSERT INTO stock_locations (
   organization_id, product_id, channel_stock_id,
   location_type, location_name,
@@ -133,22 +136,20 @@ SELECT
   cs.organization_id,
   cs.product_id,
   cs.id AS channel_stock_id,
-  CASE
-    WHEN cs.channel = 'ml_full'       THEN 'meli_facility'
-    WHEN cs.channel = 'ml_flex'       THEN 'flex_origin'
-    ELSE                                   'seller_warehouse'
-  END AS location_type,
-  CASE
-    WHEN cs.channel = 'ml_full'       THEN 'Mercado Livre Full'
-    WHEN cs.channel = 'ml_flex'       THEN 'Mercado Livre Flex'
-    WHEN cs.channel = 'amazon_fba'    THEN 'Amazon FBA'
-    WHEN cs.channel = 'nuvemshop'     THEN 'Nuvemshop'
-    WHEN cs.channel = 'shopee'        THEN 'Shopee'
-    ELSE                                   'Estoque Próprio'
+  'seller_warehouse'::text AS location_type,
+  CASE cs.channel::text
+    WHEN 'mercado_livre' THEN 'Mercado Livre'
+    WHEN 'amazon'        THEN 'Amazon'
+    WHEN 'nuvemshop'     THEN 'Nuvemshop'
+    WHEN 'shopee'        THEN 'Shopee'
+    WHEN 'shopify'       THEN 'Shopify'
+    WHEN 'tiktok_shop'   THEN 'TikTok Shop'
+    WHEN 'olx'           THEN 'OLX'
+    ELSE                      'Estoque Próprio'
   END AS location_name,
   cs.quantity,
   cs.reserved,
-  cs.channel_sku AS external_id,
+  cs.marketplace_sku AS external_id,
   'migration' AS sync_source
 FROM channel_stock cs
 ON CONFLICT (product_id, location_type, location_id) DO NOTHING;

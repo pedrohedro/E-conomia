@@ -3,17 +3,17 @@
 -- Implementa atomicidade para reversas e índices para consultas rápidas
 -- ============================================================================
 
--- 1. Partial Index para focar apenas nas movimentações de estoque recentes (30 dias)
-CREATE INDEX IF NOT EXISTS idx_stock_movements_recent 
-  ON stock_movements (organization_id, product_id, created_at DESC)
-  WHERE created_at > (NOW() - INTERVAL '30 days');
+-- 1. Index para queries de movimentações por org/produto ordenadas por data
+-- (NOW() não é IMMUTABLE, então usamos índice completo em vez de partial.)
+CREATE INDEX IF NOT EXISTS idx_stock_movements_recent
+  ON stock_movements (organization_id, product_id, created_at DESC);
 
 -- 2. Função RPC blindada contra chamadas concorrentes (ACID)
 -- Garante que duas vendas em mesma fração de segundo não negativarão o inventário
 CREATE OR REPLACE FUNCTION reserve_channel_stock(
   p_org_id UUID,
   p_product_id UUID,
-  p_channel fulfillment_type,
+  p_channel marketplace_type,
   p_qty INT
 )
 RETURNS BOOLEAN

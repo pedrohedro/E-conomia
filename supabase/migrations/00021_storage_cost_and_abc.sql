@@ -48,7 +48,7 @@ create or replace view public.vw_margin_with_storage
     from public.orders o
   )
   select
-    oi.organization_id,
+    o.organization_id,
     oi.order_id,
     o.marketplace_order_id,
     o.status,
@@ -58,7 +58,7 @@ create or replace view public.vw_margin_with_storage
     oi.quantity,
     oi.unit_price,
     (oi.unit_price * oi.quantity)                           as gross_revenue,
-    coalesce(o.marketplace_fee_pct, 0)                      as fee_pct,
+    coalesce(o.marketplace_fee_percent, 0)                  as fee_pct,
     f.fee_per_item                                          as fee_per_item,
     coalesce(sc.cost_per_unit * oi.quantity, 0)             as storage_cost,
     -- Receita líquida aproximada = gross - taxa proporcional - armazenagem
@@ -68,7 +68,7 @@ create or replace view public.vw_margin_with_storage
   join public.orders o      on o.id = oi.order_id
   join fee_per_order f      on f.order_id = o.id
   left join public.storage_costs sc
-    on sc.organization_id = oi.organization_id
+    on sc.organization_id = o.organization_id
     and sc.sku = oi.sku
     and sc.fulfillment_type = 'ml_full';
 
