@@ -73,15 +73,15 @@ Foco: estoque multi-origem (Full/Flex/Próprio), sincronização real-time via w
 ### ECOM-76: Edge Function — Webhook Receiver ML
 - **Prioridade:** P0 MUST | **Esforço:** 6-8h | **Depende de:** ECOM-75
 - **Tarefas:**
-  - [ ] Criar/refatorar `webhook-handler/index.ts`
-  - [ ] Roteamento por `topic`: stock_locations, stock_fulfillment, orders_v2, items, shipments
-  - [ ] **IMPORTANTE:** ML não envia dados — apenas `resource` URL. Precisa GET adicional
-  - [ ] Responder HTTP 200 em < 500ms (ML retry 3x se não receber)
-  - [ ] Fila assíncrona: responder 200 imediatamente, processar em background
-  - [ ] Tabela de idempotência: `webhook_dedup(resource, sent, processed_at)`
-  - [ ] Validação de origem: IP whitelist + `application_id`
-  - [ ] Rate limiter local: token bucket para chamadas à API ML (~100 req/min)
-  - [ ] Testes: simular webhook, verificar que estoque atualiza
+  - [x] Criar/refatorar `webhook-handler/index.ts`
+  - [x] Roteamento por `topic`: stock_locations, stock_fulfillment, orders_v2, items, shipments
+  - [x] **IMPORTANTE:** ML não envia dados — apenas `resource` URL. Precisa GET adicional
+  - [x] Responder HTTP 200 em < 500ms (ML retry 3x se não receber)
+  - [x] Fila assíncrona: responder 200 imediatamente, processar em background
+  - [x] Tabela de idempotência: `webhook_dedup(resource, sent, processed_at)`
+  - [x] Validação de origem: IP whitelist + `application_id`
+  - [x] Rate limiter local: token bucket para chamadas à API ML (~100 req/min)
+  - [x] Testes: simular webhook, verificar que estoque atualiza
 
 ### ECOM-77: Sync Engine — Reconciliação Estoque ML ↔ Local
 - **Prioridade:** P0 MUST | **Esforço:** 5-7h | **Depende de:** ECOM-75

@@ -29,12 +29,51 @@ serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    console.log(`[webhook] marketplace=${marketplace} topic=${body.topic} resource=${body.resource}`);
+
+    // 1. Processamento interno assíncrono (disparado via pg_net trigger)
+    if (body.is_internal_trigger && body.event_id) {
+      return await processInternalEvent(body.event_id);
+    }
+
+    // 2. Recepção síncrona do webhook externo (responde 200 rápido)
+    const supabase = getServiceClient();
 
     if (marketplace === "mercado_livre") {
-      return await handleMLWebhook(body);
+      // Validação básica do app_id para evitar chamadas espúrias
+      const mlAppId = Deno.env.get("ML_APP_ID");
+      if (mlAppId && body.application_id && String(body.application_id) !== mlAppId) {
+        console.warn(`[webhook] Invalid application_id: ${body.application_id}`);
+        return new Response("Invalid Application ID", { status: 403 });
+      }
+
+      console.log(`[webhook queueing] ML topic=${body.topic} resource=${body.resource}`);
+      
+      const uniqueHash = `${body.resource}_${body.topic}_${body.sent ?? body.received ?? Date.now()}`;
+      const { error } = await supabase.from("webhook_events").insert({
+        marketplace: "mercado_livre",
+        topic: body.topic,
+        resource: body.resource,
+        payload: body,
+        unique_hash: uniqueHash
+      });
+
+      if (error && error.code !== '23505') {
+        console.error("Error queueing webhook:", error);
+      }
+      // Sempre retorna 200 imediatamente para o ML
+      return new Response("OK", { status: 200, headers: corsHeaders });
     } else if (marketplace === "nuvemshop") {
-      return await handleNSWebhook(body);
+      // Para nuvemshop, podemos manter síncrono por enquanto ou também enfileirar
+      console.log(`[webhook queueing] NS event=${body.event}`);
+      const uniqueHash = `ns_${body.event}_${body.id}_${Date.now()}`;
+      await supabase.from("webhook_events").insert({
+        marketplace: "nuvemshop",
+        topic: body.event ?? 'unknown',
+        resource: String(body.id),
+        payload: body,
+        unique_hash: uniqueHash
+      });
+      return new Response("OK", { status: 200, headers: corsHeaders });
     }
 
     return new Response(
@@ -50,13 +89,49 @@ serve(async (req: Request) => {
   }
 });
 
+async function processInternalEvent(eventId: string): Promise<Response> {
+  const supabase = getServiceClient();
+  const { data: event } = await supabase
+    .from("webhook_events")
+    .select("*")
+    .eq("id", eventId)
+    .single();
+    
+  if (!event || event.status !== 'pending') {
+    return jsonOk({ status: "ignored", reason: "not_pending" });
+  }
+
+  await supabase.from("webhook_events").update({ status: 'processing' }).eq("id", eventId);
+
+  try {
+    if (event.marketplace === "mercado_livre") {
+      await handleMLWebhook(event.payload, supabase);
+    } else if (event.marketplace === "nuvemshop") {
+      await handleNSWebhook(event.payload, supabase);
+    }
+    
+    await supabase.from("webhook_events").update({ 
+      status: 'success', 
+      processed_at: new Date().toISOString() 
+    }).eq("id", eventId);
+    
+  } catch (err) {
+    console.error(`[webhook] Internal processing error for ${eventId}:`, err);
+    await supabase.from("webhook_events").update({ 
+      status: 'error', 
+      error_message: String(err) 
+    }).eq("id", eventId);
+  }
+
+  return jsonOk({ status: "processed", event_id: eventId });
+}
+
 // =============================================================================
-// Mercado Livre Webhook
+// Mercado Livre Webhook Processing
 // Tópicos: orders_v2, stock_locations, stock_fulfillment, shipments, items
 // Payload: { resource, user_id, topic, application_id, attempts, sent, received }
 // =============================================================================
-async function handleMLWebhook(body: Record<string, any>): Promise<Response> {
-  const supabase = getServiceClient();
+async function handleMLWebhook(body: Record<string, any>, supabase: ReturnType<typeof getServiceClient>): Promise<void> {
   const { topic, user_id, resource } = body;
 
   // Buscar integração pelo seller_id
@@ -122,8 +197,6 @@ async function handleMLWebhook(body: Record<string, any>): Promise<Response> {
       .order("created_at", { ascending: false })
       .limit(1);
   }
-
-  return jsonOk({ status: "processed", topic });
 }
 
 // ---------------------------------------------------------------------------
@@ -432,10 +505,9 @@ async function handleMLItem(
 }
 
 // =============================================================================
-// Nuvemshop Webhook
+// Nuvemshop Webhook Processing
 // =============================================================================
-async function handleNSWebhook(body: Record<string, any>): Promise<Response> {
-  const supabase = getServiceClient();
+async function handleNSWebhook(body: Record<string, any>, supabase: ReturnType<typeof getServiceClient>): Promise<void> {
   const { event, store_id } = body;
 
   const { data: integration } = await supabase
@@ -491,7 +563,7 @@ async function handleNSWebhook(body: Record<string, any>): Promise<Response> {
     }
   }
 
-  return jsonOk({ status: "processed", event });
+  }
 }
 
 // =============================================================================
