@@ -86,16 +86,16 @@ Foco: estoque multi-origem (Full/Flex/Próprio), sincronização real-time via w
 ### ECOM-77: Sync Engine — Reconciliação Estoque ML ↔ Local
 - **Prioridade:** P0 MUST | **Esforço:** 5-7h | **Depende de:** ECOM-75
 - **Tarefas:**
-  - [ ] Refatorar `reconcile-stock/index.ts`
-  - [ ] Estratégia híbrida:
+  - [x] Refatorar `reconcile-stock/index.ts`
+  - [x] Estratégia híbrida:
     - Webhooks: ~95% das atualizações (real-time)
     - Cron leve (15min): verificar apenas items com divergência recente
     - Reconciliação completa (1x/dia, off-peak): comparar TUDO
-  - [ ] **NÃO fazer:** Cron a cada 5min para todos os items (estoura rate limit ML)
-  - [ ] Usar `last_synced_at` para sync incremental
-  - [ ] Log de divergências em `sync_logs`
-  - [ ] Alerta se divergência > 10% ou > 5 unidades
-  - [ ] Testes: simular divergência, verificar reconciliação
+  - [x] **NÃO fazer:** Cron a cada 5min para todos os items (estoura rate limit ML)
+  - [x] Usar `last_synced_at` para sync incremental
+  - [x] Log de divergências em `sync_logs`
+  - [x] Alerta se divergência > 10% ou > 5 unidades
+  - [x] Testes: simular divergência, verificar reconciliação
 
 ### ECOM-78: Dashboard de Estoque Unificado
 - **Prioridade:** P1 MUST | **Esforço:** 8-10h | **Depende de:** ECOM-74

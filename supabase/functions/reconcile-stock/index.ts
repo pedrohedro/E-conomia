@@ -15,10 +15,12 @@ serve(async (req: Request) => {
   const corsH = getCorsHeaders(req);
 
   const supabase = getServiceClient();
-  let body: { organization_id?: string; dry_run?: boolean } = {};
+  let body: { organization_id?: string; dry_run?: boolean; strategy?: string } = {};
   try { body = await req.json(); } catch {}
 
-  const dryRun = body.dry_run === true;
+  const url = new URL(req.url);
+  const strategy = body.strategy || url.searchParams.get("strategy") || "incremental"; // incremental | full
+  const dryRun = body.dry_run === true || url.searchParams.get("dry_run") === "true";
 
   let intQuery = supabase
     .from("marketplace_integrations")
@@ -47,7 +49,7 @@ serve(async (req: Request) => {
     }
 
     try {
-      const result = await reconcileForIntegration(supabase, integration, dryRun);
+      const result = await reconcileForIntegration(supabase, integration, dryRun, strategy);
       results.push(result);
 
       if (!dryRun) {
@@ -93,20 +95,29 @@ serve(async (req: Request) => {
 async function reconcileForIntegration(
   supabase: ReturnType<typeof getServiceClient>,
   integration: Record<string, any>,
-  dryRun: boolean
+  dryRun: boolean,
+  strategy: string
 ): Promise<ReconcileResult> {
   const orgId = integration.organization_id;
   const sellerId = integration.seller_id;
   const token = integration.access_token;
 
-  // Busca todos os channel_stocks do ML para esta org
-  const { data: localStocks } = await supabase
+  let query = supabase
     .from("channel_stock")
-    .select("id, product_id, channel_sku, available, reserved, channel, products(name, sku)")
+    .select("id, product_id, channel_sku, available, reserved, channel, products(name, sku), last_synced_at")
     .eq("organization_id", orgId)
     .in("channel", ["ml_full", "ml_flex"])
-    .not("channel_sku", "is", null)
-    .limit(MAX_DIVERGENCES);
+    .not("channel_sku", "is", null);
+
+  if (strategy === "incremental") {
+    // Busca os 100 itens mais antigos/não sincronizados
+    query = query.order("last_synced_at", { ascending: true, nullsFirst: true }).limit(100);
+  } else {
+    // Full sync limite
+    query = query.limit(MAX_DIVERGENCES);
+  }
+
+  const { data: localStocks } = await query;
 
   if (!localStocks?.length) {
     return { integration_id: integration.id, organization_id: orgId, divergences_found: 0, fixed: 0, skipped: 0, dry_run: dryRun };
@@ -191,7 +202,7 @@ async function reconcileForIntegration(
           type: "stock_divergence",
           title: "Divergência de Estoque Detectada",
           message: `${(localEntry.products as any)?.name ?? mlId}: Local=${localQty} vs ML=${mlQty} (${localEntry.channel})`,
-          severity: diff > 10 ? "high" : diff > 3 ? "medium" : "low",
+          severity: (diff > 5 || (diff / Math.max(localQty, 1)) > 0.1) ? "high" : "medium",
           data: {
             channel_sku: mlId,
             local_qty: localQty,
@@ -202,6 +213,14 @@ async function reconcileForIntegration(
         });
         if (!notifErr) fixed++; else skipped++;
       }
+    }
+
+    // Atualiza last_synced_at para os itens checados
+    if (!dryRun) {
+      const idsToUpdate = chunk.map(c => c.id);
+      await supabase.from("channel_stock")
+        .update({ last_synced_at: new Date().toISOString() })
+        .in("id", idsToUpdate);
     }
 
     // Rate limit: 200ms entre chunks
