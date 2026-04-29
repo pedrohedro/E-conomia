@@ -14,23 +14,18 @@ serve(async (req: Request) => {
 
   const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-  // Buscar integrações que precisam de refresh:
-  // 1) status=active com token expirando em <1h
-  // 2) status=token_expired (qualquer timestamp - precisam de recuperação)
-  const { data: activeExpiring } = await supabase
-    .from("marketplace_integrations")
-    .select("id, organization_id, marketplace, refresh_token, seller_id")
-    .eq("status", "active")
-    .eq("marketplace", "mercado_livre")
-    .not("refresh_token", "is", null)
-    .lt("token_expires_at", oneHourFromNow);
+  // Buscar integrações que precisam de refresh usando RPC para decriptar os tokens
+  const { data: activeExpiring } = await supabase.rpc("get_decrypted_integration_list", {
+    p_status: "active",
+    p_marketplace: "mercado_livre",
+    p_expires_before: oneHourFromNow
+  });
 
-  const { data: expiredOnes } = await supabase
-    .from("marketplace_integrations")
-    .select("id, organization_id, marketplace, refresh_token, seller_id")
-    .eq("status", "token_expired")
-    .eq("marketplace", "mercado_livre")
-    .not("refresh_token", "is", null);
+  const { data: expiredOnes } = await supabase.rpc("get_decrypted_integration_list", {
+    p_status: "token_expired",
+    p_marketplace: "mercado_livre",
+    p_expires_before: null
+  });
 
   const integrations = [...(activeExpiring ?? []), ...(expiredOnes ?? [])];
   const error = null;
@@ -50,20 +45,18 @@ serve(async (req: Request) => {
       const tokens = await MercadoLivre.refreshToken(
         integration.refresh_token!
       );
-      const expiresAt = new Date(
-        Date.now() + tokens.expires_in * 1000
-      ).toISOString();
 
-      await supabase
-        .from("marketplace_integrations")
-        .update({
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          token_expires_at: expiresAt,
-          status: "active",
-          last_sync_error: null,
-        })
-        .eq("id", integration.id);
+      // Usar a RPC de save_marketplace_integration para criptografar
+      await supabase.rpc("save_marketplace_integration", {
+        p_org_id: integration.organization_id,
+        p_marketplace: integration.marketplace,
+        p_seller_id: integration.seller_id,
+        p_seller_name: integration.seller_name || integration.seller_id,
+        p_access_token: tokens.access_token,
+        p_refresh_token: tokens.refresh_token,
+        p_expires_in: tokens.expires_in,
+        p_config: integration.config || {}
+      });
 
       await supabase.from("sync_logs").insert({
         integration_id: integration.id,

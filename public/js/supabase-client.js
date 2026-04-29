@@ -82,6 +82,21 @@ export async function signOut() {
   return supabase.auth.signOut();
 }
 
+// Inicia fluxo OAuth com Google. Após o consentimento, o Supabase redireciona
+// de volta para `redirectTo` (default: /dashboard.html da origem atual).
+// O `auth-guard.requireAuth()` cuida de mandar para onboarding.html caso o usuário
+// recém-criado ainda não tenha organização.
+export async function signInWithGoogle(redirectTo) {
+  const target = redirectTo || `${window.location.origin}/dashboard.html`;
+  return supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: target,
+      queryParams: { access_type: "offline", prompt: "consent" },
+    },
+  });
+}
+
 // =============================================================================
 // Marketplace Integration helpers
 // =============================================================================

@@ -100,24 +100,16 @@ async function saveIntegration(
   expiresIn: number | null,
   config: Record<string, any> = {}
 ) {
-  const expiresAt = expiresIn
-    ? new Date(Date.now() + expiresIn * 1000).toISOString()
-    : null;
-
-  const { error } = await supabase
-    .from("marketplace_integrations")
-    .upsert({
-      organization_id: orgId,
-      marketplace,
-      seller_id:        sellerId,
-      seller_name:      sellerName,
-      seller_nickname:  sellerName,
-      access_token:     accessToken,
-      refresh_token:    refreshToken,
-      token_expires_at: expiresAt,
-      status:           "active",
-      config,
-    }, { onConflict: "organization_id,marketplace" });
+  const { error } = await supabase.rpc("save_marketplace_integration", {
+    p_org_id: orgId,
+    p_marketplace: marketplace,
+    p_seller_id: sellerId,
+    p_seller_name: sellerName,
+    p_access_token: accessToken,
+    p_refresh_token: refreshToken,
+    p_expires_in: expiresIn,
+    p_config: config
+  });
 
   if (error) throw new Error(`DB save failed: ${error.message}`);
 }

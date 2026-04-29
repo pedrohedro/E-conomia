@@ -36,14 +36,14 @@ Foco: estoque multi-origem (Full/Flex/Próprio), sincronização real-time via w
 ### ECOM-75: Edge Function — ML OAuth Flow Completo
 - **Prioridade:** P0 MUST | **Esforço:** 4-6h | **Bloqueador de:** ECOM-76, 77, 79
 - **Tarefas:**
-  - [ ] Refatorar `marketplace-authorize/index.ts` — gerar state token anti-CSRF
-  - [ ] Usar tabela `oauth_states` (migration 00018) com TTL 10 min
-  - [ ] Refatorar `marketplace-callback/index.ts` — trocar code por tokens
-  - [ ] Criptografar access_token e refresh_token antes de salvar (pgcrypto)
-  - [ ] Salvar `seller_id` em `marketplace_integrations`
-  - [ ] Edge Function `token-refresh/index.ts` — cron que renova 30min antes do vencimento
-  - [ ] Fallback: se refresh falhar 3x → status `token_expired` + notificar
-  - [ ] Testes: fluxo completo auth → callback → token storage
+  - [x] Refatorar `marketplace-authorize/index.ts` — gerar state token anti-CSRF
+  - [x] Usar tabela `oauth_states` (migration 00018) com TTL 10 min
+  - [x] Refatorar `marketplace-callback/index.ts` — trocar code por tokens
+  - [x] Criptografar access_token e refresh_token antes de salvar (pgcrypto)
+  - [x] Salvar `seller_id` em `marketplace_integrations`
+  - [x] Edge Function `token-refresh/index.ts` — cron que renova 30min antes do vencimento
+  - [x] Fallback: se refresh falhar 3x → status `token_expired` + notificar
+  - [x] Testes: fluxo completo auth → callback → token storage
 
 ### ECOM-93: Definição de Personas e Segmentos
 - **Prioridade:** P0 MUST | **Esforço:** 2-3h
