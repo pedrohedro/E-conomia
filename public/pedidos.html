@@ -861,7 +861,7 @@ window.submitLabel = async () => {
   const receiverAddr = shipping.receiver_address ?? {};
 
   const to = {
-    name:    buyer.nickname ?? `${buyer.first_name ?? ''} ${buyer.last_name ?? ''}`.trim() || 'Comprador',
+    name:    buyer.nickname ?? (`${buyer.first_name ?? ''} ${buyer.last_name ?? ''}`.trim() || 'Comprador'),
     cep:     receiverAddr.zip_code?.replace(/\D/g, '') ?? '',
     address: receiverAddr.street_name ?? '',
     number:  receiverAddr.street_number ?? 'S/N',

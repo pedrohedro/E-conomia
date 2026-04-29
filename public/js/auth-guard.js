@@ -1,4 +1,4 @@
-import { supabase, getCurrentUser, getUserOrganization } from './supabase-client.js';
+import { supabase, getCurrentUser, getUserOrganization, signOut } from './supabase-client.js';
 
 export async function requireAuth() {
   const user = await getCurrentUser();
@@ -48,4 +48,4 @@ function updateProfileUI(user, orgData) {
   });
 }
 
-export { supabase };
+export { supabase, signOut };
