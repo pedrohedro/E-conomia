@@ -18,6 +18,23 @@ export async function requireAuth() {
     return null;
   }
 
+  // Verifica se tem integrações. Se não tiver e não pulou onboarding, manda pro onboarding
+  if (orgId && !window.location.pathname.includes('onboarding')) {
+    const skipped = localStorage.getItem('onboarding_skipped');
+    if (!skipped) {
+      const { data: integrations } = await supabase
+        .from('marketplace_integrations')
+        .select('id')
+        .eq('organization_id', orgId)
+        .limit(1);
+      
+      if (!integrations || integrations.length === 0) {
+        window.location.href = 'onboarding.html';
+        return null;
+      }
+    }
+  }
+
   window.__ECONOMIA__ = { user, org, orgId, role };
 
   updateProfileUI(user, orgData);

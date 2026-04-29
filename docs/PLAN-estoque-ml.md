@@ -56,13 +56,13 @@ Foco: estoque multi-origem (Full/Flex/Próprio), sincronização real-time via w
 ### ECOM-94: Onboarding Flow — First-Time UX
 - **Prioridade:** P0 MUST | **Esforço:** 6-8h | **Depende de:** ECOM-75
 - **Tarefas:**
-  - [ ] Refatorar `onboarding.html` — não redirecionar para login
-  - [ ] Tela 1: "Conecte seu Mercado Livre" → botão grande → OAuth
-  - [ ] Tela 2: Loading animado "Importando seus produtos..." com progress bar
-  - [ ] Tela 3: "Pronto! Você tem X produtos" → CTA "Ver meu estoque"
-  - [ ] Progressive disclosure: sem wizard de 10 passos
-  - [ ] Redirect para dashboard já populado após onboarding
-  - [ ] Tour opcional (3 tooltips): estoque, alertas, sync status
+  - [x] Refatorar `onboarding.html` — não redirecionar para login
+  - [x] Tela 1: "Conecte seu Mercado Livre" → botão grande → OAuth
+  - [x] Tela 2: Loading animado "Importando seus produtos..." com progress bar
+  - [x] Tela 3: "Pronto! Você tem X produtos" → CTA "Ver meu estoque"
+  - [x] Progressive disclosure: sem wizard de 10 passos
+  - [x] Redirect para dashboard já populado após onboarding
+  - [x] Tour opcional (3 tooltips): estoque, alertas, sync status
 
 ---
 

@@ -241,34 +241,11 @@
       <div class="progress-step active" id="prog-1"></div>
       <div class="progress-step" id="prog-2"></div>
       <div class="progress-step" id="prog-3"></div>
-      <div class="progress-step" id="prog-4"></div>
-      <span class="progress-label" id="prog-label">Passo 1 de 4</span>
+      <span class="progress-label" id="prog-label">Passo 1 de 3</span>
     </div>
 
-    <!-- Step 1: Nome da loja -->
+    <!-- Step 1: Conectar ML -->
     <div id="step-1" class="panel">
-      <p class="panel-title">Como se chama sua loja?</p>
-      <p class="panel-subtitle">Dê um nome para organizar seus dados. Você pode mudar depois.</p>
-
-      <div id="onb-error" class="error-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="onb-error-msg"></span>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="org-name">Nome da loja / empresa</label>
-        <input class="input" type="text" id="org-name" placeholder="Ex: Minha Loja Online" autofocus maxlength="80">
-        <p class="form-hint">Aparecerá nos relatórios e cabeçalho da plataforma.</p>
-      </div>
-
-      <button id="create-btn" class="btn btn-primary" onclick="handleCreate()">
-        Continuar →
-      </button>
-      <span class="skip-link" onclick="handleSignOut()">Sair e usar outra conta</span>
-    </div>
-
-    <!-- Step 2: Conectar ML -->
-    <div id="step-2" class="panel">
       <p class="panel-title">Conecte sua conta Mercado Livre</p>
       <p class="panel-subtitle">Importamos seus produtos e estoque automaticamente. É rápido e seguro.</p>
 
@@ -317,8 +294,10 @@
       </button>
     </div>
 
-    <!-- Step 3: Sync loading -->
-    <div id="step-3" class="panel">
+
+
+    <!-- Step 2: Sync loading -->
+    <div id="step-2" class="panel" style="display:none;">
       <div class="sync-progress">
         <div class="sync-spinner" id="sync-spinner"></div>
         <p class="sync-title" id="sync-title">Importando seus produtos…</p>
@@ -330,8 +309,8 @@
       </div>
     </div>
 
-    <!-- Step 4: AHA moment -->
-    <div id="step-4" class="panel">
+    <!-- Step 3: AHA moment -->
+    <div id="step-3" class="panel" style="display:none;">
       <div class="aha-emoji">🎉</div>
       <p class="panel-title" style="text-align:center;">Estoque importado!</p>
       <p class="panel-subtitle" style="text-align:center;">Seu estoque do Mercado Livre está disponível agora.</p>
@@ -385,8 +364,8 @@
       </button>
     </div>
 
-    <!-- Step 5: Sem ML (empty state) -->
-    <div id="step-5" class="panel" style="text-align:center;">
+    <!-- Step 4: Sem ML (empty state) -->
+    <div id="step-4" class="panel" style="text-align:center;display:none;">
       <div style="font-size:44px;margin-bottom:12px;">📦</div>
       <p class="panel-title">Tudo pronto!</p>
       <p class="panel-subtitle">
@@ -405,22 +384,22 @@
 </div>
 
 <script type="module">
-import { supabase, getCurrentUser, getUserOrganization, createOrganization } from './js/supabase-client.js';
+import { requireAuth, supabase, signOut } from './js/auth-guard.js';
 
 const SUPABASE_FN = 'https://rqmpqxguecuhrsbzcwgb.supabase.co/functions/v1';
-const PROGRESS_STEPS = ['prog-1','prog-2','prog-3','prog-4'];
+const PROGRESS_STEPS = ['prog-1','prog-2','prog-3'];
 let currentStep = 1;
 let orgId = null;
 
 // ---- Init ----
-const user = await getCurrentUser();
-if (!user) { window.location.href = 'login.html'; }
-
-// Se já tem org, ir para step 2 (conectar ML)
-const orgData = await getUserOrganization();
-if (orgData?.organization_id) {
-  orgId = orgData.organization_id;
-  showStep(2);
+const authState = await requireAuth();
+if (!authState) {
+  // auth-guard already handles the redirect if not logged in
+  console.log("Waiting for auth...");
+} else {
+  // Se tem organização, definimos o orgId e vamos pro step 1 (conectar ML)
+  orgId = authState.orgId;
+  showStep(1);
 }
 
 // ---- Step helpers ----
@@ -438,45 +417,13 @@ function showStep(n) {
     else if (i + 1 === n) el.classList.add('active');
   });
 
-  const labels = { 1:'Passo 1 de 4 — Sua loja', 2:'Passo 2 de 4 — Conectar ML', 3:'Passo 3 de 4 — Importando...', 4:'Passo 4 de 4 — Pronto!', 5:'Configurado!' };
+  const labels = { 1:'Passo 1 de 3 — Conectar ML', 2:'Passo 2 de 3 — Importando...', 3:'Passo 3 de 3 — Pronto!', 4:'Configurado!' };
   document.getElementById('prog-label').textContent = labels[n] ?? '';
 
-  if (n >= 4) document.getElementById('progress-wrap').style.display = 'none';
+  if (n >= 3) document.getElementById('progress-wrap').style.display = 'none';
 }
 
-// ---- Step 1: Criar org ----
-window.handleCreate = async () => {
-  const orgName = document.getElementById('org-name').value.trim();
-  const errEl   = document.getElementById('onb-error');
-  const errMsg  = document.getElementById('onb-error-msg');
-  const btn     = document.getElementById('create-btn');
-
-  errEl.classList.remove('show');
-  if (!orgName || orgName.length < 2) {
-    errMsg.textContent = 'Digite o nome da sua loja (mín. 2 caracteres).';
-    errEl.classList.add('show');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Criando...';
-  try {
-    const org = await createOrganization(orgName);
-    orgId = org?.id ?? (await getUserOrganization())?.organization_id;
-    showStep(2);
-  } catch (err) {
-    errMsg.textContent = err.message || 'Erro ao criar organização. Tente novamente.';
-    errEl.classList.add('show');
-    btn.disabled = false;
-    btn.textContent = 'Continuar →';
-  }
-};
-
-document.getElementById('org-name')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') window.handleCreate();
-});
-
-// ---- Step 2: Conectar ML ----
+// ---- Step 1: Conectar ML ----
 window.handleMLConnect = async () => {
   const btn = document.getElementById('ml-connect-btn');
   btn.disabled = true;
@@ -494,7 +441,7 @@ window.handleMLConnect = async () => {
 
     // Salva estado para retorno do OAuth
     sessionStorage.setItem('onboarding_org_id', orgId);
-    sessionStorage.setItem('onboarding_step', '3');
+    sessionStorage.setItem('onboarding_step', '2');
     window.location.href = url;
 
   } catch (err) {
@@ -508,21 +455,25 @@ window.handleMLConnect = async () => {
   }
 };
 
-window.skipMLConnect = () => showStep(5);
+window.skipMLConnect = () => {
+  localStorage.setItem('onboarding_skipped', 'true');
+  showStep(4);
+};
 
 // ---- Volta do OAuth ML (session storage check) ----
 const pendingOrgId = sessionStorage.getItem('onboarding_org_id');
 const pendingStep  = sessionStorage.getItem('onboarding_step');
-if (pendingOrgId && pendingStep === '3') {
+if (pendingOrgId && pendingStep === '2') {
   sessionStorage.removeItem('onboarding_org_id');
   sessionStorage.removeItem('onboarding_step');
   orgId = pendingOrgId;
-  await startSync();
+  // Use a slight delay to let DOM render correctly
+  setTimeout(() => startSync(), 100);
 }
 
-// ---- Step 3: Sync Loading ----
+// ---- Step 2: Sync Loading ----
 async function startSync() {
-  showStep(3);
+  showStep(2);
   const bar    = document.getElementById('sync-bar');
   const title  = document.getElementById('sync-title');
   const sub    = document.getElementById('sync-subtitle');
@@ -567,7 +518,7 @@ async function startSync() {
     spinner.style.borderTopColor = 'var(--success, #10b981)';
 
     await loadAHAStats();
-    setTimeout(() => showStep(4), 600);
+    setTimeout(() => showStep(3), 600);
 
   } catch (err) {
     clearInterval(interval);
@@ -575,7 +526,7 @@ async function startSync() {
     sub.textContent   = 'Não foi possível sincronizar: ' + err.message;
     step.textContent  = 'Você pode sincronizar manualmente depois.';
     spinner.style.animation = 'none';
-    setTimeout(() => showStep(5), 3000);
+    setTimeout(() => showStep(4), 3000);
   }
 }
 
@@ -603,8 +554,14 @@ async function loadAHAStats() {
 }
 
 // ---- Navigation ----
-window.goToDashboard  = () => { window.location.href = 'dashboard.html'; };
-window.goToSettings   = () => { window.location.href = 'settings.html'; };
+window.goToDashboard  = () => { 
+  localStorage.setItem('onboarding_skipped', 'true');
+  window.location.href = 'dashboard.html'; 
+};
+window.goToSettings   = () => { 
+  localStorage.setItem('onboarding_skipped', 'true');
+  window.location.href = 'settings.html'; 
+};
 
 window.handleSignOut = async () => {
   await supabase.auth.signOut();
