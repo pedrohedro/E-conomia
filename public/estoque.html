@@ -267,8 +267,14 @@
 
 <!-- Main -->
 <div class="main-content">
-  <!-- ML Status Banner (ECOM-95) -->
-  <div id="ml-status-banner" style="display:none;"></div>
+  <!-- ML Status Banner (ECOM-95/78) -->
+  <div id="ml-status-banner" style="display:flex; align-items:center; justify-content:space-between; background:var(--secondary); padding:10px 16px; border-radius:var(--radius); border:1px solid var(--border); margin-bottom:18px; font-size:13px; font-weight:500;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="ch-dot ch-dot-ok"></span>
+      <span id="ml-status-text">Conectando...</span>
+    </div>
+    <span id="ml-last-sync-text" style="color:var(--muted-foreground); font-size:12px;">Última sync: calculando...</span>
+  </div>
 
   <header class="page-header">
     <div>
@@ -449,10 +455,12 @@
         <table class="table" id="estoque-table">
           <thead>
             <tr>
+              <th style="width:40px;text-align:center;"><input type="checkbox" id="selectAll" style="width:14px;height:14px;cursor:pointer;"></th>
               <th>Produto / SKU</th>
               <th style="text-align:center;">Total Físico</th>
               <th class="col-ml" style="text-align:center;">ML Full</th>
-              <th class="col-ml" style="text-align:center;">Local / Flex</th>
+              <th class="col-ml" style="text-align:center;">ML Flex</th>
+              <th class="col-ml" style="text-align:center;">Próprio</th>
               <th class="col-amazon" style="text-align:center;">Amazon FBA</th>
               <th class="col-shopee" style="text-align:center;">Shopee</th>
               <th class="col-nuvemshop" style="text-align:center;">Nuvemshop</th>
@@ -863,9 +871,44 @@
           });
           renderKPIs(allProducts, marketplace);
           renderTable(allProducts, marketplace);
+          updateMLStatusBanner(allProducts);
       } catch (err) {
           console.error('[Estoque] Erro ao carregar produtos:', err);
           renderError('Erro ao carregar estoque. Verifique sua conexão.');
+      }
+  }
+
+  function updateMLStatusBanner(products) {
+      const banner = document.getElementById('ml-status-banner');
+      const text = document.getElementById('ml-status-text');
+      const syncText = document.getElementById('ml-last-sync-text');
+      
+      let maxSync = 0;
+      let hasML = false;
+      products.forEach(p => {
+          (p.stock_locations ?? []).forEach(loc => {
+              if (loc.location_type === 'meli_facility' || loc.location_type === 'flex_origin') hasML = true;
+              if (loc.last_synced_at) {
+                  const ts = new Date(loc.last_synced_at).getTime();
+                  if (ts > maxSync) maxSync = ts;
+              }
+          });
+      });
+
+      if (!hasML) {
+          text.textContent = 'Mercado Livre não conectado ou sem produtos';
+          text.parentElement.querySelector('.ch-dot').className = 'ch-dot ch-dot-empty';
+          syncText.textContent = '';
+      } else {
+          text.textContent = 'Mercado Livre Conectado';
+          text.parentElement.querySelector('.ch-dot').className = 'ch-dot ch-dot-ok';
+          
+          if (maxSync > 0) {
+              const mins = Math.floor((Date.now() - maxSync) / 60000);
+              syncText.textContent = \`Última sync: \${mins < 1 ? 'agora mesmo' : mins + ' min atrás'}\`;
+          } else {
+              syncText.textContent = 'Última sync: Aguardando...';
+          }
       }
   }
 
@@ -917,6 +960,7 @@
 
       tbody.innerHTML = products.map(p => buildRow(p, activeMarketplace)).join('');
       animateTableIn(tbody);
+      initCheckboxes();
   }
 
   function animateTableIn(tbody) {
@@ -958,7 +1002,8 @@
       const channelCells = buildChannelCells(p, activeMarketplace);
 
       return `
-          <tr class="${rowClass}">
+          <tr class="${rowClass}" data-id="${p.id}">
+            <td style="text-align:center;"><input type="checkbox" class="row-checkbox" value="${p.id}" style="width:14px;height:14px;cursor:pointer;"></td>
             <td>
               <div style="display:flex;flex-direction:column;gap:2px;">
                 <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
@@ -977,46 +1022,58 @@
   }
 
   function buildChannelCells(p, activeMarketplace) {
-      const CHANNELS = ['mercado_livre', 'nuvemshop', 'amazon', 'shopee'];
-      const COL_CLASSES = {
-          mercado_livre: 'col-ml',
-          nuvemshop:     'col-ml',
-          amazon:        'col-amazon',
-          shopee:        'col-shopee',
-      };
+      // Pega dados do stock_locations
+      let qtyFull = 0; let qtyFlex = 0; let qtyProprio = 0;
+      (p.stock_locations ?? []).forEach(sl => {
+          if (sl.location_type === 'meli_facility') qtyFull += sl.available ?? sl.quantity ?? 0;
+          if (sl.location_type === 'flex_origin') qtyFlex += sl.available ?? sl.quantity ?? 0;
+          if (sl.location_type === 'seller_warehouse') qtyProprio += sl.available ?? sl.quantity ?? 0;
+      });
 
+      // Pega dados do channel_stock pros demais
       const stockMap = {};
       (p.channel_stock ?? []).forEach(cs => {
           stockMap[cs.channel] = cs.available ?? cs.quantity ?? 0;
       });
 
-      return CHANNELS.map(mp => {
-          const qty = stockMap[mp];
-          const cfg = MARKETPLACE_COLORS[mp] ?? { dotClass: 'ch-dot-empty', label: mp };
-          const colClass = COL_CLASSES[mp] ?? '';
-          const isActive = activeMarketplace === mp || activeMarketplace === null;
-
-          if (qty == null || !isActive) {
-              return `<td class="${colClass}" style="text-align:center;">
+      const buildCell = (qty, label, isActive, dotBaseCls, colCls) => {
+          if (!isActive) {
+              return \`<td class="\${colCls}" style="text-align:center;">
                   <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
                     <span class="ch-dot ch-dot-empty"></span>
-                    <span style="color:var(--muted-foreground);font-size:13px;">${activeMarketplace && activeMarketplace !== mp ? '—' : '0'}</span>
+                    <span style="color:var(--muted-foreground);font-size:13px;">—</span>
                   </div>
-              </td>`;
+              </td>\`;
           }
-
-          const dotCls = qty > 0 ? cfg.dotClass : 'ch-dot-empty';
+          const dotCls = qty > 0 ? dotBaseCls : 'ch-dot-empty';
           const txtStyle = qty > 0
               ? 'color:var(--foreground);font-weight:600;font-size:13px;'
               : 'color:var(--muted-foreground);font-size:13px;';
-
-          return `<td class="${colClass}" style="text-align:center;">
+          return \`<td class="\${colCls}" style="text-align:center;">
               <div style="display:flex;align-items:center;justify-content:center;gap:6px;">
-                <span class="ch-dot ${dotCls}"></span>
-                <span style="${txtStyle}">${qty.toLocaleString('pt-BR')}</span>
+                <span class="ch-dot \${dotCls}"></span>
+                <span style="\${txtStyle}">\${qty.toLocaleString('pt-BR')}</span>
               </div>
-          </td>`;
-      }).join('');
+          </td>\`;
+      };
+
+      const mlActive = activeMarketplace === 'mercado_livre' || activeMarketplace === null;
+      
+      let html = '';
+      html += buildCell(qtyFull, 'ML Full', mlActive, 'ch-dot-ok', 'col-ml');
+      html += buildCell(qtyFlex, 'ML Flex', mlActive, 'ch-dot-warn', 'col-ml');
+      html += buildCell(qtyProprio, 'Próprio', mlActive, 'ch-dot-ok', 'col-ml');
+
+      // Outros canais
+      const OTHER_CHANNELS = ['amazon', 'shopee', 'nuvemshop'];
+      OTHER_CHANNELS.forEach(mp => {
+          const qty = stockMap[mp] ?? 0;
+          const cfg = MARKETPLACE_COLORS[mp] ?? { dotClass: 'ch-dot-empty' };
+          const isActive = activeMarketplace === mp || activeMarketplace === null;
+          html += buildCell(qty, mp, isActive, cfg.dotClass, \`col-\${mp}\`);
+      });
+
+      return html;
   }
 
   // -----------------------------------------------------------------------
@@ -1026,6 +1083,7 @@
       const tbody = document.getElementById('estoque-table-body');
       tbody.innerHTML = Array.from({ length: 6 }, () => `
           <tr class="skel-row">
+            <td style="text-align:center;"><div class="skeleton" style="height:14px;width:14px;margin:0 auto;border-radius:2px;"></div></td>
             <td>
               <div class="skel-main skeleton" style="height:14px;width:55%;margin-bottom:6px;border-radius:4px;"></div>
               <div class="skel-sub skeleton" style="height:11px;width:35%;border-radius:4px;"></div>
@@ -1033,11 +1091,23 @@
             <td style="text-align:center;"><div class="skeleton" style="height:14px;width:40px;margin:0 auto;border-radius:4px;"></div></td>
             <td class="col-ml" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
             <td class="col-ml" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
+            <td class="col-ml" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
             <td class="col-amazon" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
             <td class="col-shopee" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
             <td class="col-nuvemshop" style="text-align:center;"><div class="skeleton" style="height:14px;width:36px;margin:0 auto;border-radius:4px;"></div></td>
             <td class="col-actions"></td>
           </tr>`).join('');
+  }
+
+  function initCheckboxes() {
+      const selectAll = document.getElementById('selectAll');
+      if (!selectAll) return;
+      selectAll.checked = false;
+      selectAll.onchange = (e) => {
+          document.querySelectorAll('.row-checkbox').forEach(cb => {
+              cb.checked = e.target.checked;
+          });
+      };
   }
 
   function renderError(msg) {
@@ -1158,6 +1228,10 @@
     if (realtimeCh) supabase.removeChannel(realtimeCh);
     realtimeCh = supabase
       .channel(`channel_stock:${orgId}`)
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'stock_locations', filter: `organization_id=eq.${orgId}` },
+        async () => { if (orgId) await loadAndRender(); }
+      )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'channel_stock', filter: `organization_id=eq.${orgId}` },
         async () => { if (orgId) await loadAndRender(); }

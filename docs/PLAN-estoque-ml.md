@@ -100,17 +100,17 @@ Foco: estoque multi-origem (Full/Flex/Próprio), sincronização real-time via w
 ### ECOM-78: Dashboard de Estoque Unificado
 - **Prioridade:** P1 MUST | **Esforço:** 8-10h | **Depende de:** ECOM-74
 - **Tarefas:**
-  - [ ] Refatorar `estoque.html` com novo layout:
+  - [x] Refatorar `estoque.html` com novo layout:
     - Status bar: "ML Conectado ✅ Última sync: 2min"
     - KPIs: Total SKUs, Em Alerta, Sem Estoque, Valor Total
     - Filtros: Canal ▾ Status ▾ Categoria ▾ 🔍 Busca
     - Tabela: SKU | Produto | Full | Flex | Próprio | Total
-  - [ ] Cores por status: 🟢 OK, 🟡 Low, 🔴 Critical, ⬛ Out
-  - [ ] Indicadores visuais por localização (badges Full/Flex/Próprio)
-  - [ ] **Empty state** — tela para quando vendedor não tem produtos
-  - [ ] **Loading state** — skeleton loader durante sync inicial
-  - [ ] **Ação em lote** — selecionar múltiplos SKUs para ajustar estoque
-  - [ ] Realtime updates via Supabase Realtime (subscribe to stock_locations changes)
+  - [x] Cores por status: 🟢 OK, 🟡 Low, 🔴 Critical, ⬛ Out
+  - [x] Indicadores visuais por localização (badges Full/Flex/Próprio)
+  - [x] **Empty state** — tela para quando vendedor não tem produtos
+  - [x] **Loading state** — skeleton loader durante sync inicial
+  - [x] **Ação em lote** — selecionar múltiplos SKUs para ajustar estoque
+  - [x] Realtime updates via Supabase Realtime (subscribe to stock_locations changes)
 
 ### ECOM-79: Sync Bidirecional de Estoque ML
 - **Prioridade:** P1 MUST | **Esforço:** 4-6h | **Depende de:** ECOM-75

@@ -337,7 +337,7 @@ export function hideSkeletons(ids) {
 export async function fetchAllInventory(orgId, { search = '', stockFilter = 'all', marketplace = null } = {}) {
   let q = supabase
     .from('products')
-    .select('id, name, sku, sale_price, cost_price, margin_percent, total_stock, stock_alert, is_active, channel_stock(channel, available, quantity, reserved)')
+    .select('id, name, sku, sale_price, cost_price, margin_percent, total_stock, stock_alert, is_active, channel_stock(channel, available, quantity, reserved), stock_locations(location_type, quantity, available, last_synced_at)')
     .eq('organization_id', orgId)
     .eq('is_active', true)
     .order('stock_alert', { ascending: false })
