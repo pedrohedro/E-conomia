@@ -1448,24 +1448,8 @@
       if (cs) {
         const newQty = Math.max(0, (cs.quantity ?? 0) + movQty);
         await supabase.from('channel_stock').update({ quantity: newQty }).eq('id', cs.id);
-
-        // Push para ML se checkbox marcado e canal é Flex/Próprio
-        if (pushML && ['ml_flex','seller_warehouse'].includes(channel)) {
-          const { data: product } = await supabase
-            .from('products').select('sku').eq('id', productId).single();
-          const { data: csFull } = await supabase
-            .from('channel_stock').select('channel_sku').eq('id', cs.id).single();
-          const channelSku = csFull?.channel_sku ?? product?.sku;
-
-          if (channelSku) {
-            const { data: { session } } = await supabase.auth.getSession();
-            fetch(`${SUPABASE_FN}/push-stock-to-ml`, {
-              method: 'POST',
-              headers: { 'Content-Type':'application/json', Authorization:`Bearer ${session.access_token}` },
-              body: JSON.stringify({ organization_id: orgId, product_id: productId, channel_sku: channelSku, quantity: newQty }),
-            }).catch(e => console.warn('[push-stock-ml]', e));
-          }
-        }
+        
+        // Push para ML é feito automaticamente via Trigger (pg_net) no BD se o canal for Flex/Próprio.
       }
 
       showAdjResult('success', 'Movimentação registrada com sucesso!');

@@ -115,13 +115,13 @@ Foco: estoque multi-origem (Full/Flex/Próprio), sincronização real-time via w
 ### ECOM-79: Sync Bidirecional de Estoque ML
 - **Prioridade:** P1 MUST | **Esforço:** 4-6h | **Depende de:** ECOM-75
 - **Tarefas:**
-  - [ ] Refatorar `push-stock-to-ml/index.ts`
-  - [ ] Direção 1: ML → Local (webhook + sync engine — já coberto por ECOM-76/77)
-  - [ ] Direção 2: Local → ML (`PUT /items/{id}` com `available_quantity`)
-  - [ ] Rate limiting local (token bucket)
-  - [ ] Retry com backoff exponencial
-  - [ ] Validação antes de push: não enviar se divergência está sendo investigada
-  - [ ] Testes: atualizar estoque local, verificar que ML reflete
+  - [x] Refatorar `push-stock-to-ml/index.ts`:
+    - Rota `PUT /items/{id}` (ou nova API de variações)
+    - Suporte a múltiplas contas (usar credenciais certas via `auth`)
+  - [x] Trigger em `channel_stock` (Local): ao alterar estoque Próprio/Flex, enfileirar request para atualizar ML.
+  - [x] Respeitar trava: **Nunca** enviar update de quantidade para itens "Full" (ML rejeita com erro).
+  - [x] Tratamento de erro: se falhar (ex: token expirou), logar no `sync_logs` e agendar retry via Edge Function.
+  - [x] Testes: atualizar estoque local, verificar que ML reflete
 
 ### ECOM-80: Sistema de Alertas Inteligentes
 - **Prioridade:** P1 MUST | **Esforço:** 3-5h

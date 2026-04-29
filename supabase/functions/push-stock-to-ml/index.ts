@@ -33,16 +33,13 @@ serve(async (req: Request) => {
 
   const supabase = getServiceClient();
 
-  // Busca token de acesso ML da organização
-  const { data: integration, error: intErr } = await supabase
-    .from("marketplace_integrations")
-    .select("id, access_token, seller_id, token_expires_at")
-    .eq("organization_id", organization_id)
-    .eq("marketplace", "mercado_livre")
-    .eq("status", "active")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .single();
+  // Busca token de acesso ML descriptografado via RPC (ECOM-75)
+  const { data: integrations, error: intErr } = await supabase
+    .rpc("get_decrypted_integration_list", { p_org_id: organization_id });
+
+  const integration = (integrations ?? []).find(
+    (i: any) => i.marketplace === "mercado_livre" && i.status === "active"
+  );
 
   if (intErr || !integration) {
     return json({ error: "Integração ML não encontrada ou inativa" }, 404, corsH);
