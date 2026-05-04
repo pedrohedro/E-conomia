@@ -1,19 +1,38 @@
-.vercel/
+# macOS
 .DS_Store
+**/.DS_Store
+
+# Editor / IDE
 OmniFlow-CRM.code-workspace
+.cursor/
+.vscode/
+
+# Dependencies
 node_modules/
+
+# Build artifacts
 dist/
+.next/
+
+# Environment variables
 .env
 .env.local
 .env.*.local
+
+# Vercel
+.vercel/
+
+# Supabase local state
 supabase/.temp/
+
+# Tooling state (not source)
 .playwright-mcp/
-.cursor/
-.vercel
 .swarm/
 .mcp.json
-public/.claude-flow/
 .claude-flow/
 .claude/
+public/.claude-flow/
 *.session.json
-# *.png moved to explicit ignores if needed, but not global
+
+# Local artifacts (kept locally, not committed)
+artifacts/*.png

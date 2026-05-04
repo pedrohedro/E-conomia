@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Block obvious secrets in diff
+        run: |
+          if git grep -nE 'sb_secret_|sk_live_|sk_test_[A-Za-z0-9]{16,}|SUPABASE_SERVICE_ROLE_KEY *= *[A-Za-z0-9]' -- ':!*.example' ':!.github/workflows/*'; then
+            echo "::error::Possible secret committed. Move it to .env or env vars."
+            exit 1
+          fi
+
+      - name: Validate JSON files
+        run: |
+          for f in vercel.json package.json render-worker/package.json supabase/config.toml; do
+            [ -f "$f" ] || continue
+            case "$f" in
+              *.json)
+                python3 -c "import json,sys; json.load(open('$f'))" \
+                  || { echo "::error::Invalid JSON: $f"; exit 1; }
+                ;;
+            esac
+          done
+
+      - name: Check migration ordering
+        run: |
+          cd supabase/migrations
+          prev=0
+          for f in $(ls *.sql | sort); do
+            num=$(echo "$f" | grep -oE '^[0-9]+' || true)
+            if [ -z "$num" ]; then
+              echo "::error::$f does not start with numeric prefix"; exit 1
+            fi
+            if [ "$num" -le "$prev" ]; then
+              echo "::error::Migration $f out of order (prev=$prev)"; exit 1
+            fi
+            prev=$num
+          done
+          echo "Migrations OK ($prev migrations)"
+
+  edge-functions-typecheck:
+    name: Edge Functions (Deno check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - name: Type-check Edge Functions
+        run: |
+          fail=0
+          for fn in supabase/functions/*/index.ts; do
+            [ -f "$fn" ] || continue
+            echo "Checking $fn"
+            deno check "$fn" || fail=1
+          done
+          exit $fail
