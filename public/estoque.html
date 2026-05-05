@@ -319,6 +319,17 @@
 
   <main class="page-body">
 
+    <!-- Upsell Fulfillment Partner Banner -->
+    <div id="fulfillment-upsell" style="display: none; background: linear-gradient(135deg, var(--brand), var(--brand-dark)); border-radius: var(--radius-lg); padding: var(--spacing-lg) var(--spacing-xl); margin-bottom: var(--spacing-xl); color: white; align-items: center; justify-content: space-between;">
+      <div>
+        <h3 style="margin: 0 0 var(--spacing-xs) 0; color: white; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-rocket"></i> Estoque crescendo?
+        </h3>
+        <p style="margin: 0; font-size: 13px; opacity: 0.9;">Terceirize sua logística com nosso Galpão Parceiro (Fulfillment) e ganhe escala sem dor de cabeça.</p>
+      </div>
+      <a href="fulfillment-partner.html" class="btn btn-primary" style="background: white; color: var(--brand); white-space: nowrap;">Saiba mais</a>
+    </div>
+
     <!-- KPI Cards -->
     <div class="kpi-grid">
       <div class="kpi-card">
@@ -928,6 +939,12 @@
       document.getElementById('kpi-local').textContent  = sumByMarketplace('nuvemshop').toLocaleString('pt-BR');
       document.getElementById('kpi-amazon').textContent = sumByMarketplace('amazon').toLocaleString('pt-BR');
       document.getElementById('kpi-shopee').textContent = sumByMarketplace('shopee').toLocaleString('pt-BR');
+
+      // Mostrar banner de upsell se o total de estoque for > 200 itens (operação crescendo)
+      if (totalStock > 200) {
+          const upsell = document.getElementById('fulfillment-upsell');
+          if (upsell) upsell.style.display = 'flex';
+      }
   }
 
   // -----------------------------------------------------------------------

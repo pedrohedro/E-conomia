@@ -215,6 +215,17 @@
       </div>
     </div>
 
+    <!-- Upsell Fulfillment Partner Banner -->
+    <div id="fulfillment-upsell" style="display: none; background: linear-gradient(135deg, var(--brand), var(--brand-dark)); border-radius: var(--radius-lg); padding: var(--spacing-lg) var(--spacing-xl); margin-bottom: var(--spacing-xl); color: white; align-items: center; justify-content: space-between;">
+      <div>
+        <h3 style="margin: 0 0 var(--spacing-xs) 0; color: white; display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-rocket"></i> Escale sua operação logística
+        </h3>
+        <p style="margin: 0; font-size: 13px; opacity: 0.9;">Você atingiu um volume ideal para terceirizar seu picking/packing. Conheça nosso Galpão de Fulfillment Parceiro.</p>
+      </div>
+      <a href="fulfillment-partner.html" class="btn btn-primary" style="background: white; color: var(--brand); white-space: nowrap;">Saiba mais</a>
+    </div>
+
     <!-- Chart + Inventory -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
       <div class="card">
@@ -486,6 +497,11 @@ const init = async () => {
         document.getElementById('kpi-taxa-percent').textContent = kpis.percentTaxa;
         document.getElementById('kpi-status').textContent = kpis.ordersCount + ' pedidos';
         document.getElementById('kpi-status-detail').textContent = 'Mês atual';
+
+        if (kpis.ordersCount > 50) {
+           const upsell = document.getElementById('fulfillment-upsell');
+           if (upsell) upsell.style.display = 'flex';
+        }
 
         initChart(chartData, MP_COLORS.geral.color);
         renderInventory(products);
