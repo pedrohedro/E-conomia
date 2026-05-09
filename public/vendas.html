@@ -822,6 +822,17 @@
 
   function buildOrderRow(order) {
     const customer = order.customers?.name || 'Cliente não informado';
+    const documentStr = order.customers?.document ? `<span style="font-size:10.5px;color:var(--muted-foreground);display:block;">Doc: ${escHtml(order.customers.document)}</span>` : '';
+    
+    // Formata os itens para exibir
+    const items = order.order_items ?? [];
+    let itemsHtml = '';
+    if (items.length > 0) {
+      const itemNames = items.slice(0, 2).map(i => `${i.quantity}x ${i.product_name}`).join(', ');
+      const more = items.length > 2 ? ` e mais ${items.length - 2}` : '';
+      itemsHtml = `<span style="font-size:11px;color:var(--muted-foreground);display:block;margin-top:2px;">${escHtml(itemNames)}${more}</span>`;
+    }
+
     const orderNum = order.order_number || (order.id?.slice(0, 8)) || '—';
     const grossAmt = formatCurrency(order.gross_amount ?? 0);
     const feeAmt = (order.marketplace_fee_amt > 0)
@@ -832,21 +843,33 @@
     const customerSafe = escHtml(customer);
     const valueSafe = (order.gross_amount ?? 0).toFixed(2);
 
+    // Tracking info (shipping_id)
+    const trackingBadge = order.shipping_id 
+      ? `<span style="font-size:9.5px;background:var(--secondary);color:var(--muted-foreground);padding:1px 5px;border-radius:4px;font-weight:600;margin-left:4px;" title="Rastreio: ${escHtml(order.shipping_id)}">Envio Info</span>` 
+      : '';
+
     // NF-e badge
     const nfeStatus = order.nfe_status;
     let nfeBadge = '';
     if (nfeStatus === 'authorized') {
-      nfeBadge = `<span style="font-size:9.5px;background:color-mix(in srgb, var(--success) 15%, transparent);color:var(--success);padding:1px 5px;border-radius:4px;font-weight:600;">NF-e</span>`;
+      nfeBadge = `<span style="font-size:9.5px;background:color-mix(in srgb, var(--success) 15%, transparent);color:var(--success);padding:1px 5px;border-radius:4px;font-weight:600;margin-left:4px;">NF-e</span>`;
     } else if (nfeStatus === 'processing') {
-      nfeBadge = `<span style="font-size:9.5px;background:color-mix(in srgb, var(--warning) 15%, transparent);color:var(--warning);padding:1px 5px;border-radius:4px;font-weight:600;">NF-e...</span>`;
+      nfeBadge = `<span style="font-size:9.5px;background:color-mix(in srgb, var(--warning) 15%, transparent);color:var(--warning);padding:1px 5px;border-radius:4px;font-weight:600;margin-left:4px;">NF-e...</span>`;
     }
 
     return `<tr>
       <td>
         <span class="order-num">#${orderNumSafe}</span>
-        ${nfeBadge}
+        <div style="display:inline-flex;align-items:center;">
+          ${nfeBadge}
+          ${trackingBadge}
+        </div>
       </td>
-      <td>${customerSafe}</td>
+      <td>
+        <span style="font-weight:500;">${customerSafe}</span>
+        ${documentStr}
+        ${itemsHtml}
+      </td>
       <td>${buildMarketplaceBadge(order.marketplace)}</td>
       <td>${buildStatusBadge(order.status)}</td>
       <td><span style="font-weight:600;">${grossAmt}</span>${feeAmt}</td>

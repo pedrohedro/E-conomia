@@ -369,20 +369,22 @@
         return;
       }
 
-      if (data.user) {
+      if (data.session) {
+        // Email confirmations disabled: user is immediately logged in
         const slug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         try {
-          // Tenta via RPC (corrige chicken-and-egg RLS)
           await supabase.rpc('create_organization_with_member', { org_name: orgName, org_slug: slug });
-        } catch {
-          // Fallback direto (funciona se RLS estiver relaxada)
-          const { data: org } = await supabase.from('organizations').insert({ name: orgName, slug }).select('id').single();
-          if (org) await supabase.from('org_members').insert({ organization_id: org.id, user_id: data.user.id, role: 'owner', accepted_at: new Date().toISOString() });
+        } catch (err) {
+          console.error(err);
         }
+        window.location.href = 'dashboard.html';
+        return;
+      } else if (data.user) {
+        // Email confirmations enabled: user needs to verify email
+        succEl.textContent = 'Conta criada! Verifique seu email para confirmar.';
+        succEl.classList.add('show');
       }
 
-      succEl.textContent = 'Conta criada! Verifique seu email para confirmar.';
-      succEl.classList.add('show');
       btn.disabled = false;
       btn.textContent = 'Criar conta';
     };

@@ -212,8 +212,9 @@ export async function fetchRecentOrders(orgId, limit = 20, marketplace = null) {
     .from('orders')
     .select(`
       id, order_number, marketplace, status, gross_amount, net_amount,
-      marketplace_fee_amt, created_at,
-      customers(name)
+      marketplace_fee_amt, created_at, buyer_data, shipping_id,
+      customers(name, document),
+      order_items(quantity, product_name)
     `)
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false })

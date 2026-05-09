@@ -231,6 +231,10 @@ async function upsertMLOrder(
   if (shipping.logistic_type === "fulfillment") fulfillmentType = "ml_full";
   else if (shipping.logistic_type === "self_service") fulfillmentType = "ml_flex";
 
+  const buyerData = mlOrder.buyer
+    ? { id: mlOrder.buyer.id, nickname: mlOrder.buyer.nickname, email: mlOrder.buyer.email }
+    : null;
+
   const { data: order } = await supabase
     .from("orders")
     .upsert(
@@ -247,6 +251,8 @@ async function upsertMLOrder(
         marketplace_fee_amt: totalFee,
         shipping_cost: mlOrder.shipping?.cost ?? 0,
         discount_amount: mlOrder.coupon?.amount ?? 0,
+        buyer_data: buyerData,
+        shipping_id: mlOrder.shipping?.id ? String(mlOrder.shipping.id) : null,
         marketplace_created_at: mlOrder.date_created,
         raw_data: mlOrder,
       },

@@ -215,6 +215,27 @@ async function handleMLOrder(
     { headers: { Authorization: `Bearer ${integration.access_token}` } }
   );
 
+  const buyer = mlOrder.buyer ?? {};
+
+  // 1. Upsert customer
+  const { data: customer } = await supabase
+    .from("customers")
+    .upsert(
+      {
+        organization_id: integration.organization_id,
+        marketplace: "mercado_livre",
+        marketplace_buyer_id: String(buyer.id),
+        name: `${buyer.first_name ?? ""} ${buyer.last_name ?? ""}`.trim(),
+        email: buyer.email,
+        phone: buyer.phone?.number,
+        city: buyer.billing_info?.city,
+        state: buyer.billing_info?.state_id,
+      },
+      { onConflict: "organization_id,marketplace,marketplace_buyer_id", ignoreDuplicates: false }
+    )
+    .select("id")
+    .single();
+
   const grossAmount = mlOrder.total_amount ?? 0;
   const totalFee = mlOrder.order_items?.reduce(
     (acc: number, item: any) => acc + (item.sale_fee ?? 0) * (item.quantity ?? 1),
@@ -225,16 +246,26 @@ async function handleMLOrder(
     ? { id: mlOrder.buyer.id, nickname: mlOrder.buyer.nickname, email: mlOrder.buyer.email }
     : null;
 
+  // Fulfillment type based on shipping
+  let fulfillmentType = "ml_coleta";
+  const shipping = mlOrder.shipping ?? {};
+  if (shipping.logistic_type === "fulfillment") fulfillmentType = "ml_full";
+  else if (shipping.logistic_type === "self_service") fulfillmentType = "ml_flex";
+
   const { data: order } = await supabase.from("orders").upsert(
     {
       organization_id: integration.organization_id,
       marketplace: "mercado_livre",
       marketplace_order_id: String(mlOrder.id),
       order_number: `ML-${mlOrder.id}`,
+      customer_id: customer?.id,
       status: mapMLStatus(mlOrder.status),
+      fulfillment: fulfillmentType,
       gross_amount: grossAmount,
+      marketplace_fee_pct: grossAmount > 0 ? (totalFee / grossAmount) * 100 : 0,
       marketplace_fee_amt: totalFee,
-      marketplace_fee_percent: grossAmount > 0 ? (totalFee / grossAmount) * 100 : 0,
+      shipping_cost: mlOrder.shipping?.cost ?? 0,
+      discount_amount: mlOrder.coupon?.amount ?? 0,
       buyer_data: buyerData,
       shipping_id: mlOrder.shipping?.id ? String(mlOrder.shipping.id) : null,
       marketplace_created_at: mlOrder.date_created,
@@ -243,8 +274,24 @@ async function handleMLOrder(
     { onConflict: "organization_id,marketplace,marketplace_order_id", ignoreDuplicates: false }
   ).select("id, status").single();
 
-  // Baixa automática de estoque ao aprovar pedido
-  if (order && mlOrder.status === "paid") {
+  if (!order) return;
+
+  // 2. Sync order items
+  await supabase.from("order_items").delete().eq("order_id", order.id);
+  const itemsToInsert = (mlOrder.order_items ?? []).map((item: any) => ({
+    order_id: order.id,
+    organization_id: integration.organization_id,
+    product_name: item.item?.title ?? "",
+    sku: item.item?.seller_sku || item.item?.seller_custom_field || null,
+    quantity: item.quantity ?? 1,
+    unit_price: item.unit_price ?? 0,
+  }));
+  if (itemsToInsert.length > 0) {
+    await supabase.from("order_items").insert(itemsToInsert);
+  }
+
+  // 3. Baixa automática de estoque ao aprovar pedido
+  if (mlOrder.status === "paid") {
     for (const item of mlOrder.order_items ?? []) {
       const mlItemId = item.item?.id;
       const qty = item.quantity ?? 1;
@@ -561,8 +608,6 @@ async function handleNSWebhook(body: Record<string, any>, supabase: ReturnType<t
         console.error(`[webhook] NS order ${orderId} error:`, err);
       }
     }
-  }
-
   }
 }
 
