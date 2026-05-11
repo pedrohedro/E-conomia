@@ -557,19 +557,19 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           Geral
         </button>
-        <button data-tab="mercado_livre" class="tab-btn">
+        <button data-tab="mercado_livre" class="tab-btn" data-mp="mercado_livre">
           <img src="/assets/logos/mercado-livre.png" alt="ML">
           ML
         </button>
-        <button data-tab="amazon" class="tab-btn">
+        <button data-tab="amazon" class="tab-btn" data-mp="amazon">
           <img src="/assets/logos/amazon.png" alt="Amazon">
           Amazon
         </button>
-        <button data-tab="shopee" class="tab-btn">
+        <button data-tab="shopee" class="tab-btn" data-mp="shopee">
           <img src="/assets/logos/shopee.png" alt="Shopee">
           Shopee
         </button>
-        <button data-tab="nuvemshop" class="tab-btn">
+        <button data-tab="nuvemshop" class="tab-btn" data-mp="nuvemshop">
           <img src="/assets/logos/nuvemshop.png" alt="Nuvemshop">
           Nuvemshop
         </button>
@@ -671,9 +671,9 @@
         <div class="empty-state-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         </div>
-        <p class="empty-state-title">Nenhum pedido encontrado</p>
-        <p class="empty-state-desc">Conecte um marketplace para sincronizar seus pedidos.</p>
-        <a href="index.html" class="empty-state-link">Conectar Marketplace</a>
+        <p id="empty-state-title" class="empty-state-title">Nenhum pedido encontrado</p>
+        <p id="empty-state-desc" class="empty-state-desc">Conecte um marketplace para sincronizar seus pedidos.</p>
+        <a id="empty-state-link" href="index.html" class="empty-state-link">Conectar Marketplace</a>
       </div>
     </div>
 
@@ -750,7 +750,7 @@
 
 <script type="module">
   import { requireAuth } from './js/auth-guard.js';
-  import { fetchRecentOrders, formatCurrency } from './js/api.js';
+  import { fetchRecentOrders, formatCurrency, fetchActiveIntegrations } from './js/api.js';
   import { initThemeToggle } from './js/theme.js';
   import { initSidebar } from './js/sidebar-component.js';
   import { supabase } from './js/supabase-client.js';
@@ -958,7 +958,9 @@
 
   let allOrders = [];
   let currentTab = 'geral';
+  let currentPeriod = 'today';
   let searchQuery = '';
+  let activeIntegrations = [];
 
     function getFilteredOrders() {
     let filtered = allOrders;
@@ -1011,6 +1013,24 @@
       tbody.innerHTML = '';
       emptyState.style.display = 'flex';
       countBadge.textContent = '';
+      
+      const hasAnyIntegration = activeIntegrations.length > 0;
+      const titleEl = document.getElementById('empty-state-title');
+      const descEl = document.getElementById('empty-state-desc');
+      const linkEl = document.getElementById('empty-state-link');
+
+      if (!hasAnyIntegration) {
+        titleEl.textContent = 'Nenhuma integração ativa';
+        descEl.textContent = 'Conecte um marketplace para começar a receber pedidos.';
+        linkEl.style.display = 'inline-flex';
+      } else {
+        const tabLabel = currentTab === 'geral' ? '' : (MARKETPLACE_CONFIG[currentTab]?.label || currentTab);
+        titleEl.textContent = 'Nenhum pedido encontrado';
+        descEl.textContent = currentTab === 'geral' 
+          ? 'Não encontramos pedidos nos períodos selecionados para suas integrações.'
+          : `Não há pedidos recentes para ${tabLabel} neste período.`;
+        linkEl.style.display = 'none';
+      }
     } else {
       emptyState.style.display = 'none';
       tbody.innerHTML = filtered.map(buildOrderRow).join('');
@@ -1294,11 +1314,24 @@
       });
     });
 
-    // Fetch orders
+    // Fetch integrations and orders
     try {
-      allOrders = await fetchRecentOrders(orgId, 50);
+      [activeIntegrations, allOrders] = await Promise.all([
+        fetchActiveIntegrations(orgId),
+        fetchRecentOrders(orgId, 100)
+      ]);
+      
+      // Update Tab styles based on integration
+      const activeMps = activeIntegrations.map(i => i.marketplace);
+      document.querySelectorAll('.tab-btn[data-mp]').forEach(btn => {
+        const mp = btn.dataset.mp;
+        if (!activeMps.includes(mp)) {
+          btn.style.opacity = '0.4';
+          btn.title = 'Marketplace não conectado';
+        }
+      });
     } catch (err) {
-      console.error('Erro ao buscar pedidos:', err);
+      console.error('Erro ao buscar dados iniciais:', err);
       allOrders = [];
     }
 
