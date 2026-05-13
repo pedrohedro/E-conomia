@@ -26,31 +26,31 @@ func New(pool *pgxpool.Pool) *Handler {
 
 // DashboardData holds all data needed to render the dashboard page.
 type DashboardData struct {
-	PageTitle      string
-	UserEmail      string
-	UserInitials   string
-	OrgName        string
-	KPIs           DashboardKPIs
-	ChartData      []float64
-	StockAlerts    []ProductAlert
-	Integrations   []IntegrationInfo
+	PageTitle    string
+	UserEmail    string
+	UserInitials string
+	OrgName      string
+	KPIs         DashboardKPIs
+	ChartData    []float64
+	StockAlerts  []ProductAlert
+	Integrations []IntegrationInfo
 }
 
 type DashboardKPIs struct {
-	Revenue      string
-	RevenueRaw   float64
-	Variation    string
-	Fees         string
-	FeePercent   string
-	OrdersCount  int
+	Revenue     string
+	RevenueRaw  float64
+	Variation   string
+	Fees        string
+	FeePercent  string
+	OrdersCount int
 }
 
 type ProductAlert struct {
-	Name         string
-	SKU          string
-	TotalStock   int
-	StockAlert   string
-	MarginPct    float64
+	Name       string
+	SKU        string
+	TotalStock int
+	StockAlert string
+	MarginPct  float64
 }
 
 type IntegrationInfo struct {

@@ -74,11 +74,11 @@ func (p *Partial) StockAlerts(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	type Alert struct {
-		Name       string
-		SKU        string
-		Stock      int
-		Alert      string
-		MarginPct  float64
+		Name      string
+		SKU       string
+		Stock     int
+		Alert     string
+		MarginPct float64
 	}
 	var alerts []Alert
 	for rows.Next() {

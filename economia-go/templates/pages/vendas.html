@@ -1,0 +1,14 @@
+{{define "content"}}
+<div class="header">
+  <div>
+    <h1 class="title">Relatório de Vendas</h1>
+    <p class="subtitle">Análise financeira de todos os pedidos finalizados.</p>
+  </div>
+</div>
+
+<div class="card" style="padding: 24px;">
+  <div id="vendas-report" hx-get="/partials/vendas-report" hx-trigger="load">
+    <div style="text-align: center; padding: 48px; color: var(--muted-foreground);">Calculando totais...</div>
+  </div>
+</div>
+{{end}}

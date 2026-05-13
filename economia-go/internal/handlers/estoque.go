@@ -18,17 +18,17 @@ type EstoqueData struct {
 }
 
 type ProductRow struct {
-	ID           string
-	Name         string
-	SKU          string
-	SalePrice    float64
-	CostPrice    float64
-	MarginPct    float64
-	TotalStock   int
-	MinStock     int
-	StockAlert   string
-	IsActive     bool
-	Channels     []ChannelRow
+	ID         string
+	Name       string
+	SKU        string
+	SalePrice  float64
+	CostPrice  float64
+	MarginPct  float64
+	TotalStock int
+	MinStock   int
+	StockAlert string
+	IsActive   bool
+	Channels   []ChannelRow
 }
 
 type ChannelRow struct {

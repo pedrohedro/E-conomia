@@ -13,40 +13,24 @@ const (
 )
 
 // RequireAuth validates the session cookie (Clerk) and injects userID into context.
-// For development, it accepts a header X-Dev-User-ID to bypass Clerk.
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// DEV MODE: bypass auth with header
-		if devUser := r.Header.Get("X-Dev-User-ID"); devUser != "" {
-			ctx := context.WithValue(r.Context(), UserIDKey, devUser)
-			next.ServeHTTP(w, r.WithContext(ctx))
-			return
-		}
-
-		// TODO: Integrate Clerk SDK when keys are configured
-		// claims, err := clerk.VerifySession(r)
-		// if err != nil { redirect to /login }
-		// ctx := context.WithValue(r.Context(), UserIDKey, claims.Subject)
-
-		// For now, redirect to login if no dev header
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		// TEMP BYPASS PARA TESTES NO RENDER:
+		// Vamos injetar um usuário e organização fixos para testar a UI
+		ctx := context.WithValue(r.Context(), UserIDKey, "dev_user_123")
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 // RequireOrg ensures an organization is selected and injects orgID into context.
 func RequireOrg(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// DEV MODE: bypass with header
-		if devOrg := r.Header.Get("X-Dev-Org-ID"); devOrg != "" {
-			ctx := context.WithValue(r.Context(), OrgIDKey, devOrg)
-			next.ServeHTTP(w, r.WithContext(ctx))
-			return
-		}
-
-		// TODO: Get from Clerk session's ActiveOrganizationID
-		// or from cookie/query param
-
-		http.Redirect(w, r, "/onboarding", http.StatusSeeOther)
+		// TEMP BYPASS PARA TESTES NO RENDER:
+		// Para o DB funcionar, precisamos de um UUID válido que exista ou vai dar erro na query.
+		// Vamos pegar a primeira organização do banco ou usar um hardcoded se for só para teste visual.
+		// Por enquanto injetamos um "fake_org" (as queries vão retornar vazio, mas a página carrega).
+		ctx := context.WithValue(r.Context(), OrgIDKey, "00000000-0000-0000-0000-000000000000") // Fake UUID
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

@@ -1,0 +1,22 @@
+{{define "vendas-report"}}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+  <div class="kpi-card" style="border-left: 4px solid var(--brand)">
+    <p class="kpi-label">Faturamento Bruto</p>
+    <p class="kpi-value">R$ {{printf "%.2f" .Gross}}</p>
+    <p class="kpi-sub">Total de {{.Count}} pedidos</p>
+  </div>
+  <div class="kpi-card" style="border-left: 4px solid var(--danger)">
+    <p class="kpi-label">Taxas dos Marketplaces</p>
+    <p class="kpi-value">R$ {{printf "%.2f" .Fees}}</p>
+  </div>
+  <div class="kpi-card" style="border-left: 4px solid var(--warn)">
+    <p class="kpi-label">Custo de Frete</p>
+    <p class="kpi-value">R$ {{printf "%.2f" .Shipping}}</p>
+  </div>
+  <div class="kpi-card" style="border-left: 4px solid var(--success)">
+    <p class="kpi-label">Valor Líquido</p>
+    <p class="kpi-value">R$ {{printf "%.2f" .Net}}</p>
+    <p class="kpi-sub">A receber</p>
+  </div>
+</div>
+{{end}}

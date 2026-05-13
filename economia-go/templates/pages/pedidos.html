@@ -1,0 +1,45 @@
+{{define "content"}}
+<div class="header">
+  <div>
+    <h1 class="title">Pedidos</h1>
+    <p class="subtitle">Gerencie todos os seus pedidos dos marketplaces.</p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" onclick="alert('Funcionalidade de Nova NFe em breve')">Emitir NFe em Massa</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="filters" style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; gap: 16px;">
+    <select name="status" class="input" hx-get="/partials/pedidos-table" hx-target="#pedidos-tbody" hx-trigger="change">
+      <option value="all">Todos os Status</option>
+      <option value="pending">Pendentes</option>
+      <option value="approved">Aprovados</option>
+      <option value="preparing">Em Preparação</option>
+      <option value="packed">Embalados</option>
+      <option value="shipped">Enviados</option>
+      <option value="delivered">Entregues</option>
+      <option value="cancelled">Cancelados</option>
+    </select>
+  </div>
+
+  <table class="table" style="width: 100%;">
+    <thead>
+      <tr>
+        <th>Pedido</th>
+        <th>Canal</th>
+        <th>Status</th>
+        <th>Logística</th>
+        <th>Valor Líquido</th>
+        <th>NFe</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody id="pedidos-tbody" hx-get="/partials/pedidos-table" hx-trigger="load">
+      <tr>
+        <td colspan="7" style="text-align: center; padding: 48px;">Carregando pedidos...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{{end}}

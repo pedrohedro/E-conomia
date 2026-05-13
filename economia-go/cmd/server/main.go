@@ -73,12 +73,21 @@ func main() {
 		})
 		r.Get("/dashboard", h.Dashboard)
 		r.Get("/estoque", h.Estoque)
+		r.Get("/pedidos", h.PedidosPage)
+		r.Get("/vendas", h.VendasPage)
 
 		// HTMX partials
 		r.Get("/partials/dashboard/kpis", p.DashboardKPIs)
 		r.Get("/partials/stock-alerts", p.StockAlerts)
 		r.Get("/partials/estoque/table", p.EstoqueTable)
+		r.Get("/partials/pedidos-table", h.PedidosTable)
+		r.Get("/partials/vendas-report", h.VendasReport)
 	})
+
+	// Webhooks (Public)
+	wh := handlers.NewWebhookHandler(pool)
+	r.Post("/webhooks/olist", wh.OlistReceiver)
+	r.Post("/webhooks/omie", wh.OmieReceiver)
 
 	// Start server
 	srv := &http.Server{
