@@ -57,7 +57,7 @@ func (h *Handler) Estoque(w http.ResponseWriter, r *http.Request) {
 		TotalCount: len(products),
 	}
 
-	if err := h.tmpls.ExecuteTemplate(w, "estoque.html", data); err != nil {
+	if err := h.pages["estoque"].ExecuteTemplate(w, "base", data); err != nil {
 		log.Printf("Template error: %v", err)
 		http.Error(w, "Internal Server Error", 500)
 	}

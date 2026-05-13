@@ -13,20 +13,12 @@ import (
 
 // PedidosPage renderiza a página inteira de pedidos
 func (h *Handler) PedidosPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles(
-		filepath.Join("templates", "layouts", "base.html"),
-		filepath.Join("templates", "pages", "pedidos.html"),
-	)
-	if err != nil {
-		http.Error(w, "Erro ao carregar template", http.StatusInternalServerError)
-		return
-	}
 
 	data := map[string]interface{}{
 		"Title": "Pedidos - E-conomia",
 	}
 
-	if err := tmpl.ExecuteTemplate(w, "base.html", data); err != nil {
+	if err := h.pages["pedidos"].ExecuteTemplate(w, "base", data); err != nil {
 		log.Printf("Error executing template: %v", err)
 	}
 }

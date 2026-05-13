@@ -16,12 +16,19 @@ import (
 
 type Handler struct {
 	db    *pgxpool.Pool
-	tmpls *template.Template
+	pages map[string]*template.Template
 }
 
 func New(pool *pgxpool.Pool) *Handler {
-	tmpls := template.Must(template.ParseGlob(filepath.Join("templates", "**", "*.html")))
-	return &Handler{db: pool, tmpls: tmpls}
+	pages := make(map[string]*template.Template)
+	baseLayout := filepath.Join("templates", "layouts", "base.html")
+
+	pages["dashboard"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "dashboard.html")))
+	pages["estoque"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "estoque.html")))
+	pages["pedidos"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "pedidos.html")))
+	pages["vendas"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "vendas.html")))
+
+	return &Handler{db: pool, pages: pages}
 }
 
 // DashboardData holds all data needed to render the dashboard page.
@@ -75,7 +82,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 		Integrations: integrations,
 	}
 
-	if err := h.tmpls.ExecuteTemplate(w, "dashboard.html", data); err != nil {
+	if err := h.pages["dashboard"].ExecuteTemplate(w, "base", data); err != nil {
 		log.Printf("Template error: %v", err)
 		http.Error(w, "Internal Server Error", 500)
 	}

@@ -12,20 +12,12 @@ import (
 
 // VendasPage renderiza a página inteira de relatórios de vendas
 func (h *Handler) VendasPage(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles(
-		filepath.Join("templates", "layouts", "base.html"),
-		filepath.Join("templates", "pages", "vendas.html"),
-	)
-	if err != nil {
-		http.Error(w, "Erro ao carregar template", http.StatusInternalServerError)
-		return
-	}
 
 	data := map[string]interface{}{
 		"Title": "Relatório de Vendas - E-conomia",
 	}
 
-	if err := tmpl.ExecuteTemplate(w, "base.html", data); err != nil {
+	if err := h.pages["vendas"].ExecuteTemplate(w, "base", data); err != nil {
 		log.Printf("Error executing template: %v", err)
 	}
 }
