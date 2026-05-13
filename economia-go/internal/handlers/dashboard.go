@@ -27,6 +27,8 @@ func New(pool *pgxpool.Pool) *Handler {
 	pages["estoque"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "estoque.html")))
 	pages["pedidos"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "pedidos.html")))
 	pages["vendas"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "vendas.html")))
+	pages["marketplaces"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "marketplaces.html")))
+	pages["contabil"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "contabil.html")))
 
 	return &Handler{db: pool, pages: pages}
 }

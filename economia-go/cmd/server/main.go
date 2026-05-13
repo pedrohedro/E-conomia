@@ -75,6 +75,8 @@ func main() {
 		r.Get("/estoque", h.Estoque)
 		r.Get("/pedidos", h.PedidosPage)
 		r.Get("/vendas", h.VendasPage)
+		r.Get("/marketplaces", h.MarketplacesPage)
+		r.Get("/contabil", h.ContabilPage)
 
 		// HTMX partials
 		r.Get("/partials/dashboard/kpis", p.DashboardKPIs)
