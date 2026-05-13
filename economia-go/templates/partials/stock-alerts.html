@@ -1,0 +1,30 @@
+{{define "stock-alerts"}}
+<table class="table">
+  <thead>
+    <tr><th>Produto</th><th>Estoque</th><th>Margem</th></tr>
+  </thead>
+  <tbody>
+    {{range .}}
+    <tr>
+      <td>
+        <div style="font-size:13px;font-weight:500;color:var(--foreground)">{{.Name}}</div>
+        <div style="font-size:11.5px;color:var(--muted-foreground)">{{.SKU}}</div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="status-dot {{if eq .Stock 0}}status-crit{{else if ne .Alert "normal"}}status-warn{{else}}status-ok{{end}}"></span>
+          <span style="font-size:13px;font-weight:600">{{.Stock}}</span>
+        </div>
+      </td>
+      <td>
+        <span class="badge {{if ge .MarginPct 25.0}}badge-success{{else if ge .MarginPct 15.0}}badge-brand{{else}}badge-danger{{end}}">
+          {{printf "%.1f" .MarginPct}}%
+        </span>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted-foreground)">Sem alertas.</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}

@@ -1,0 +1,15 @@
+{{define "kpis"}}
+<div class="kpi-card">
+  <p class="kpi-label">Faturamento bruto</p>
+  <p class="kpi-value">{{.Revenue}}</p>
+</div>
+<div class="kpi-card">
+  <p class="kpi-label">Taxas de marketplace</p>
+  <p class="kpi-value">{{.Fees}}</p>
+</div>
+<div class="kpi-card">
+  <p class="kpi-label">Pedidos</p>
+  <p class="kpi-value">{{.OrdersCount}} pedidos</p>
+  <p class="kpi-sub">Mês atual</p>
+</div>
+{{end}}

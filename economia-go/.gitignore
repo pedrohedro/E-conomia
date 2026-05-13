@@ -1,0 +1,15 @@
+# Dependencies
+/bin/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp

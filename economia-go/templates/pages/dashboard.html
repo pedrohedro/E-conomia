@@ -1,0 +1,181 @@
+{{template "base" .}}
+
+{{define "head"}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .mp-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 18px; }
+  .mp-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: var(--radius);
+    font-size: 12.5px; font-weight: 500;
+    background: var(--secondary); color: var(--muted-foreground);
+    border: 1px solid var(--border); cursor: pointer;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+  }
+  .mp-tab:hover { background: var(--accent); color: var(--foreground); }
+  .mp-tab.active { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
+  .mp-tab img { height: 16px; width: auto; max-width: 32px; object-fit: contain; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 18px; }
+  @media(max-width:900px){ .kpi-grid{ grid-template-columns: repeat(2,1fr); } }
+  @media(max-width:600px){ .kpi-grid{ grid-template-columns: 1fr; } }
+  .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+  .kpi-label { font-size: 11.5px; color: var(--muted-foreground); margin: 0 0 6px; }
+  .kpi-value { font-size: 24px; font-weight: 700; color: var(--foreground); margin: 0; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--muted-foreground); margin: 6px 0 0; }
+  .chart-canvas-wrap { height: 220px; position: relative; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .status-ok { background: var(--success); }
+  .status-warn { background: var(--warning); }
+  .status-crit { background: var(--destructive); }
+</style>
+{{end}}
+
+{{define "content"}}
+<!-- Marketplace Tabs -->
+<div class="mp-tabs">
+  <button class="mp-tab active"
+          hx-get="/partials/dashboard/kpis"
+          hx-target="#kpi-grid"
+          hx-swap="innerHTML">Geral</button>
+  <button class="mp-tab"
+          hx-get="/partials/dashboard/kpis?mp=mercado_livre"
+          hx-target="#kpi-grid"
+          hx-swap="innerHTML">
+    <img src="/static/assets/logos/mercado-livre.png" alt="">Mercado Livre
+  </button>
+  <button class="mp-tab"
+          hx-get="/partials/dashboard/kpis?mp=amazon"
+          hx-target="#kpi-grid"
+          hx-swap="innerHTML">
+    <img src="/static/assets/logos/amazon.png" alt="">Amazon
+  </button>
+  <button class="mp-tab"
+          hx-get="/partials/dashboard/kpis?mp=shopee"
+          hx-target="#kpi-grid"
+          hx-swap="innerHTML">
+    <img src="/static/assets/logos/shopee.png" alt="">Shopee
+  </button>
+</div>
+
+<!-- KPIs -->
+<div id="kpi-grid" class="kpi-grid">
+  <div class="kpi-card">
+    <p class="kpi-label">Faturamento bruto</p>
+    <p class="kpi-value">{{.KPIs.Revenue}}</p>
+    <p class="kpi-sub">{{.KPIs.Variation}}</p>
+  </div>
+  <div class="kpi-card">
+    <p class="kpi-label">Taxas de marketplace</p>
+    <p class="kpi-value">{{.KPIs.Fees}}</p>
+    <p class="kpi-sub">{{.KPIs.FeePercent}}</p>
+  </div>
+  <div class="kpi-card">
+    <p class="kpi-label">Pedidos</p>
+    <p class="kpi-value">{{.KPIs.OrdersCount}} pedidos</p>
+    <p class="kpi-sub">Mês atual</p>
+  </div>
+</div>
+
+<!-- Chart + Stock Alerts -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Faturamento — últimos 12 meses</h2>
+    </div>
+    <div class="card-body">
+      <div class="chart-canvas-wrap">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Estoque em alerta</h2>
+      <a href="/estoque" class="btn btn-ghost" style="font-size:12px;height:28px;padding:0 10px;">Ver tudo</a>
+    </div>
+    <div class="table-wrapper"
+         hx-get="/partials/stock-alerts"
+         hx-trigger="load, every 30s"
+         hx-swap="innerHTML">
+      <table class="table">
+        <thead>
+          <tr><th>Produto</th><th>Estoque</th><th>Margem</th></tr>
+        </thead>
+        <tbody>
+          {{range .StockAlerts}}
+          <tr>
+            <td>
+              <div style="font-size:13px;font-weight:500;color:var(--foreground)">{{.Name}}</div>
+              <div style="font-size:11.5px;color:var(--muted-foreground)">{{.SKU}}</div>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="status-dot {{if eq .TotalStock 0}}status-crit{{else if ne .StockAlert "normal"}}status-warn{{else}}status-ok{{end}}"></span>
+                <span style="font-size:13px;font-weight:600">{{.TotalStock}}</span>
+                {{if ne .StockAlert "normal"}}
+                <span class="badge badge-danger" style="font-size:10px">Baixo</span>
+                {{end}}
+              </div>
+            </td>
+            <td>
+              <span class="badge {{if ge .MarginPct 25.0}}badge-success{{else if ge .MarginPct 15.0}}badge-brand{{else}}badge-danger{{end}}">
+                {{printf "%.1f" .MarginPct}}%
+              </span>
+            </td>
+          </tr>
+          {{else}}
+          <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--muted-foreground);font-size:12.5px;">Nenhum produto cadastrado.</td></tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script>
+  const chartData = [{{range $i, $v := .ChartData}}{{if $i}},{{end}}{{$v}}{{end}}];
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  const isDark = document.documentElement.classList.contains('dark');
+  const color = '#0891b2';
+  const gradient = ctx.createLinearGradient(0, 0, 0, 220);
+  gradient.addColorStop(0, color + '33');
+  gradient.addColorStop(1, color + '00');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+      datasets: [{
+        label: 'Faturamento (k)',
+        data: chartData,
+        borderColor: color,
+        backgroundColor: gradient,
+        borderWidth: 2,
+        pointRadius: 3,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } }, border: { display: false } },
+        y: { ticks: { callback: v => v + 'k', font: { size: 11 } }, border: { display: false } }
+      }
+    }
+  });
+
+  // Tab active state
+  document.querySelectorAll('.mp-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.mp-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+</script>
+{{end}}

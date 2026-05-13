@@ -1,0 +1,105 @@
+{{template "base" .}}
+
+{{define "head"}}
+<style>
+  .filter-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .stock-summary {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 18px;
+  }
+  @media(max-width:900px){ .stock-summary{ grid-template-columns: repeat(2,1fr); } }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .status-ok { background: var(--success); }
+  .status-warn { background: var(--warning); }
+  .status-crit { background: var(--destructive); }
+  .channel-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .channel-badge {
+    font-size: 10px; padding: 1px 6px; border-radius: 4px;
+    background: var(--secondary); color: var(--muted-foreground);
+  }
+</style>
+{{end}}
+
+{{define "content"}}
+<!-- Filter Bar -->
+<div class="filter-bar">
+  <input class="input" type="search" placeholder="Buscar por nome ou SKU..."
+         style="width:280px;height:34px;"
+         name="search" value="{{.Search}}"
+         hx-get="/partials/estoque/table"
+         hx-trigger="keyup changed delay:300ms"
+         hx-target="#stock-table-body"
+         hx-include="[name='filter']">
+
+  <select class="select" name="filter"
+          hx-get="/partials/estoque/table"
+          hx-trigger="change"
+          hx-target="#stock-table-body"
+          hx-include="[name='search']">
+    <option value="all" {{if eq .Filter "all"}}selected{{end}}>Todos</option>
+    <option value="critical" {{if eq .Filter "critical"}}selected{{end}}>Em alerta</option>
+    <option value="ok" {{if eq .Filter "ok"}}selected{{end}}>Normal</option>
+    <option value="empty" {{if eq .Filter "empty"}}selected{{end}}>Zerado</option>
+  </select>
+
+  <span class="badge badge-neutral">{{.TotalCount}} produtos</span>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Preço</th>
+          <th>Estoque</th>
+          <th>Margem</th>
+          <th>Canais</th>
+        </tr>
+      </thead>
+      <tbody id="stock-table-body">
+        {{range .Products}}
+        <tr>
+          <td>
+            <div style="font-size:13px;font-weight:500;color:var(--foreground)">{{.Name}}</div>
+            <div style="font-size:11.5px;color:var(--muted-foreground)">{{.SKU}}</div>
+          </td>
+          <td style="font-size:13px">R$ {{printf "%.2f" .SalePrice}}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span class="status-dot {{if eq .TotalStock 0}}status-crit{{else if ne .StockAlert "normal"}}status-warn{{else}}status-ok{{end}}"></span>
+              <span style="font-size:13px;font-weight:600">{{.TotalStock}}</span>
+              {{if ne .StockAlert "normal"}}
+              <span class="badge badge-danger" style="font-size:10px">{{.StockAlert}}</span>
+              {{end}}
+            </div>
+          </td>
+          <td>
+            <span class="badge {{if ge .MarginPct 25.0}}badge-success{{else if ge .MarginPct 15.0}}badge-brand{{else}}badge-danger{{end}}">
+              {{printf "%.1f" .MarginPct}}%
+            </span>
+          </td>
+          <td>
+            <div class="channel-badges">
+              {{range .Channels}}
+              <span class="channel-badge">{{.Channel}}: {{.Available}}</span>
+              {{end}}
+            </div>
+          </td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="5" class="empty-state" style="padding:48px;text-align:center;">
+            <p class="empty-state-title">Nenhum produto encontrado</p>
+            <p class="empty-state-desc">Ajuste os filtros ou cadastre novos produtos.</p>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{end}}

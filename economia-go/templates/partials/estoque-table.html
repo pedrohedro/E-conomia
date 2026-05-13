@@ -1,0 +1,28 @@
+{{define "estoque-table"}}
+{{range .}}
+<tr>
+  <td>
+    <div style="font-size:13px;font-weight:500;color:var(--foreground)">{{.Name}}</div>
+    <div style="font-size:11.5px;color:var(--muted-foreground)">{{.SKU}}</div>
+  </td>
+  <td style="font-size:13px">R$ {{printf "%.2f" .Price}}</td>
+  <td>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="status-dot {{if eq .Stock 0}}status-crit{{else if ne .Alert "normal"}}status-warn{{else}}status-ok{{end}}"></span>
+      <span style="font-size:13px;font-weight:600">{{.Stock}}</span>
+    </div>
+  </td>
+  <td>
+    <span class="badge {{if ge .MarginPct 25.0}}badge-success{{else if ge .MarginPct 15.0}}badge-brand{{else}}badge-danger{{end}}">
+      {{printf "%.1f" .MarginPct}}%
+    </span>
+  </td>
+</tr>
+{{else}}
+<tr>
+  <td colspan="4" style="text-align:center;padding:48px;color:var(--muted-foreground)">
+    Nenhum produto encontrado com esses filtros.
+  </td>
+</tr>
+{{end}}
+{{end}}
