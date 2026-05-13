@@ -62,7 +62,10 @@ func main() {
 	})
 
 	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-		clerkKey := os.Getenv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY")
+		clerkKey := cfg.ClerkPublishKey
+		if clerkKey == "" {
+			clerkKey = os.Getenv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY")
+		}
 
 		tmpl, err := template.ParseFiles("templates/pages/login.html")
 		if err != nil {
