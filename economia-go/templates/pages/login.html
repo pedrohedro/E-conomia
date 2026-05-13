@@ -24,11 +24,17 @@
   <!-- Script para carregar o Clerk -->
   <script>
     const clerkPubKey = '{{.ClerkKey}}';
+    let frontendApi = clerkPubKey.replace('pk_test_', '').replace('pk_live_', '').split('$')[0];
+    try {
+      frontendApi = atob(frontendApi);
+    } catch (e) {
+      console.error("Failed to decode Clerk key", e);
+    }
     
     const script = document.createElement('script');
     script.setAttribute('data-clerk-publishable-key', clerkPubKey);
     script.async = true;
-    script.src = `https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`;
+    script.src = `https://${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`;
     script.crossOrigin = 'anonymous';
     script.addEventListener('load', async function () {
       await window.Clerk.load();
