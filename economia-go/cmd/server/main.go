@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -52,11 +53,27 @@ func main() {
 		w.Write([]byte("ok"))
 	})
 
-	// Public routes
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
+	})
+
+	r.Get("/home", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/landing.html")
+	})
+
 	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Clerk hosted login page redirect
+		clerkKey := os.Getenv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY")
+
+		tmpl, err := template.ParseFiles("templates/pages/login.html")
+		if err != nil {
+			http.Error(w, "Error loading login template", 500)
+			return
+		}
+
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<html><body><h1>Login — E-conomia</h1><p>Clerk integration pending</p></body></html>`))
+		tmpl.Execute(w, map[string]string{
+			"ClerkKey": clerkKey,
+		})
 	})
 
 	// Authenticated routes
@@ -68,9 +85,6 @@ func main() {
 		r.Use(middleware.RequireOrg)
 
 		// Full page renders
-		r.Get("/", func(w http.ResponseWriter, req *http.Request) {
-			http.Redirect(w, req, "/dashboard", http.StatusSeeOther)
-		})
 		r.Get("/dashboard", h.Dashboard)
 		r.Get("/estoque", h.Estoque)
 		r.Get("/pedidos", h.PedidosPage)
