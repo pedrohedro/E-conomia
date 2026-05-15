@@ -25,6 +25,7 @@
   <script>
     const clerkPubKey = '{{.ClerkKey}}';
     let frontendApi = clerkPubKey.replace('pk_test_', '').replace('pk_live_', '');
+    while (frontendApi.length % 4 !== 0) frontendApi += '=';
     try {
       frontendApi = atob(frontendApi).split('$')[0];
     } catch (e) {
