@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 
@@ -79,13 +80,20 @@ func main() {
 		})
 	})
 
+	// Initialize Clerk SDK
+	if cfg.ClerkSecretKey == "" {
+		log.Println("WARNING: CLERK_SECRET_KEY is not set. Auth verification will fail.")
+	} else {
+		clerk.SetKey(cfg.ClerkSecretKey)
+	}
+
 	// Authenticated routes
 	h := handlers.New(pool)
 	p := partials.New(pool)
 
 	r.Group(func(r chi.Router) {
-		r.Use(middleware.RequireAuth)
-		r.Use(middleware.RequireOrg)
+		r.Use(middleware.RequireAuth(pool))
+		r.Use(middleware.RequireOrg(pool))
 
 		// Full page renders
 		r.Get("/dashboard", h.Dashboard)
