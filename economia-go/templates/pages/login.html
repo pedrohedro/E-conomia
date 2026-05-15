@@ -24,9 +24,9 @@
   <!-- Script para carregar o Clerk -->
   <script>
     const clerkPubKey = '{{.ClerkKey}}';
-    let frontendApi = clerkPubKey.replace('pk_test_', '').replace('pk_live_', '').split('$')[0];
+    let frontendApi = clerkPubKey.replace('pk_test_', '').replace('pk_live_', '');
     try {
-      frontendApi = atob(frontendApi);
+      frontendApi = atob(frontendApi).split('$')[0];
     } catch (e) {
       console.error("Failed to decode Clerk key", e);
     }
