@@ -47,7 +47,13 @@
         window.location.href = '/dashboard';
       } else {
         // Monta o componente de login do Clerk
-        window.Clerk.mountSignIn(appDiv);
+        window.Clerk.mountSignIn(appDiv, {
+          routing: "hash",
+          signInUrl: "/login",
+          signUpUrl: "/login",
+          forceRedirectUrl: "/dashboard",
+          fallbackRedirectUrl: "/dashboard"
+        });
       }
     });
     document.body.appendChild(script);
