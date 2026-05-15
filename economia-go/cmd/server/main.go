@@ -105,6 +105,9 @@ func main() {
 
 	// Webhooks (Public)
 	wh := handlers.NewWebhookHandler(pool)
+	clerkWh := handlers.NewClerkWebhookHandler(pool, cfg.ClerkWebhookSecret)
+	
+	r.Post("/webhooks/clerk", clerkWh.ServeHTTP)
 	r.Post("/webhooks/olist", wh.OlistReceiver)
 	r.Post("/webhooks/omie", wh.OmieReceiver)
 

@@ -7,6 +7,7 @@ type Config struct {
 	DatabaseURL       string
 	ClerkSecretKey    string
 	ClerkPublishKey   string
+	ClerkWebhookSecret string
 	EncryptionKey     string
 	MLClientID        string
 	MLClientSecret    string
@@ -22,6 +23,7 @@ func Load() *Config {
 		DatabaseURL:       getEnv("DATABASE_URL", "postgres://localhost:5432/economia?sslmode=disable"),
 		ClerkSecretKey:    getEnv("CLERK_SECRET_KEY", ""),
 		ClerkPublishKey:   getEnv("CLERK_PUBLISHABLE_KEY", ""),
+		ClerkWebhookSecret: getEnv("CLERK_WEBHOOK_SECRET", ""),
 		EncryptionKey:     getEnv("ENCRYPTION_KEY", "economia-dev-key-fallback"),
 		MLClientID:        getEnv("ML_CLIENT_ID", ""),
 		MLClientSecret:    getEnv("ML_CLIENT_SECRET", ""),
