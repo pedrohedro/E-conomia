@@ -15,7 +15,7 @@ import (
 func (h *Handler) PedidosPage(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{
-		"Title": "Pedidos - E-conomia",
+		"PageTitle": "Pedidos",
 	}
 
 	if err := h.pages["pedidos"].ExecuteTemplate(w, "base", data); err != nil {

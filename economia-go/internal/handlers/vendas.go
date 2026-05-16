@@ -14,7 +14,7 @@ import (
 func (h *Handler) VendasPage(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{
-		"Title": "Relatório de Vendas - E-conomia",
+		"PageTitle": "Vendas",
 	}
 
 	if err := h.pages["vendas"].ExecuteTemplate(w, "base", data); err != nil {

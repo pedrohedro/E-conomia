@@ -1,0 +1,181 @@
+{{define "head"}}
+<style>
+  .settings-section { margin-bottom: 32px; }
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--foreground); }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12.5px; font-weight: 500; color: var(--foreground); display: block; margin-bottom: 6px; }
+  .integration-card {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 12px;
+  }
+  .integration-info { display: flex; align-items: center; gap: 14px; }
+  .integration-logo {
+    width: 42px; height: 42px; border-radius: 8px; background: var(--secondary);
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;
+    color: var(--brand); overflow: hidden; border: 1px solid var(--border);
+  }
+  .integration-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .integration-name { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+  .integration-meta { font-size: 12px; color: var(--muted-foreground); margin: 0; }
+  .integration-actions { display: flex; align-items: center; gap: 10px; }
+</style>
+{{end}}
+
+{{define "content"}}
+<div id="settings-container">
+  <!-- Toast feedback area -->
+  <div id="settings-toast"></div>
+
+  <!-- Dados da Organização -->
+  <div class="settings-section">
+    <h2 class="section-title">Dados da Organização</h2>
+    <div class="card">
+      <form hx-post="/settings/org" hx-target="#settings-toast" class="card-body grid-2" style="gap: 20px;">
+        <div class="form-group">
+          <label class="form-label" for="org_name">Nome da Empresa</label>
+          <input class="input" type="text" id="org_name" name="name" value="{{.Organization.Name}}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="org_slug">Slug / Identificador Único</label>
+          <input class="input" type="text" id="org_slug" name="slug" value="{{.Organization.Slug}}" readonly style="background: var(--secondary); cursor: not-allowed;" title="O slug é único e não pode ser alterado diretamente">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="org_cnpj">CNPJ</label>
+          <input class="input" type="text" id="org_cnpj" name="cnpj" placeholder="00.000.000/0001-00" value="{{if .Organization.CNPJ}}{{.Organization.CNPJ}}{{end}}">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="tax_regime">Regime Tributário</label>
+          <select class="select" id="tax_regime" name="tax_regime">
+            <option value="simples_nacional" {{if eq .Organization.TaxRegime "simples_nacional"}}selected{{end}}>Simples Nacional</option>
+            <option value="lucro_presumido" {{if eq .Organization.TaxRegime "lucro_presumido"}}selected{{end}}>Lucro Presumido</option>
+            <option value="lucro_real" {{if eq .Organization.TaxRegime "lucro_real"}}selected{{end}}>Lucro Real</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="grid-column: 1 / -1; display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Salvar Alterações
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Canais de Venda e Marketplaces -->
+  <div class="settings-section">
+    <h2 class="section-title">Integrações de Marketplaces</h2>
+    
+    <!-- Mercado Livre -->
+    <div class="integration-card">
+      <div class="integration-info">
+        <div class="integration-logo" style="background: #FFF059; color: #2d3277;">ML</div>
+        <div>
+          <p class="integration-name">Mercado Livre</p>
+          <p class="integration-meta">
+            {{if .Integrations.mercado_livre}}
+              <span class="badge badge-success">Conectado</span>
+              {{if .Integrations.mercado_livre.SellerNickname}} — Vendedor: {{.Integrations.mercado_livre.SellerNickname}}{{end}}
+              {{if .Integrations.mercado_livre.LastSyncAt}} (Última sync: {{.Integrations.mercado_livre.LastSyncAt.Format "02/01 15:04"}}){{end}}
+            {{else}}
+              <span class="badge badge-neutral">Desconectado</span>
+              Sincronização bidirecional de estoque e pedidos em tempo real.
+            {{end}}
+          </p>
+        </div>
+      </div>
+      <div class="integration-actions">
+        {{if .Integrations.mercado_livre}}
+          <button hx-post="/settings/integrations/disconnect?mp=mercado_livre" hx-confirm="Tem certeza que deseja desconectar o Mercado Livre?" hx-target="#settings-container" class="btn btn-secondary" style="color: var(--destructive); border-color: color-mix(in srgb, var(--destructive) 30%, transparent);">Desconectar</button>
+          <a href="{{.MLAuthURL}}" class="btn btn-secondary">Reconectar</a>
+        {{else}}
+          <a href="{{.MLAuthURL}}" class="btn btn-primary" style="background: #2d3277; color: #ffffff;">Conectar Conta</a>
+        {{end}}
+      </div>
+    </div>
+
+    <!-- Amazon -->
+    <div class="integration-card">
+      <div class="integration-info">
+        <div class="integration-logo" style="background: #232f3e; color: #ff9900;">AMZ</div>
+        <div>
+          <p class="integration-name">Amazon Brasil</p>
+          <p class="integration-meta">
+            {{if .Integrations.amazon}}
+              <span class="badge badge-success">Conectado</span>
+            {{else}}
+              <span class="badge badge-neutral">Desconectado</span>
+              Sincronização FBA e DBA via SP-API.
+            {{end}}
+          </p>
+        </div>
+      </div>
+      <div class="integration-actions">
+        {{if .Integrations.amazon}}
+          <button hx-post="/settings/integrations/disconnect?mp=amazon" hx-target="#settings-container" class="btn btn-secondary">Desconectar</button>
+        {{else}}
+          <button class="btn btn-secondary" disabled title="Configuração via SP-API em breve">Em Breve</button>
+        {{end}}
+      </div>
+    </div>
+
+    <!-- Shopee -->
+    <div class="integration-card">
+      <div class="integration-info">
+        <div class="integration-logo" style="background: #ee4d2d; color: #ffffff;">SHP</div>
+        <div>
+          <p class="integration-name">Shopee</p>
+          <p class="integration-meta">
+            {{if .Integrations.shopee}}
+              <span class="badge badge-success">Conectado</span>
+            {{else}}
+              <span class="badge badge-neutral">Desconectado</span>
+              Sincronização de pedidos e inventário.
+            {{end}}
+          </p>
+        </div>
+      </div>
+      <div class="integration-actions">
+        <button class="btn btn-secondary" disabled title="Em breve">Em Breve</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Integrações de ERP -->
+  <div class="settings-section">
+    <h2 class="section-title">Integrações de ERP e Logística</h2>
+
+    <!-- Olist Hub -->
+    <div class="integration-card">
+      <div class="integration-info">
+        <div class="integration-logo" style="background: #1447e6; color: #ffffff;">OH</div>
+        <div>
+          <p class="integration-name">Olist Hub API</p>
+          <p class="integration-meta">Conectado automaticamente via Webhook e Partners API.</p>
+        </div>
+      </div>
+      <div class="integration-actions">
+        <span class="badge badge-brand">Ativo</span>
+      </div>
+    </div>
+
+    <!-- Omie ERP -->
+    <div class="integration-card">
+      <div class="integration-info">
+        <div class="integration-logo" style="background: #002b49; color: #00d6b4;">OM</div>
+        <div>
+          <p class="integration-name">Omie ERP</p>
+          <p class="integration-meta">Sincronização de faturamento e notas fiscais.</p>
+        </div>
+      </div>
+      <div class="integration-actions">
+        <span class="badge badge-brand">Ativo</span>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

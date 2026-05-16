@@ -17,9 +17,12 @@ import (
 
 	"github.com/pedrohedro/economia-go/internal/config"
 	"github.com/pedrohedro/economia-go/internal/db"
+	"github.com/pedrohedro/economia-go/internal/drivers"
 	"github.com/pedrohedro/economia-go/internal/handlers"
 	"github.com/pedrohedro/economia-go/internal/handlers/partials"
+	"github.com/pedrohedro/economia-go/internal/jobs"
 	"github.com/pedrohedro/economia-go/internal/middleware"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -90,6 +93,7 @@ func main() {
 	// Authenticated routes
 	h := handlers.New(pool)
 	p := partials.New(pool)
+	meliClient := drivers.NewMercadoLivreClient(pool)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RequireAuth(pool))
@@ -102,6 +106,9 @@ func main() {
 		r.Get("/vendas", h.VendasPage)
 		r.Get("/marketplaces", h.MarketplacesPage)
 		r.Get("/contabil", h.ContabilPage)
+		r.Get("/settings", h.GetSettings)
+		r.Post("/settings/org", h.UpdateOrg)
+		r.Post("/settings/integrations/disconnect", h.DisconnectIntegration)
 
 		// HTMX partials
 		r.Get("/partials/dashboard/kpis", p.DashboardKPIs)
@@ -109,6 +116,9 @@ func main() {
 		r.Get("/partials/estoque/table", p.EstoqueTable)
 		r.Get("/partials/pedidos-table", h.PedidosTable)
 		r.Get("/partials/vendas-report", h.VendasReport)
+
+		// OAuth Callbacks
+		r.Get("/webhooks/ml/callback", meliClient.OAuthCallback)
 	})
 
 	// Webhooks (Public)
@@ -116,8 +126,19 @@ func main() {
 	clerkWh := handlers.NewClerkWebhookHandler(pool, cfg.ClerkWebhookSecret)
 	
 	r.Post("/webhooks/clerk", clerkWh.ServeHTTP)
+	r.Post("/webhooks/ml", meliClient.WebhookReceiver)
 	r.Post("/webhooks/olist", wh.OlistReceiver)
 	r.Post("/webhooks/omie", wh.OmieReceiver)
+
+	// Background Cron Jobs
+	c := cron.New()
+	stockService := jobs.NewStockReconcileService(pool)
+	tokenService := jobs.NewTokenRefreshService(pool)
+
+	_, _ = c.AddFunc("@every 30m", stockService.ReconcileAll)
+	_, _ = c.AddFunc("@every 30m", tokenService.RefreshAll)
+	c.Start()
+	defer c.Stop()
 
 	// Start server
 	srv := &http.Server{
