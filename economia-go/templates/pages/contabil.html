@@ -1,13 +1,30 @@
 {{define "content"}}
 <div class="header">
   <div>
-    <h1 class="title">Contábil</h1>
-    <p class="subtitle">Emissão de notas fiscais e relatórios contábeis.</p>
+    <h1 class="title">Contábil &amp; Finan&ccedil;as</h1>
+    <p class="subtitle">Vis&atilde;o geral do seu fluxo de caixa e obriga&ccedil;&otilde;es financeiras.</p>
+  </div>
+  <div class="actions">
+    <button class="btn btn-secondary"
+            hx-get="/partials/contabil-summary"
+            hx-target="#contabil-summary"
+            hx-swap="innerHTML">
+      Atualizar
+    </button>
   </div>
 </div>
 
-<div class="card" style="padding: 48px; text-align: center; color: var(--muted-foreground);">
-  <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">Em Breve</p>
-  <p>O módulo contábil e emissão em lote de NF-e será implementado em breve.</p>
+<div class="filter-bar" style="margin-bottom: 24px;">
+  <span style="color: var(--muted-foreground); font-size: 0.875rem;">
+    Per&iacute;odo: M&ecirc;s atual
+  </span>
+</div>
+
+<div id="contabil-summary"
+     hx-get="/partials/contabil-summary"
+     hx-trigger="load">
+  <div style="text-align: center; padding: 48px; color: var(--muted-foreground);">
+    Carregando dados financeiros...
+  </div>
 </div>
 {{end}}

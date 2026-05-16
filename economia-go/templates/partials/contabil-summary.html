@@ -1,0 +1,102 @@
+{{define "contabil-summary"}}
+<!-- KPI Grid -->
+<div class="kpi-grid" style="margin-bottom: 32px;">
+
+  <div class="kpi-card" style="border-left: 4px solid var(--success)">
+    <p class="kpi-label">Faturamento Bruto</p>
+    <p class="kpi-value">{{.KPIs.Revenue}}</p>
+    <p class="kpi-sub">Pedidos aprovados no m&ecirc;s</p>
+  </div>
+
+  <div class="kpi-card" style="border-left: 4px solid var(--danger)">
+    <p class="kpi-label">Taxas Marketplace</p>
+    <p class="kpi-value">{{.KPIs.Fees}}</p>
+    <p class="kpi-sub">Comiss&otilde;es e frete cobradas</p>
+  </div>
+
+  <div class="kpi-card" style="border-left: 4px solid var(--warning, #f59e0b)">
+    <p class="kpi-label">Custo Log&iacute;stico (CMV)</p>
+    <p class="kpi-value">{{.KPIs.CMV}}</p>
+    <p class="kpi-sub">Frete e custos de envio</p>
+  </div>
+
+  <div class="kpi-card" style="border-left: 4px solid var(--brand)">
+    <p class="kpi-label">Lucro L&iacute;quido Estimado</p>
+    <p class="kpi-value">{{.KPIs.NetProfit}}</p>
+    <p class="kpi-sub">Faturamento &minus; taxas &minus; log&iacute;stica</p>
+  </div>
+
+  <div class="kpi-card" style="border-left: 4px solid var(--success)">
+    <p class="kpi-label">Repasses Recebidos</p>
+    <p class="kpi-value">{{.KPIs.PayoutsMonth}}</p>
+    <p class="kpi-sub">Total no m&ecirc;s atual</p>
+  </div>
+
+  <div class="kpi-card" style="border-left: 4px solid var(--danger)">
+    <p class="kpi-label">Contas a Pagar</p>
+    <p class="kpi-value">{{.KPIs.PendingPayable}}</p>
+    <p class="kpi-sub">Vencendo este m&ecirc;s</p>
+  </div>
+
+  <div class="kpi-card" style="border-left: 4px solid var(--brand)">
+    <p class="kpi-label">Saldo em Conta</p>
+    <p class="kpi-value">{{.KPIs.CashBalance}}</p>
+    <p class="kpi-sub">Repasses confirmados &minus; despesas pagas</p>
+  </div>
+
+</div>
+
+<!-- Movimentações Recentes -->
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Movimenta&ccedil;&otilde;es Recentes</h2>
+  </div>
+  <div class="card-body table-wrapper">
+    <table class="table" style="width: 100%;">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Descri&ccedil;&atilde;o</th>
+          <th>Tipo</th>
+          <th style="text-align: right;">Valor</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Entries}}
+        <tr>
+          <td style="white-space: nowrap;">{{.EntryDate.Format "02/01/2006"}}</td>
+          <td style="font-weight: 500;">{{.Description}}</td>
+          <td>
+            {{if eq .EntryType "income"}}
+              <span class="badge badge-success">Entrada</span>
+            {{else}}
+              <span class="badge badge-danger">Sa&iacute;da</span>
+            {{end}}
+          </td>
+          <td style="text-align: right; font-weight: 600;
+               {{if eq .EntryType "income"}}color: var(--success);{{else}}color: var(--danger);{{end}}">
+            {{if eq .EntryType "income"}}+{{else}}-{{end}}
+            R$ {{printf "%.2f" .Amount}}
+          </td>
+          <td>
+            {{if eq .Status "confirmed"}}
+              <span class="badge badge-brand">Confirmado</span>
+            {{else}}
+              <span class="badge badge-warn">Previsto</span>
+            {{end}}
+          </td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="5"
+              style="text-align: center; padding: 48px; color: var(--muted-foreground);">
+            Nenhuma movimenta&ccedil;&atilde;o registrada.
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{end}}

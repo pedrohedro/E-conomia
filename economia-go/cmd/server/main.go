@@ -19,7 +19,6 @@ import (
 	"github.com/pedrohedro/economia-go/internal/db"
 	"github.com/pedrohedro/economia-go/internal/drivers"
 	"github.com/pedrohedro/economia-go/internal/handlers"
-	"github.com/pedrohedro/economia-go/internal/handlers/partials"
 	"github.com/pedrohedro/economia-go/internal/jobs"
 	"github.com/pedrohedro/economia-go/internal/middleware"
 	"github.com/robfig/cron/v3"
@@ -92,7 +91,6 @@ func main() {
 
 	// Authenticated routes
 	h := handlers.New(pool)
-	p := partials.New(pool)
 	meliClient := drivers.NewMercadoLivreClient(pool)
 
 	r.Group(func(r chi.Router) {
@@ -111,11 +109,15 @@ func main() {
 		r.Post("/settings/integrations/disconnect", h.DisconnectIntegration)
 
 		// HTMX partials
-		r.Get("/partials/dashboard/kpis", p.DashboardKPIs)
-		r.Get("/partials/stock-alerts", p.StockAlerts)
-		r.Get("/partials/estoque/table", p.EstoqueTable)
+		r.Get("/partials/dashboard/kpis", h.DashboardKPIs)
+		r.Get("/partials/stock-alerts", h.StockAlerts)
+		r.Get("/partials/estoque/table", h.EstoqueTable)
 		r.Get("/partials/pedidos-table", h.PedidosTable)
 		r.Get("/partials/vendas-report", h.VendasReport)
+		r.Get("/partials/contabil-summary", h.ContabilSummary)
+
+		// Stock Push (empurra estoque pendente para ML)
+		r.Post("/partials/stock-push", h.StockPushML)
 
 		// OAuth Callbacks
 		r.Get("/webhooks/ml/callback", meliClient.OAuthCallback)
@@ -134,9 +136,13 @@ func main() {
 	c := cron.New()
 	stockService := jobs.NewStockReconcileService(pool)
 	tokenService := jobs.NewTokenRefreshService(pool)
+	alertsService := jobs.NewStockAlertsService(pool)
+	reportService := jobs.NewScheduledReportService(pool)
 
 	_, _ = c.AddFunc("@every 30m", stockService.ReconcileAll)
 	_, _ = c.AddFunc("@every 30m", tokenService.RefreshAll)
+	_, _ = c.AddFunc("@every 1h", alertsService.CheckAll)
+	_, _ = c.AddFunc("0 6 * * *", reportService.RunDaily) // diariamente às 06:00 UTC
 	c.Start()
 	defer c.Stop()
 
