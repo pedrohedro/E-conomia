@@ -10,8 +10,12 @@
 </div>
 
 <div class="card">
-  <div class="filters" style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; gap: 16px;">
-    <select name="status" class="input" hx-get="/partials/pedidos-table" hx-target="#pedidos-tbody" hx-trigger="change">
+  <div class="filters" style="padding: 24px; border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: center;">
+    <select name="status" class="input"
+            hx-get="/partials/pedidos-table"
+            hx-target="#pedidos-tbody"
+            hx-trigger="change"
+            hx-indicator=".pedidos-loading">
       <option value="all">Todos os Status</option>
       <option value="pending">Pendentes</option>
       <option value="approved">Aprovados</option>
@@ -21,6 +25,7 @@
       <option value="delivered">Entregues</option>
       <option value="cancelled">Cancelados</option>
     </select>
+    <span class="htmx-indicator pedidos-loading"><span class="spinner"></span></span>
   </div>
 
   <table class="table" style="width: 100%;">

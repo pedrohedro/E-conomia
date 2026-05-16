@@ -1,19 +1,24 @@
 {{define "content"}}
 <!-- Filter Bar -->
 <div class="filter-bar">
-  <input class="input" type="search" placeholder="Buscar por nome ou SKU..."
-         style="width:280px;height:34px;"
-         name="search" value="{{.Search}}"
-         hx-get="/partials/estoque/table"
-         hx-trigger="keyup changed delay:300ms"
-         hx-target="#stock-table-body"
-         hx-include="[name='filter']">
+  <div style="display:flex;align-items:center;gap:6px;">
+    <input class="input" type="search" placeholder="Buscar por nome ou SKU..."
+           style="width:280px;height:34px;"
+           name="search" value="{{.Search}}"
+           hx-get="/partials/estoque/table"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#stock-table-body"
+           hx-include="[name='filter']"
+           hx-indicator=".filter-loading">
+    <span class="htmx-indicator filter-loading"><span class="spinner"></span></span>
+  </div>
 
   <select class="select" name="filter"
           hx-get="/partials/estoque/table"
           hx-trigger="change"
           hx-target="#stock-table-body"
-          hx-include="[name='search']">
+          hx-include="[name='search']"
+          hx-indicator=".filter-loading">
     <option value="all" {{if eq .Filter "all"}}selected{{end}}>Todos</option>
     <option value="critical" {{if eq .Filter "critical"}}selected{{end}}>Em alerta</option>
     <option value="ok" {{if eq .Filter "ok"}}selected{{end}}>Normal</option>

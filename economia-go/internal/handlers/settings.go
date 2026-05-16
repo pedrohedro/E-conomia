@@ -26,8 +26,8 @@ func (h *Handler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	// 1. Fetch organization details
 	var org models.Organization
 	err := h.db.QueryRow(r.Context(), `
-		SELECT id, name, slug, cnpj, tax_regime, tax_rate 
-		FROM organizations 
+		SELECT id, name, slug, cnpj, tax_regime, tax_rate
+		FROM organizations
 		WHERE id = $1
 	`, orgID).Scan(&org.ID, &org.Name, &org.Slug, &org.CNPJ, &org.TaxRegime, &org.TaxRate)
 
@@ -39,8 +39,8 @@ func (h *Handler) GetSettings(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Fetch marketplace integrations
 	rows, err := h.db.Query(r.Context(), `
-		SELECT id, marketplace, status, seller_nickname, last_sync_at 
-		FROM marketplace_integrations 
+		SELECT id, marketplace, status, seller_nickname, last_sync_at
+		FROM marketplace_integrations
 		WHERE organization_id = $1
 	`, orgID)
 
@@ -79,12 +79,13 @@ func (h *Handler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UpdateOrg salva as alterações cadastrais da empresa via HTMX
+// UpdateOrg salva as alterações cadastrais da empresa via HTMX e retorna um toast HTML
 func (h *Handler) UpdateOrg(w http.ResponseWriter, r *http.Request) {
 	orgID := r.Context().Value(middleware.OrgIDKey).(string)
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `<div class="badge badge-danger" style="padding:10px 14px;font-size:13px;border-radius:var(--radius);">&#10007; Requisição inválida.</div>`)
 		return
 	}
 
@@ -93,25 +94,25 @@ func (h *Handler) UpdateOrg(w http.ResponseWriter, r *http.Request) {
 	taxRegime := r.FormValue("tax_regime")
 
 	if name == "" {
-		http.Error(w, "Nome é obrigatório", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `<div class="badge badge-danger" style="padding:10px 14px;font-size:13px;border-radius:var(--radius);">&#10007; Nome é obrigatório.</div>`)
 		return
 	}
 
 	_, err := h.db.Exec(r.Context(), `
-		UPDATE organizations 
-		SET name = $1, cnpj = $2, tax_regime = $3, updated_at = NOW() 
+		UPDATE organizations
+		SET name = $1, cnpj = $2, tax_regime = $3, updated_at = NOW()
 		WHERE id = $4
 	`, name, cnpj, taxRegime, orgID)
 
+	w.Header().Set("Content-Type", "text/html")
 	if err != nil {
 		log.Printf("Error updating organization: %v", err)
-		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, `<div class="toast" style="border-left: 4px solid var(--destructive); background: var(--destructive); color: #fff;">Erro ao salvar alterações.</div>`)
+		fmt.Fprintf(w, `<div class="badge badge-danger" style="padding:10px 14px;font-size:13px;border-radius:var(--radius);">&#10007; Erro ao salvar alterações.</div>`)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, `<div class="toast" style="border-left: 4px solid var(--success); background: var(--success); color: #fff;">Configurações salvas com sucesso!</div>`)
+	fmt.Fprintf(w, `<div class="badge badge-success" style="padding:10px 14px;font-size:13px;border-radius:var(--radius);">&#10003; Configurações salvas com sucesso!</div>`)
 }
 
 // DisconnectIntegration desconecta uma integração via HTMX
@@ -121,13 +122,13 @@ func (h *Handler) DisconnectIntegration(w http.ResponseWriter, r *http.Request) 
 
 	if mp != "" {
 		_, err := h.db.Exec(r.Context(), `
-			DELETE FROM marketplace_integrations 
+			DELETE FROM marketplace_integrations
 			WHERE organization_id = $1 AND marketplace = $2
 		`, orgID, mp)
 		if err != nil {
 			log.Printf("Error deleting integration %s: %v", mp, err)
 		} else {
-			log.Printf("Integration %s disconnected for org %s", mp, orgID)
+			log.Printf("Integration %s disconnected for org %s", mp, mp)
 		}
 	}
 
