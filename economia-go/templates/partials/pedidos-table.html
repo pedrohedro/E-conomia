@@ -4,7 +4,7 @@
   <td style="font-weight: 500;">{{.OrderNumber}}</td>
   <td style="text-transform: capitalize;">{{.Marketplace}}</td>
   <td>
-    <span class="badge {{if eq .Status "pending"}}badge-warn{{else if eq .Status "approved"}}badge-success{{else if eq .Status "cancelled"}}badge-danger{{else}}badge-brand{{end}}">
+    <span class="badge {{if eq .Status "pending"}}badge-warn{{else if eq .Status "approved" "paid" "preparing" "packed"}}badge-success{{else if eq .Status "cancelled"}}badge-danger{{else}}badge-brand{{end}}">
       {{.Status}}
     </span>
   </td>
@@ -15,7 +15,13 @@
       {{.NfeStatus}}
     </span>
   </td>
-  <td>{{.CreatedAt.Format "02/01/2006 15:04"}}</td>
+  <td>
+    {{if .MarketplaceCreatedAt}}
+      {{.MarketplaceCreatedAt.Format "02/01/2006 15:04"}}
+    {{else}}
+      --
+    {{end}}
+  </td>
 </tr>
 {{else}}
 <tr>

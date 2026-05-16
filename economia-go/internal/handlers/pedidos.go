@@ -29,7 +29,7 @@ func (h *Handler) PedidosTable(w http.ResponseWriter, r *http.Request) {
 
 	status := r.URL.Query().Get("status")
 	query := `
-		SELECT id, order_number, marketplace, status, fulfillment, net_amount, nfe_status, created_at 
+		SELECT id, order_number, marketplace, status, fulfillment, net_amount, nfe_status, marketplace_created_at 
 		FROM orders 
 		WHERE organization_id = $1
 	`
@@ -40,7 +40,7 @@ func (h *Handler) PedidosTable(w http.ResponseWriter, r *http.Request) {
 		args = append(args, status)
 	}
 
-	query += ` ORDER BY created_at DESC LIMIT 50`
+	query += ` ORDER BY marketplace_created_at DESC LIMIT 50`
 
 	rows, err := h.db.Query(context.Background(), query, args...)
 	if err != nil {
@@ -55,7 +55,7 @@ func (h *Handler) PedidosTable(w http.ResponseWriter, r *http.Request) {
 		var o models.Order
 		err := rows.Scan(
 			&o.ID, &o.OrderNumber, &o.Marketplace, &o.Status,
-			&o.Fulfillment, &o.NetAmount, &o.NfeStatus, &o.CreatedAt,
+			&o.Fulfillment, &o.NetAmount, &o.NfeStatus, &o.MarketplaceCreatedAt,
 		)
 		if err != nil {
 			log.Printf("Error scanning order: %v", err)
