@@ -41,7 +41,7 @@ func RequireAuth(db *pgxpool.Pool) func(http.Handler) http.Handler {
 
 			// Find internal user ID in Postgres
 			var userID string
-			err := db.QueryRow(r.Context(), "SELECT id FROM users WHERE clerk_id = $1", clerkID).Scan(&userID)
+			err := db.QueryRow(r.Context(), "SELECT id FROM profiles WHERE id = $1", clerkID).Scan(&userID)
 			if err != nil {
 				if err == pgx.ErrNoRows {
 					// User not synced yet via webhook
@@ -77,7 +77,7 @@ func RequireOrg(db *pgxpool.Pool) func(http.Handler) http.Handler {
 			var orgID string
 			err := db.QueryRow(r.Context(), `
 				SELECT organization_id 
-				FROM organization_members 
+				FROM org_members 
 				WHERE user_id = $1 
 				ORDER BY created_at ASC LIMIT 1
 			`, userID).Scan(&orgID)

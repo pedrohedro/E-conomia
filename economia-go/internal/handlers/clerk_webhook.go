@@ -85,40 +85,42 @@ func (h *ClerkWebhookHandler) handleUserSync(ctx context.Context, event ClerkEve
 		email = event.Data.EmailAddresses[0].EmailAddress
 	}
 
-	// Upsert user into database
+	// Combine first and last name
+	fullName := event.Data.FirstName
+	if event.Data.LastName != "" {
+		if fullName != "" {
+			fullName += " "
+		}
+		fullName += event.Data.LastName
+	}
+
+	// Upsert user into database (profiles table)
 	query := `
-		INSERT INTO users (clerk_id, email, first_name, last_name, role, updated_at)
-		VALUES ($1, $2, $3, $4, 'admin', NOW())
-		ON CONFLICT (clerk_id) DO UPDATE SET
-			email = EXCLUDED.email,
-			first_name = EXCLUDED.first_name,
-			last_name = EXCLUDED.last_name,
+		INSERT INTO profiles (id, full_name, updated_at)
+		VALUES ($1, $2, NOW())
+		ON CONFLICT (id) DO UPDATE SET
+			full_name = EXCLUDED.full_name,
 			updated_at = NOW();
 	`
-	_, err := h.db.Exec(ctx, query, event.Data.ID, email, event.Data.FirstName, event.Data.LastName)
+	_, err := h.db.Exec(ctx, query, event.Data.ID, fullName)
 	if err != nil {
-		log.Printf("Error upserting user %s: %v", event.Data.ID, err)
+		log.Printf("Error upserting profile %s: %v", event.Data.ID, err)
 		return
 	}
 
-	log.Printf("Successfully synced user %s (%s)", event.Data.ID, email)
+	log.Printf("Successfully synced profile %s (%s)", event.Data.ID, email)
 
 	// Ensure user has at least one organization
 	h.ensureUserOrganization(ctx, event.Data.ID, event.Data.FirstName)
 }
 
 func (h *ClerkWebhookHandler) ensureUserOrganization(ctx context.Context, clerkID string, firstName string) {
-	// First get the user's internal ID
-	var userID string
-	err := h.db.QueryRow(ctx, "SELECT id FROM users WHERE clerk_id = $1", clerkID).Scan(&userID)
-	if err != nil {
-		log.Printf("Error fetching user id for clerk_id %s: %v", clerkID, err)
-		return
-	}
+	// For profiles, clerkID is the internal ID directly!
+	userID := clerkID
 
 	// Check if user is already in any organization
 	var orgCount int
-	err = h.db.QueryRow(ctx, "SELECT COUNT(*) FROM organization_members WHERE user_id = $1", userID).Scan(&orgCount)
+	err := h.db.QueryRow(ctx, "SELECT COUNT(*) FROM org_members WHERE user_id = $1", userID).Scan(&orgCount)
 	if err != nil {
 		log.Printf("Error checking user organizations: %v", err)
 		return
@@ -142,10 +144,10 @@ func (h *ClerkWebhookHandler) ensureUserOrganization(ctx context.Context, clerkI
 			return
 		}
 
-		// Add user to the new organization as owner
+		// Add user to the new organization as admin (user_role enum in DB)
 		_, err = h.db.Exec(ctx, `
-			INSERT INTO organization_members (organization_id, user_id, role)
-			VALUES ($1, $2, 'owner')
+			INSERT INTO org_members (organization_id, user_id, role)
+			VALUES ($1, $2, 'admin')
 		`, orgID, userID)
 		if err != nil {
 			log.Printf("Error adding user to organization: %v", err)
