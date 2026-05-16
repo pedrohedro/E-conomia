@@ -22,7 +22,8 @@ const (
 // RequireAuth validates the session cookie (Clerk) and injects the internal userID into context.
 func RequireAuth(db *pgxpool.Pool) func(http.Handler) http.Handler {
 	// First apply Clerk's native middleware which parses Bearer token or __session cookie
-	clerkMiddleware := clerkhttp.RequireHeaderAuthorization()
+	// Using WithHeaderAuthorization so we can handle missing sessions gracefully with a redirect
+	clerkMiddleware := clerkhttp.WithHeaderAuthorization()
 
 	return func(next http.Handler) http.Handler {
 		// Our custom handler wrapped inside Clerk's middleware
