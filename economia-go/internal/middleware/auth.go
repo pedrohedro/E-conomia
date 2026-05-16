@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	clerkhttp "github.com/clerk/clerk-sdk-go/v2/http"
@@ -104,11 +106,12 @@ func RequireOrg(db *pgxpool.Pool) func(http.Handler) http.Handler {
 				if err == pgx.ErrNoRows {
 					// User has no organizations (webhook missed or first login) -> JIT Self-Healing Sync!
 					log.Printf("Auth Self-Healing: Auto-creating default organization for user %s", userID)
+					slug := fmt.Sprintf("org-%s-%d", userID[:8], time.Now().Unix())
 					errOrg := db.QueryRow(r.Context(), `
-						INSERT INTO organizations (name, created_at, updated_at)
-						VALUES ('Meu Negócio', NOW(), NOW())
+						INSERT INTO organizations (name, slug, created_at, updated_at)
+						VALUES ('Meu Negócio', $1, NOW(), NOW())
 						RETURNING id
-					`).Scan(&orgID)
+					`, slug).Scan(&orgID)
 					if errOrg == nil {
 						_, _ = db.Exec(r.Context(), `
 							INSERT INTO org_members (organization_id, user_id, role)

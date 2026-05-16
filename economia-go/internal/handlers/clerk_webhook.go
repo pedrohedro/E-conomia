@@ -3,9 +3,11 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	svix "github.com/svix/svix-webhooks/go"
@@ -133,12 +135,13 @@ func (h *ClerkWebhookHandler) ensureUserOrganization(ctx context.Context, clerkI
 			orgName = "Negócio de " + firstName
 		}
 
+		slug := fmt.Sprintf("org-%s-%d", userID[:8], time.Now().Unix())
 		var orgID string
 		err = h.db.QueryRow(ctx, `
-			INSERT INTO organizations (name, created_at, updated_at)
-			VALUES ($1, NOW(), NOW())
+			INSERT INTO organizations (name, slug, created_at, updated_at)
+			VALUES ($1, $2, NOW(), NOW())
 			RETURNING id
-		`, orgName).Scan(&orgID)
+		`, orgName, slug).Scan(&orgID)
 		if err != nil {
 			log.Printf("Error creating default organization: %v", err)
 			return
