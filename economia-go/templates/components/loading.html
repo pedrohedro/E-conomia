@@ -1,0 +1,40 @@
+{{define "loading-skeleton-row"}}
+<tr class="skeleton-row" aria-hidden="true">
+  {{range .Cols}}
+  <td><div class="skeleton-cell"></div></td>
+  {{end}}
+</tr>
+{{end}}
+
+{{define "loading-spinner"}}
+<span class="htmx-indicator" aria-label="Carregando...">
+  <span class="spinner" role="status"></span>
+</span>
+{{end}}
+
+{{define "loading-table"}}
+<div class="htmx-indicator table-skeleton" aria-busy="true" aria-label="Carregando dados...">
+  <table class="table">
+    <tbody>
+      <tr class="skeleton-row" aria-hidden="true">
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+      </tr>
+      <tr class="skeleton-row" aria-hidden="true">
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+      </tr>
+      <tr class="skeleton-row" aria-hidden="true">
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+        <td><div class="skeleton-cell"></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{{end}}

@@ -166,3 +166,40 @@ body.login-page {
   animation: spin 0.6s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* -----------------------------------------------------------------------------
+   Skeleton Loading
+----------------------------------------------------------------------------- */
+.skeleton-row { pointer-events: none; }
+.skeleton-cell {
+  height: 14px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--secondary) 25%,
+    color-mix(in srgb, var(--secondary) 60%, var(--background)) 50%,
+    var(--secondary) 75%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-pulse 1.4s ease infinite;
+}
+@keyframes skeleton-pulse {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* -----------------------------------------------------------------------------
+   Alert Banner
+----------------------------------------------------------------------------- */
+.alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.alert-message { color: var(--foreground); }

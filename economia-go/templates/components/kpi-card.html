@@ -1,0 +1,7 @@
+{{define "kpi-card"}}
+<div class="kpi-card">
+  <p class="kpi-label">{{.Label}}</p>
+  <p class="kpi-value">{{.Value}}</p>
+  {{if .Sub}}<p class="kpi-sub">{{.Sub}}</p>{{end}}
+</div>
+{{end}}

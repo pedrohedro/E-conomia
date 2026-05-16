@@ -22,14 +22,24 @@ type Handler struct {
 func New(pool *pgxpool.Pool) *Handler {
 	pages := make(map[string]*template.Template)
 	baseLayout := filepath.Join("templates", "layouts", "base.html")
+	components := componentFiles()
+	funcs := templateFuncMap()
 
-	pages["dashboard"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "dashboard.html")))
-	pages["estoque"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "estoque.html")))
-	pages["pedidos"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "pedidos.html")))
-	pages["vendas"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "vendas.html")))
-	pages["marketplaces"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "marketplaces.html")))
-	pages["contabil"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "contabil.html")))
-	pages["settings"] = template.Must(template.ParseFiles(baseLayout, filepath.Join("templates", "pages", "settings.html")))
+	// parseWithComponents builds a template set from the base layout, component
+	// partials, and the given page file — all sharing the same FuncMap.
+	parseWithComponents := func(pageFile string) *template.Template {
+		files := append([]string{baseLayout, pageFile}, components...)
+		return template.Must(template.New("").Funcs(funcs).ParseFiles(files...))
+	}
+
+	pages["dashboard"] = parseWithComponents(filepath.Join("templates", "pages", "dashboard.html"))
+	pages["estoque"] = parseWithComponents(filepath.Join("templates", "pages", "estoque.html"))
+	pages["pedidos"] = parseWithComponents(filepath.Join("templates", "pages", "pedidos.html"))
+	pages["vendas"] = parseWithComponents(filepath.Join("templates", "pages", "vendas.html"))
+	pages["marketplaces"] = parseWithComponents(filepath.Join("templates", "pages", "marketplaces.html"))
+	pages["contabil"] = parseWithComponents(filepath.Join("templates", "pages", "contabil.html"))
+	pages["settings"] = parseWithComponents(filepath.Join("templates", "pages", "settings.html"))
+	pages["error"] = parseWithComponents(filepath.Join("templates", "pages", "error.html"))
 
 	return &Handler{db: pool, pages: pages}
 }

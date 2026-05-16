@@ -1,0 +1,18 @@
+{{define "alert-banner"}}
+{{if .Message}}
+<div class="alert-banner alert-{{.Level}}" role="alert" aria-live="polite">
+  <span class="badge
+    {{- if eq .Level "success"}} badge-success
+    {{- else if eq .Level "warning"}} badge-warning
+    {{- else if eq .Level "error"}} badge-danger
+    {{- else}} badge-brand
+    {{- end}}">
+    {{- if eq .Level "success"}}OK
+    {{- else if eq .Level "warning"}}Aviso
+    {{- else if eq .Level "error"}}Erro
+    {{- else}}Info{{end -}}
+  </span>
+  <span class="alert-message">{{.Message}}</span>
+</div>
+{{end}}
+{{end}}
