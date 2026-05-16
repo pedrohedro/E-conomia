@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <script>if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark')</script>
   <script src="/static/js/htmx.min.js"></script>
   {{block "head" .}}{{end}}
 </head>
@@ -70,10 +72,10 @@
 
   <div class="sidebar-footer">
     <div class="sidebar-user">
-      <div class="sidebar-avatar">EC</div>
+      <div class="sidebar-avatar">{{if .User.Initials}}{{.User.Initials}}{{else}}EC{{end}}</div>
       <div class="sidebar-user-info">
-        <p class="sidebar-user-name">E-conomia</p>
-        <p class="sidebar-user-role">Admin</p>
+        <p class="sidebar-user-name">{{if .User.Name}}{{.User.Name}}{{else}}E-conomia{{end}}</p>
+        <p class="sidebar-user-role">{{if .User.Role}}{{.User.Role}}{{else}}Admin{{end}}</p>
       </div>
     </div>
   </div>
@@ -95,18 +97,7 @@
   </main>
 </div>
 
-<script>
-  // Theme toggle (minimal JS)
-  const toggle = document.getElementById('themeToggle');
-  if (toggle) {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') document.documentElement.classList.add('dark');
-    toggle.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-    });
-  }
-</script>
+<script src="/static/js/app.js"></script>
 {{block "scripts" .}}{{end}}
 </body>
 </html>

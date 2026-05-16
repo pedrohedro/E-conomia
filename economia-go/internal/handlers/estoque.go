@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
@@ -60,6 +61,27 @@ func (h *Handler) Estoque(w http.ResponseWriter, r *http.Request) {
 	if err := h.pages["estoque"].ExecuteTemplate(w, "base", data); err != nil {
 		log.Printf("Template error: %v", err)
 		http.Error(w, "Internal Server Error", 500)
+	}
+}
+
+// EstoqueTable retorna apenas o HTML da tabela filtrada para o HTMX
+func (h *Handler) EstoqueTable(w http.ResponseWriter, r *http.Request) {
+	orgID := middleware.GetOrgID(r.Context())
+	search := r.URL.Query().Get("search")
+	filter := r.URL.Query().Get("filter")
+
+	products := h.fetchProducts(r.Context(), orgID, search, filter)
+
+	tmpl, err := template.ParseFiles("templates/partials/estoque-table.html")
+	if err != nil {
+		log.Printf("Partial template error: %v", err)
+		http.Error(w, "Error", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	if err := tmpl.ExecuteTemplate(w, "estoque-table", products); err != nil {
+		log.Printf("Execute template error: %v", err)
 	}
 }
 

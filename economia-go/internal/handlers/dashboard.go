@@ -91,6 +91,46 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// DashboardKPIs retorna apenas os cards de KPI para o HTMX
+func (h *Handler) DashboardKPIs(w http.ResponseWriter, r *http.Request) {
+	orgID := middleware.GetOrgID(r.Context())
+	_ = r.URL.Query().Get("mp")
+
+	kpis := h.fetchDashboardKPIs(r.Context(), orgID)
+	// Se houver filtro de marketplace, poderíamos ajustar a query aqui ou passar o mp para o fetcher
+	// Por enquanto vamos usar o fetcher padrão que já temos
+
+	data := map[string]any{
+		"Revenue":     kpis.Revenue,
+		"Fees":        kpis.Fees,
+		"OrdersCount": kpis.OrdersCount,
+	}
+
+	tmpl, err := template.ParseFiles("templates/partials/kpis.html")
+	if err != nil {
+		http.Error(w, "Error", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	tmpl.ExecuteTemplate(w, "kpis.html", data)
+}
+
+// StockAlerts retorna apenas as linhas de alerta de estoque para o HTMX
+func (h *Handler) StockAlerts(w http.ResponseWriter, r *http.Request) {
+	orgID := middleware.GetOrgID(r.Context())
+	alerts := h.fetchStockAlerts(r.Context(), orgID, 8)
+
+	tmpl, err := template.ParseFiles("templates/partials/stock-alerts.html")
+	if err != nil {
+		http.Error(w, "Error", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	tmpl.ExecuteTemplate(w, "stock-alerts.html", alerts)
+}
+
 func (h *Handler) fetchDashboardKPIs(ctx context.Context, orgID string) DashboardKPIs {
 	now := time.Now()
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)

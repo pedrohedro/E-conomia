@@ -1,0 +1,168 @@
+/* =============================================================================
+   E-CONOMIA — Shared Components
+   Classes extraídas dos templates de página para evitar duplicação.
+   Importado após tokens.css em base.html.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   Status Dots
+----------------------------------------------------------------------------- */
+.status-dot  { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.status-ok   { background: var(--success); }
+.status-warn { background: var(--warning); }
+.status-crit { background: var(--destructive); }
+
+/* -----------------------------------------------------------------------------
+   Filter Bar
+----------------------------------------------------------------------------- */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+/* -----------------------------------------------------------------------------
+   Stock Summary Grid (Estoque page)
+----------------------------------------------------------------------------- */
+.stock-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+@media (max-width: 900px) { .stock-summary { grid-template-columns: repeat(2, 1fr); } }
+
+/* -----------------------------------------------------------------------------
+   Channel Badges
+----------------------------------------------------------------------------- */
+.channel-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.channel-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--secondary);
+  color: var(--muted-foreground);
+}
+
+/* -----------------------------------------------------------------------------
+   KPI Grid + Card (Dashboard)
+----------------------------------------------------------------------------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+@media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .kpi-grid { grid-template-columns: 1fr; } }
+
+.kpi-card  { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+.kpi-label { font-size: 11.5px; color: var(--muted-foreground); margin: 0 0 6px; }
+.kpi-value { font-size: 24px; font-weight: 700; color: var(--foreground); margin: 0; line-height: 1; }
+.kpi-sub   { font-size: 12px; color: var(--muted-foreground); margin: 6px 0 0; }
+
+/* -----------------------------------------------------------------------------
+   Chart Canvas
+----------------------------------------------------------------------------- */
+.chart-canvas-wrap { height: 220px; position: relative; }
+
+/* -----------------------------------------------------------------------------
+   Marketplace Tabs
+----------------------------------------------------------------------------- */
+.mp-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 18px; }
+.mp-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  font-weight: 500;
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.mp-tab:hover  { background: var(--accent); color: var(--foreground); }
+.mp-tab.active { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
+.mp-tab img    { height: 16px; width: auto; max-width: 32px; object-fit: contain; }
+
+/* -----------------------------------------------------------------------------
+   Settings Page
+----------------------------------------------------------------------------- */
+.settings-section { margin-bottom: 32px; }
+.section-title    { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--foreground); }
+.form-group       { margin-bottom: 16px; }
+.form-label       { font-size: 12.5px; font-weight: 500; color: var(--foreground); display: block; margin-bottom: 6px; }
+
+/* -----------------------------------------------------------------------------
+   Integration Card (Settings → Marketplaces / ERP)
+----------------------------------------------------------------------------- */
+.integration-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+.integration-info    { display: flex; align-items: center; gap: 14px; }
+.integration-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--brand);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.integration-logo img { width: 100%; height: 100%; object-fit: contain; }
+.integration-name    { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.integration-meta    { font-size: 12px; color: var(--muted-foreground); margin: 0; }
+.integration-actions { display: flex; align-items: center; gap: 10px; }
+
+/* -----------------------------------------------------------------------------
+   Login Page
+----------------------------------------------------------------------------- */
+body.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   HTMX Loading States
+----------------------------------------------------------------------------- */
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  opacity: 1;
+}
+
+/* Spinner inline (use inside buttons) */
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

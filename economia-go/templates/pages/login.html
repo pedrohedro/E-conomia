@@ -4,55 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login — E-conomia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/tokens.css">
-  <style>
-    body {
-      background: var(--background);
-      color: var(--foreground);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-    }
-  </style>
+  <link rel="stylesheet" href="/static/css/components.css">
 </head>
-<body>
+<body class="login-page">
   <div id="app"></div>
 
-  <!-- Script para carregar o Clerk -->
   <script>
-    const clerkPubKey = '{{.ClerkKey}}';
-    let frontendApi = clerkPubKey.replace('pk_test_', '').replace('pk_live_', '');
+    var clerkPubKey = '{{.ClerkKey}}';
+    var frontendApi = clerkPubKey.replace('pk_test_', '').replace('pk_live_', '');
     while (frontendApi.length % 4 !== 0) frontendApi += '=';
     try {
       frontendApi = atob(frontendApi).split('$')[0];
     } catch (e) {
-      console.error("Failed to decode Clerk key", e);
+      console.error('Failed to decode Clerk key', e);
     }
-    
-    const script = document.createElement('script');
+
+    var script = document.createElement('script');
     script.setAttribute('data-clerk-publishable-key', clerkPubKey);
     script.async = true;
-    script.src = `https://${frontendApi}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`;
+    script.src = 'https://' + frontendApi + '/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
     script.crossOrigin = 'anonymous';
     script.addEventListener('load', async function () {
       await window.Clerk.load();
-      
-      const appDiv = document.getElementById('app');
-      
+      var appDiv = document.getElementById('app');
       if (window.Clerk.user) {
-        // Se já estiver logado, vai pro dashboard
         window.location.href = '/dashboard';
       } else {
-        // Monta o componente de login do Clerk
         window.Clerk.mountSignIn(appDiv, {
-          routing: "hash",
-          signInUrl: "/login",
-          signUpUrl: "/login",
-          forceRedirectUrl: "/login",
-          fallbackRedirectUrl: "/login"
+          routing: 'hash',
+          signInUrl: '/login',
+          signUpUrl: '/login',
+          forceRedirectUrl: '/login',
+          fallbackRedirectUrl: '/login'
         });
       }
     });
