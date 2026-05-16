@@ -45,14 +45,22 @@ func RequireAuth(db *pgxpool.Pool) func(http.Handler) http.Handler {
 			err := db.QueryRow(r.Context(), "SELECT id FROM profiles WHERE id = $1", clerkID).Scan(&userID)
 			if err != nil {
 				if err == pgx.ErrNoRows {
-					// User not synced yet via webhook
-					log.Printf("Auth: User %s found in Clerk but not in DB yet", clerkID)
-					http.Redirect(w, r, "/login?error=syncing", http.StatusTemporaryRedirect)
+					// User not in DB yet (webhook delayed/missed) -> JIT Self-Healing Sync!
+					log.Printf("Auth Self-Healing: Auto-creating profile for Clerk user %s", clerkID)
+					_, errInsert := db.Exec(r.Context(), `
+						INSERT INTO profiles (id, full_name, updated_at)
+						VALUES ($1, $2, NOW())
+						ON CONFLICT (id) DO NOTHING
+					`, clerkID, "Usuário "+clerkID[:6])
+					if errInsert != nil {
+						log.Printf("Error during JIT profile insert: %v", errInsert)
+					}
+					userID = clerkID
+				} else {
+					log.Printf("Database error fetching user: %v", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 					return
 				}
-				log.Printf("Database error fetching user: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
 			}
 
 			ctx := context.WithValue(r.Context(), UserIDKey, userID)
@@ -85,20 +93,29 @@ func RequireOrg(db *pgxpool.Pool) func(http.Handler) http.Handler {
 
 			if err != nil {
 				if err == pgx.ErrNoRows {
-					// User has no organizations
-					log.Printf("Auth: User %s has no organizations", userID)
-					// Let them pass without org for now, or we could return 403
-					// ctx := context.WithValue(r.Context(), OrgIDKey, "")
-					// next.ServeHTTP(w, r.WithContext(ctx))
-					// return
-					
-					// Instead, block for safety since queries depend on orgID
-					http.Error(w, "User has no organization. Please contact support.", http.StatusForbidden)
+					// User has no organizations (webhook missed or first login) -> JIT Self-Healing Sync!
+					log.Printf("Auth Self-Healing: Auto-creating default organization for user %s", userID)
+					errOrg := db.QueryRow(r.Context(), `
+						INSERT INTO organizations (name, created_at, updated_at)
+						VALUES ('Meu Negócio', NOW(), NOW())
+						RETURNING id
+					`).Scan(&orgID)
+					if errOrg == nil {
+						_, _ = db.Exec(r.Context(), `
+							INSERT INTO org_members (organization_id, user_id, role)
+							VALUES ($1, $2, 'admin')
+						`, orgID, userID)
+						log.Printf("Successfully created default organization %s for %s", orgID, userID)
+					} else {
+						log.Printf("Error creating default org: %v", errOrg)
+						http.Error(w, "Error creating organization. Please contact support.", http.StatusInternalServerError)
+						return
+					}
+				} else {
+					log.Printf("Database error fetching org: %v", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 					return
 				}
-				log.Printf("Database error fetching org: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
 			}
 
 			ctx := context.WithValue(r.Context(), OrgIDKey, orgID)
